@@ -1,0 +1,308 @@
+---
+title: Tabla de proporciones
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+date: "Martes 15-06-2021"
+
+abstract: |
+  Construimos una tabla de proporciones de zonas en relación a las comunas.
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+```
+
+
+
+
+## 1 Tabla de proporciones 
+
+Leemos la tabla Casen 2017 de personas que ya tiene integrada la clave:
+
+```{r}
+tabla_con_clave <- readRDS("censo_personas_con_clave_17.rds")
+```
+
+```{r}
+x <- tabla_con_clave
+r3_100 <- x[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+Obtenemos las frecuencias de personas por manzana, por comuna:
+
+```{r}
+r3 <-table(x$COMUNA, as.numeric(x$clave))
+r3 <- as.data.frame(r3)
+
+r3 <- r3[!(r3$Freq == 0),]
+r3_100 <- r3[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+```{r}
+saveRDS(r3, "frec_man_com.rds")
+frec_man_com <- readRDS("frec_man_com.rds")
+```
+<br>
+Calculamos una columna de proporciones para la comuna 1107:
+
+```{r}
+frec_man_com_1107 <- filter(frec_man_com, frec_man_com$Var1 == 1107)
+frec_man_com_1107$p <- frec_man_com_1107$Freq*100/sum(frec_man_com_1107$Freq)
+```
+
+```{r}
+kbl(frec_man_com_1107) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+Calculamos las proporciones ahora para todas las comunas:
+
+```{r}
+codigos_com <- unique(frec_man_com$Var1)
+frec_man_com_parcial_total <- data.frame()
+
+for(i in codigos_com){
+  # debemos dividir por 100 para obtener las proporciones y no los porcentajes:
+  frec_man_com_parcial <- filter(frec_man_com, frec_man_com$Var1 == i)
+  frec_man_com_parcial$p <- frec_man_com_parcial$Freq*100/sum(frec_man_com_parcial$Freq)/100
+  frec_man_com_parcial_total <- rbind(frec_man_com_parcial_total,frec_man_com_parcial)
+}
+```
+<br>
+Observemos los primeros 100 registros:
+
+```{r}
+r3_100 <- frec_man_com_parcial_total[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+Verifiquemos filtrando para la comuna 1107:
+
+```{r}
+frec_man_com_parcial_total_1107 <- filter(frec_man_com_parcial_total,frec_man_com_parcial_total$Var1 == 1107)
+kbl(frec_man_com_parcial_total_1107) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+
+Hay que agregar un cero a los códigos de 4 dígitos:
+
+```{r}
+# recogemos el campo Comuna:
+codigos <- frec_man_com_parcial_total$Var1
+# construimos una secuencia llamada rango del 1 al total de filas del dataset:
+rango <- seq(1:nrow(frec_man_com_parcial_total))
+# Creamos un string que agrega un cero a todos los registros:
+cadena <- paste("0",codigos[rango], sep = "")
+
+# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser siempre 5 agregandole un cero al inicio de los que tienen 4.
+# Para ello extraemos un substring de la cadena sobre todas las filas (rangos) comenzando desde el primero o el segundo y llegando siempre al 6.
+
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(frec_man_com_parcial_total,cadena)
+
+```
+<br>
+Eliminamos columnas y renombramos:
+
+```{r}
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+names(comuna_corr)[4] <- "código" 
+# comuna_corr
+```
+
+<br>
+Veamos los 100 primeros registros:
+
+```{r}
+r3_100 <- comuna_corr[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+<br>
+
+Leamos nuestra tabla que contiene integrados los ingresos expandidos y las frecuencias de hombres y mujeres por comuna
+
+
+```{r}
+h_y_m_2017_censo <- readRDS("h_y_m_2017_censo.rds")
+
+r3_100 <- h_y_m_2017_censo[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+Hacemos la unión por código:
+
+```{r}
+h_y_m_comuna_corr = merge( x = comuna_corr, y = h_y_m_2017_censo, by = "código", all.x = TRUE)
+```
+
+```{r}
+# 
+r3_100 <- h_y_m_comuna_corr[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+Calculamos una nueva columna, que multiplica la frecuencia de hombres por comuna, la proporción a nivel de zona y los ingresos expandidos a nivel de comuna y divide por la cantidad de personas que viven en la comuna.
+
+```{r}
+h_y_m_comuna_corr$multi <- h_y_m_comuna_corr$Hombres*h_y_m_comuna_corr$p*h_y_m_comuna_corr$Ingresos_expandidos/h_y_m_comuna_corr$personas
+```
+
+```{r}
+r3_100 <- h_y_m_comuna_corr[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+<br>
+
+## 2 Cálculo del promedio de la columna multi
+
+
+Vamos a calcular el promedio de nuestro campo calculado multi, pues debe dar un valor aproximado al ingreso promedio comunal.
+
+
+```{r}
+
+h_y_m_comuna_corr
+```
+
+Calculamos el promedio de multi para la comuna 01101:
+
+```{r}
+h_y_m_comuna_corr_01101 <- filter(h_y_m_comuna_corr, h_y_m_comuna_corr$código == "01101")
+h_y_m_comuna_corr_01101
+```
+
+
+
+```{r}
+library(dplyr)
+
+h_y_m_comuna_corr_01101 %>%
+  group_by(código) %>%
+  summarise_at(vars(multi), list(name = mean))
+```
+
+<br>
+
+Obtengamos el promedio para todas las comunas:
+
+```{r}
+codigos_com_2 <- unique(h_y_m_comuna_corr$código)
+frec_man_com_parcial_total_2 <- data.frame()
+```
+
+
+
+
+
+```{r}
+n <-  h_y_m_comuna_corr %>% group_by(código) %>% summarise_at(vars(multi), list(name = mean))
+
+kbl(n) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "70%", height = "300px")
+```
+
+
+
+
+
+<br>
+
+
+
+## 3 Referencias
+
+https://rpubs.com/osoramirez/316691
+
+https://dataintelligencechile.shinyapps.io/casenfinal
+
+Manual_de_usuario_Censo_2017_16R.pdf\
+
+http://www.censo2017.cl/microdatos/
+
+
+
+
+
+
+
+

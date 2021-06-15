@@ -8,7 +8,7 @@ subtitle: |
 date: "Lunes 14-06-2021"
 
 abstract: |
-  Nuestro objetivo es determinar cuáles variables de la CASEN pueden ser utilizadas para realizar predicciones a nivel de Zona Censal utilizando los datos del Censo 2017. El primer paso será, siempre dentro de la Casen del 2017, determinar las correlaciones entre el ingreso total promedio por comuna, y la tasa de presencia de categorías específicas de variables tales como educación, calidad de la vivienda y edad. El Coeficiente de Correlación de Pearson es un estadístico paramétrico cuya aplicación es adecuada. Se asume que ambas variables tienen una distribución aproximadamente normal.
+  Nuestro objetivo es determinar cuáles variables de la CASEN pueden ser utilizadas para realizar predicciones a nivel de Zona Censal utilizando los datos del Censo 2017. El primer paso será, siempre dentro de la Casen del 2017, calcular las correlaciones entre el ingreso total promedio por comuna multiplicado por la poblacion de la misma, y la frecuencia de categorías específicas de variables tales como educación, calidad de la vivienda y edad. El Coeficiente de Correlación de Pearson es un estadístico paramétrico cuya aplicación es adecuada. Se asume que las variables a correlacionar variables tienen una distribución aproximadamente normal.
     
 header-includes:
    - \usepackage[]{babel}
@@ -51,7 +51,7 @@ library(PerformanceAnalytics)
 
 ## 1.1 Ingresos promedio por comuna
 
-Obtenemos el dato de "ingreso promedio anual" según CASEN 2017 (a nivel de comuna) y obtener el coeficiente de correlación respecto a diferentes variables o  combinaciones variables en el CASEN 2017 también a nivel de comuna.
+Obtenemos el dato de "ingreso promedio anual" según CASEN 2017 (a nivel de comuna).
 
 Leemos la base de datos:
 
@@ -125,7 +125,7 @@ Veamos los primeros 5 registros:
 head(df_2017,5)
 ```
 
-Agreguemos una columna con la variable de ingresos ponderada por poblacion:
+Agreguemos una columna con la variable de ingresos ponderada por poblacion. Para ello contamos las frecuencias de los registros por comuna en el Censo del 2017.
 
 
 
@@ -146,7 +146,7 @@ my_summary_data <- x %>%
 head(my_summary_data,5)
 ```
 
-Agregamos un cero antes de cada codigo comunal para poder hacer el merge
+Agregamos un cero antes de cada codigo comunal para poder hacer el merge posteriormente con la tabla de frecuencias.
 
 
 ```{r}
@@ -190,8 +190,9 @@ Agregamos la columna "Ingresos_expandidos"
 
 ```{r}
 df_2017_2$Ingresos_expandidos <- df_2017_2$promedio_i*df_2017_2$personas
-
 head(df_2017_2,5)
+
+saveRDS(df_2017_2, "ingresos_expandidos_17.rds")
 ```
 
 
@@ -223,16 +224,15 @@ Recuperable\
 Irrecuperable\
 Sin dato
 
-Correlacionaremos el ingreso promedio comunal con la tasa de cada categoría en cada una de ellas:
+Correlacionaremos el ingreso promedio comunal con la frecuencia de respuesta para cada categoría.
 
 #### **indmat**
 
-Obtenemos las frecuencias
+i. Obtenemos las frecuencias
 
 ```{r}
 b <- casen_2017$comuna
 c <- casen_2017$indmat
-
 cross_tab =  xtabs(casen_2017$expc ~  +  unlist(b) + unlist(c)  ,aggregate(casen_2017$expc ~  +  unlist(b) + unlist(c),casen_2017,mean))
 tabla <- as.data.frame(cross_tab)
 d <-tabla[!(tabla$Freq == 0),]
@@ -240,20 +240,19 @@ d$anio <- "2017"
 head(d,5)
 ```
 
-Renombramos columnas y agregamos los codigos comunales
+ii. Renombramos columnas y agregamos los códigos comunales
 
 ```{r}
 names(d)[1] <- "comuna"     
 names(d)[2] <- "indmat"
 names(d)[3] <- "Frecuencia"
 names(d)[4] <- "Año"  
-
 df_final = merge( x = d, y = codigos_comunales, by = "comuna", all.x = TRUE)
 head(df_final,5)
 # write_xlsx(df_final, "iae_etnia_sexo_2017.xlsx")
 ```
 
-Filtramos por vivienda recuperable
+iii. Filtramos por vivienda recuperable
 
 ```{r}
 df_vivi_recu <- filter(df_final, df_final$indmat == "Vivienda Recuperable")
@@ -261,106 +260,110 @@ head(df_vivi_recu,5)
 ```
 
 
-Entonces, tenemos nuestra tabla de ingresos promedio
+iv. Entonces, tenemos nuestra tabla de ingresos promedio:
 
 ```{r}
 head(df_2017,5)
 ```
 
-y nuestra tabla de frecuencias
+v. Y nuestra tabla de frecuencias:
 
 ```{r}
 head(df_vivi_recu,5)
 ```
 
-las unimos
+vi. Las unimos
 
 ```{r}
 df_vivi_recu_final = merge( x = df_2017, y = df_vivi_recu, by = "código", all.x = TRUE)
 head(df_vivi_recu_final,5)
 ```
 
-Debemos corregir los ingresos promedio multiplicándolos por la cantidad de población.
+<!-- Debemos corregir los ingresos promedio multiplicándolos por la cantidad de población. -->
 
-Extraemos del Censo 2017 la cantidad de habitantes por comuna:
+<!-- Extraemos del Censo 2017 la cantidad de habitantes por comuna: -->
 
+
+<!-- ```{r} -->
+<!-- library("rio") -->
+<!-- x <- import("Microdato_Censo2017-Personas.csv") -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- my_summary_data <- x %>% -->
+<!--     group_by(x$COMUNA) %>% -->
+<!--     summarise(Count = n())  -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- head(my_summary_data,5) -->
+<!-- ``` -->
+
+<!-- Agregamos un cero antes de cada codigo comunal para poder hacer el merge -->
+
+
+<!-- ```{r} -->
+<!-- names(my_summary_data)[1] <- "comuna"      -->
+<!-- names(my_summary_data)[2] <- "personas" -->
+<!-- my_summary_data -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- # recogemos el campo Comuna: -->
+<!-- codigos <- my_summary_data$comuna -->
+<!-- # construimos una secuencia llamada rango del 1 al total de filas del dataset: -->
+<!-- rango <- seq(1:nrow(my_summary_data)) -->
+<!-- # Creamos un string que agrega un cero a todos los registros: -->
+<!-- cadena <- paste("0",codigos[rango], sep = "") -->
+
+<!-- # El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser siempre 5 agregandole un cero al inicio de los que tienen 4. -->
+<!-- # Para ello extraemos un substring de la cadena sobre todas las filas (rangos) comenzando desde el primero o el segundo y llegando siempre al 6. -->
+
+<!-- cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6) -->
+<!-- codigos <- as.data.frame(codigos) -->
+<!-- cadena <- as.data.frame(cadena) -->
+<!-- comuna_corr <- cbind(my_summary_data,cadena) -->
+<!-- head(comuna_corr,5) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- names(comuna_corr)[3] <- "código"   -->
+<!-- head(comuna_corr,5) -->
+<!-- ``` -->
+
+vii. La unimos a la tabla de ingresos.
 
 ```{r}
-library("rio")
-x <- import("Microdato_Censo2017-Personas.csv")
-```
-
-
-```{r}
-my_summary_data <- x %>%
-    group_by(x$COMUNA) %>%
-    summarise(Count = n()) 
-```
-
-
-```{r}
-head(my_summary_data,5)
-```
-
-Agregamos un cero antes de cada codigo comunal para poder hacer el merge
-
-
-```{r}
-names(my_summary_data)[1] <- "comuna"     
-names(my_summary_data)[2] <- "personas"
-my_summary_data
-```
-
-```{r}
-# recogemos el campo Comuna:
-codigos <- my_summary_data$comuna
-# construimos una secuencia llamada rango del 1 al total de filas del dataset:
-rango <- seq(1:nrow(my_summary_data))
-# Creamos un string que agrega un cero a todos los registros:
-cadena <- paste("0",codigos[rango], sep = "")
-
-# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser siempre 5 agregandole un cero al inicio de los que tienen 4.
-# Para ello extraemos un substring de la cadena sobre todas las filas (rangos) comenzando desde el primero o el segundo y llegando siempre al 6.
-
-cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
-codigos <- as.data.frame(codigos)
-cadena <- as.data.frame(cadena)
-comuna_corr <- cbind(my_summary_data,cadena)
-head(comuna_corr,5)
-```
-
-```{r}
-names(comuna_corr)[3] <- "código"  
-head(comuna_corr,5)
-```
-
-Unimos
-
-```{r}
-df_vivi_recu_final_3 = merge( x = df_vivi_recu_final, y = comuna_corr, by = "código", all.x = TRUE)
+df_vivi_recu_final_3 = merge( x = df_vivi_recu_final, y = df_2017_2, by = "código", all.x = TRUE)
 head(df_vivi_recu_final_3,5)
 ```
 
 
-Obtenemos la nueva variable: "variable_expandida"
+<!-- Obtenemos la nueva variable: "variable_expandida" -->
 
 
 ```{r}
-df_vivi_recu_final_3$variable_expandida <- df_vivi_recu_final_3$promedio_i*df_vivi_recu_final_3$personas
-head(df_vivi_recu_final_3,5)
+# df_vivi_recu_final_3$variable_expandida <- df_vivi_recu_final_3$promedio_i*df_vivi_recu_final_3$personas
+# head(df_vivi_recu_final_3,5)
 ```
 
 
-Correlacionamos
+viii. Correlacionamos
 
 ```{r}
-dat1 <- data.frame(df_vivi_recu_final_3$Frecuencia, df_vivi_recu_final_3$variable_expandida)
+dat1 <- data.frame(df_vivi_recu_final_3$Frecuencia, df_vivi_recu_final_3$Ingresos_expandidos)
 chart.Correlation(dat1)
 ```
+
+<span style="color:red">Mientras mayor sea la cantidad de personas que declaran vivir en una vivienda cuyo índice de materialidad sea "recuperable" en una comuna, mayor es el ingreso promedio en la misma.</span>
+
 
 
 ### Automatización
 
+Despleguemos los primeros 5 registros de nuestro dataset de frecuencias original.
 
 ```{r}
 head(df_final,5)
@@ -380,10 +383,10 @@ for (i in cate_ind_mat){
       
       df_vivi_recu <- filter(df_final, df_final$indmat == i)
       
-      df_vivi_recu_2 <- merge( x =df_vivi_recu , y = comuna_corr, by = "código", all.x = TRUE)
+      # df_vivi_recu_2 <- merge( x =df_vivi_recu , y = comuna_corr, by = "código", all.x = TRUE)
 #head(df_final,5)
       
-      df_vivi_recu_3 <- merge( x =df_vivi_recu_2 , y = df_2017_2, by = "código", all.x = TRUE)
+      df_vivi_recu_3 <- merge( x =df_vivi_recu , y = df_2017_2, by = "código", all.x = TRUE)
 
      # print(df_vivi_recu_2)
       assign(paste("Vivienda_",i, sep = ""), df_vivi_recu_3)
@@ -526,10 +529,10 @@ for (i in cate_uni){
       
       df_vivi_recu <- filter(df_final, df_final$universitarios == i)
       
-      df_vivi_recu_2 <- merge( x =df_vivi_recu , y = comuna_corr, by = "código", all.x = TRUE)
+      # df_vivi_recu_2 <- merge( x =df_vivi_recu , y = comuna_corr, by = "código", all.x = TRUE)
 #head(df_final,5)
       
-      df_vivi_recu_3 <- merge( x =df_vivi_recu_2 , y = df_2017_2, by = "código", all.x = TRUE)
+      df_vivi_recu_3 <- merge( x =df_vivi_recu , y = df_2017_2, by = "código", all.x = TRUE)
 
      # print(df_vivi_recu_2)
       assign(paste("Educacion_",i, sep = ""), df_vivi_recu_3)
@@ -537,31 +540,189 @@ for (i in cate_uni){
 ```
 
 ```{r}
+# 1
 head(`Educacion_Educación Básica`,5)
 ```
 
+```{r}
+# #2
+# `Educacion_Educación Especial (Diferencial)`
+# #3
+# `Educacion_Educación Media Científico-Humanista`
+# #4
+# `Educacion_Educación Media Técnica Profesional`
+# #5
+# `Educacion_Humanidades (Sistema Antiguo)`
+# #6
+# `Educacion_Jardín Infantil (Medio menor y Medio mayor)`
+# `Educacion_No sabe/no responde`
+# `Educacion_Nunca asistió`
+# `Educacion_Postgrado Completo`
+# `Educacion_Postgrado Incompleto`
+# `Educacion_Prekinder/Kinder (Transición menor y Transición Mayor)`
+# `Educacion_Primaria o Preparatoria (Sistema antiguo)`
+# `Educacion_Profesional Completo (Carreras 4 o más años)`
+# `Educacion_Profesional Incompleto (Carreras 4  o más años)`
+# `Educacion_Sala cuna`
+# `Educacion_Técnica, Comercial, Industrial o Normalista (Sistema Antiguo`
+# `Educacion_Técnico Nivel Superior Completo (Carreras 1 a 3 años)`
+# `Educacion_Técnico Nivel Superior Incompleto (Carreras 1 a 3 años)`
+```
 
 
 
 Correlacionamos
 
+1 Educación Básica
+
 ```{r}
 dat1 <- data.frame(`Educacion_Educación Básica`$Frecuencia, `Educacion_Educación Básica`$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+2 Educación Especial (Diferencial)
+
+```{r}
+dat1 <- data.frame(`Educacion_Educación Especial (Diferencial)`$Frecuencia, `Educacion_Educación Especial (Diferencial)`$Ingresos_expandidos)
 chart.Correlation(dat1)
 ```
 
 
 
-### 1.2.3 Correlación con cantidad de hombres con un rango de edad 40-50 que habitan vivienda con un tipo de techo Planchas metálicas (zinc, cobre, etc.)
+3 Educación Media Científico-Humanista
 
-La Casen 2017 pregunta en v6 ¿Cuál es el material que predomina en el techo de la vivienda? una respuesta es: "Planchas metálicas (zinc, cobre, etc.)"
+```{r}
+dat1 <- data.frame(`Educacion_Educación Media Científico-Humanista`$Frecuencia, `Educacion_Educación Media Científico-Humanista`$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+4 Educación Media Técnica Profesional
+
+```{r}
+dat1 <- data.frame(`Educacion_Educación Media Técnica Profesional`$Frecuencia, `Educacion_Educación Media Técnica Profesional`$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+5 Humanidades (Sistema Antiguo)
+
+```{r}
+dat1 <- data.frame(`Educacion_Humanidades (Sistema Antiguo)`$Frecuencia, `Educacion_Humanidades (Sistema Antiguo)`$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
 
 
-## 2 Para la variable o combinación de variables que arrojó el mayor coeficiente de correlación obtener la **proporción de cada zona dentro de cada comuna**.
 
 
 
 
+
+
+
+
+
+
+### 1.2.3 Correlación con cantidad de hombres con un rango de edad 40-50 que habitan vivienda con un tipo de techo específico.
+
+La Casen 2017 pregunta en v6 ¿Cuál es el material que predomina en el techo de la vivienda? 
+
+<br>
+<hr style="height:1px;border-width:1;color:Gray;background-color:Gray">
+<br>
+
+
+
+## 2 Del censo, obtener la cantidad de población a nivel de zona y estimar la proporción.
+
+
+```{r uno}
+library("rio")
+x <- import("Microdato_Censo2017-Personas.csv")
+```
+
+
+
+```{r dos}
+
+#unique(x$COMUNA)
+
+codigos <- x$COMUNA
+
+rango <- seq(1:nrow(x))
+
+cadena<- paste("0",codigos[rango], sep = "")
+
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(codigos,cadena)
+
+codigos <- x$DC
+
+rango <- seq(1:nrow(x))
+
+cadena <- paste("0",codigos[rango], sep = "")
+
+cadena <- substr(cadena,(nchar(cadena)[rango])-(1),(nchar(cadena)[rango]))
+
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+dc <- cbind(codigos,cadena)
+
+
+
+codigos <- x$ZC_LOC
+rango <- seq(1:nrow(x))
+cadena<- paste("00",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(2),nchar(cadena)[rango])
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+cadena_c <- cbind(codigos,cadena)
+
+
+#head(unique(cadena_c$cadena),50)
+
+x$clave <- paste(x$COMUNA, dc$cadena, x$AREA,  cadena_c$cadena, sep="")
+
+# saveRDS(x, "censo_personas_con_clave_17.rds")
+# 
+# tablamadre <- head(x,50)
+# 
+# kbl(tablamadre) %>%
+#   kable_styling(bootstrap_options = c("striped", "hover")) %>%
+#   kable_paper() %>%
+#   scroll_box(width = "100%", height = "300px")
+
+
+```
+
+
+```{r tres}
+# tabla_con_clave <- readRDS("censo_personas_con_clave_17.rds")
+```
+
+```{r cuatro}
+head(x,5)
+```
+
+
+```{r cinco}
+# r <- filter(x, x$COMUNA == 15202)
+# 
+# r2 <-table(r$clave)
+# r2
+```
+```{r seis}
+r3 <-table(x$COMUNA, as.numeric(x$clave))
+r3 <- as.data.frame(r3)
+```
+
+```{r siete}
+r3 <- r3[!(r3$Freq == 0),]
+r3_100 <- r3[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
 
 ## 3 Referencias
 
