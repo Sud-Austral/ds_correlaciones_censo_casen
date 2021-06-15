@@ -1,0 +1,200 @@
+---
+title: Correlaciones entre variables del Censo de PERSONAS y CASEN a nivel de Zona Censal IV
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+date: "Martes 15-06-2021"
+
+abstract: |
+  Tenemos dos objetivos. El primero, dentro de la lógica de expandir la información del nivel comunal al de las zonas (manzanas), será correlacionar variables relevantes que estén presentes en la Casen 2017 (ingresos totales promedios a nivel comunal) con variables del Censo 2017. Decidimos utilizar variables a correlacionar desde el Censo del 2017 porque su información es más exacta (no es una muestra), puede que no coincidan las categorías de respuesta en variables presentes en ambos instrumentos y la Casen del 2017 omite alrededor de 20 comunas (ésta ausencia no la podemos remediar pues la arrastraremos en el cálculo del promedio de ingresos comunales).
+  
+    El segundo, construir una tabla de proporciones de zonas en relación a las comunas.
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+```
+
+## 1 Variables presentes en el Censo 2017 de viviendas a correlacionar con ingresos promedios comunales.
+
+Leemos los datos del censo **viviendas** 2017:
+
+```{r}
+Censo2017_Viviendas <- import("Microdato_Censo2017-Viviendas.csv")
+nrow(Censo2017_Viviendas)
+```
+
+Construimos la clave:
+
+```{r}
+# codigos <- Censo2017_Viviendas$COMUNA
+# rango <- seq(1:nrow(Censo2017_Viviendas))
+# cadena<- paste("0",codigos[rango], sep = "")
+# cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+# codigos <- as.data.frame(codigos)
+# cadena <- as.data.frame(cadena)
+# comuna_corr <- cbind(codigos,cadena)
+# 
+# codigos <- Censo2017_Viviendas$DC
+# rango <- seq(1:nrow(Censo2017_Viviendas))
+# cadena <- paste("0",codigos[rango], sep = "")
+# cadena <- substr(cadena,(nchar(cadena)[rango])-(1),(nchar(cadena)[rango]))
+# codigos <- as.data.frame(codigos)
+# cadena <- as.data.frame(cadena)
+# dc <- cbind(codigos,cadena)
+# 
+# codigos <- Censo2017_Viviendas$ZC_LOC
+# rango <- seq(1:nrow(Censo2017_Viviendas))
+# cadena<- paste("00",codigos[rango], sep = "")
+# cadena <- substr(cadena,(nchar(cadena)[rango])-(2),nchar(cadena)[rango])
+# codigos <- as.data.frame(codigos)
+# cadena <- as.data.frame(cadena)
+# cadena_c <- cbind(codigos,cadena)
+# 
+# Censo2017_Viviendas$clave <- paste(Censo2017_Viviendas$COMUNA, dc$cadena, Censo2017_Viviendas$AREA,  cadena_c$cadena, sep="")
+```
+
+
+```{r}
+# saveRDS(Censo2017_Viviendas, "censo_viviendas_con_clave_17.rds")
+```
+
+
+<br>
+
+### 1.1 **P01**: Tipo de vivienda 
+
+1 Casa\
+2 Departamento en edificio \
+3 Vivienda tradicional indígena (ruka, pae pae u otras) \
+4 Pieza en casa antigua o en conventillo \
+5 Mediagua, mejora, rancho o choza \
+6 Móvil (carpa, casa rodante o similar) \
+7 Otro tipo de vivienda particular \
+8 Vivienda colectiva \
+9 Operativo personas en tránsito (no es vivienda) \
+10 Operativo calle (no es vivienda)
+
+```{r}
+tabla_con_clave <- readRDS("censo_viviendas_con_clave_17.rds")
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P01
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+# 
+```
+
+
+```{r}
+d
+```
+
+
+aca voy
+
+
+```{r}
+# Debemos apilar lado a lado los datos de frecuencias de sexos y agregar un cero al campo de codigo comunal.
+censo_2017_hombres <- filter(d, d$unlist.c. == 1)
+names(censo_2017_hombres)[3] <- "Hombres"  
+
+censo_2017_mujeres <- filter(d, d$unlist.c. == 2)
+names(censo_2017_mujeres)[3] <- "Mujeres"  
+
+#Unimos:
+df_final = merge( x = censo_2017_hombres, y = censo_2017_mujeres, by = "unlist.b.", all.x = TRUE)
+
+# Limpiamos y renombramos columnas:
+
+df_final <- df_final[,-c(2,5,7),drop=FALSE] 
+names(df_final)[1] <- "comuna"  
+
+# Agregamos un cero a los codigos comunales de 4 digitos:
+  
+# recogemos el campo Comuna:
+codigos <- df_final$comuna
+# construimos una secuencia llamada rango del 1 al total de filas del dataset:
+rango <- seq(1:nrow(df_final))
+# Creamos un string que agrega un cero a todos los registros:
+cadena <- paste("0",codigos[rango], sep = "")
+
+# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser siempre 5 agregandole un cero al inicio de los que tienen 4.
+# Para ello extraemos un substring de la cadena sobre todas las filas (rangos) comenzando desde el primero o el segundo y llegando siempre al 6.
+
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(df_final,cadena)
+
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+names(comuna_corr)[4] <- "código" 
+
+# Hacemos el merge con los ingresos comunales:
+
+ingresos_expandidos_2017 <- readRDS("ingresos_expandidos_17.rds")
+
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+
+tablamadre <- head(df_2017_2,50)
+
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+
+
+
+## 2 Referencias
+
+https://rpubs.com/osoramirez/316691
+
+https://dataintelligencechile.shinyapps.io/casenfinal
+
+Manual_de_usuario_Censo_2017_16R.pdf\
+
+http://www.censo2017.cl/microdatos/
+
+Censo de Población y Vivienda\
+
+https://www.ine.cl/estadisticas/sociales/censos-de-poblacion-y-vivienda/poblacion-y-vivienda

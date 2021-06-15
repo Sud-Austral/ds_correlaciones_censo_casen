@@ -239,14 +239,14 @@ Vamos a calcular el promedio de nuestro campo calculado multi, pues debe dar un 
 
 ```{r}
 
-h_y_m_comuna_corr
+head(h_y_m_comuna_corr,5)
 ```
 
 Calculamos el promedio de multi para la comuna 01101:
 
 ```{r}
 h_y_m_comuna_corr_01101 <- filter(h_y_m_comuna_corr, h_y_m_comuna_corr$código == "01101")
-h_y_m_comuna_corr_01101
+head(h_y_m_comuna_corr_01101,5)
 ```
 
 
@@ -275,6 +275,8 @@ frec_man_com_parcial_total_2 <- data.frame()
 ```{r}
 n <-  h_y_m_comuna_corr %>% group_by(código) %>% summarise_at(vars(multi), list(name = mean))
 
+names(n)[2] <- "Ingreso_promedio"
+
 kbl(n) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
@@ -299,9 +301,9 @@ Manual_de_usuario_Censo_2017_16R.pdf\
 
 http://www.censo2017.cl/microdatos/
 
+Censo de Población y Vivienda\
 
-
-
+https://www.ine.cl/estadisticas/sociales/censos-de-poblacion-y-vivienda/poblacion-y-vivienda
 
 
 
