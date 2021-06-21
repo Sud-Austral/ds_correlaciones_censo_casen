@@ -1,16 +1,14 @@
 ---
-title: Correlaciones entre variables del Censo de PERSONAS y CASEN a nivel de Zona Censal IV
+title: Correlaciones entre variables del Censo de Viviendas y CASEN a nivel de Zona Censal IV
 author:
 - name: VE-CC-AJ
   affiliation: DataIntelligence
 subtitle: | 
 
-date: "Martes 15-06-2021"
+date: "Miércoles 16-06-2021"
 
 abstract: |
-  Tenemos dos objetivos. El primero, dentro de la lógica de expandir la información del nivel comunal al de las zonas (manzanas), será correlacionar variables relevantes que estén presentes en la Casen 2017 (ingresos totales promedios a nivel comunal) con variables del Censo 2017. Decidimos utilizar variables a correlacionar desde el Censo del 2017 porque su información es más exacta (no es una muestra), puede que no coincidan las categorías de respuesta en variables presentes en ambos instrumentos y la Casen del 2017 omite alrededor de 20 comunas (ésta ausencia no la podemos remediar pues la arrastraremos en el cálculo del promedio de ingresos comunales).
-  
-    El segundo, construir una tabla de proporciones de zonas en relación a las comunas.
+  Calculamos correlaciones entre el ingreso promedio comunal extraído de la Casen 2017 y todas las variables del Censo de viviendas 2017 también a nivel comunal.
     
 header-includes:
    - \usepackage[]{babel}
@@ -53,50 +51,7 @@ library("rio")
 
 ## 1 Variables presentes en el Censo 2017 de viviendas a correlacionar con ingresos promedios comunales.
 
-Leemos los datos del censo **viviendas** 2017:
 
-```{r}
-Censo2017_Viviendas <- import("Microdato_Censo2017-Viviendas.csv")
-nrow(Censo2017_Viviendas)
-```
-
-Construimos la clave:
-
-```{r}
-# codigos <- Censo2017_Viviendas$COMUNA
-# rango <- seq(1:nrow(Censo2017_Viviendas))
-# cadena<- paste("0",codigos[rango], sep = "")
-# cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
-# codigos <- as.data.frame(codigos)
-# cadena <- as.data.frame(cadena)
-# comuna_corr <- cbind(codigos,cadena)
-# 
-# codigos <- Censo2017_Viviendas$DC
-# rango <- seq(1:nrow(Censo2017_Viviendas))
-# cadena <- paste("0",codigos[rango], sep = "")
-# cadena <- substr(cadena,(nchar(cadena)[rango])-(1),(nchar(cadena)[rango]))
-# codigos <- as.data.frame(codigos)
-# cadena <- as.data.frame(cadena)
-# dc <- cbind(codigos,cadena)
-# 
-# codigos <- Censo2017_Viviendas$ZC_LOC
-# rango <- seq(1:nrow(Censo2017_Viviendas))
-# cadena<- paste("00",codigos[rango], sep = "")
-# cadena <- substr(cadena,(nchar(cadena)[rango])-(2),nchar(cadena)[rango])
-# codigos <- as.data.frame(codigos)
-# cadena <- as.data.frame(cadena)
-# cadena_c <- cbind(codigos,cadena)
-# 
-# Censo2017_Viviendas$clave <- paste(Censo2017_Viviendas$COMUNA, dc$cadena, Censo2017_Viviendas$AREA,  cadena_c$cadena, sep="")
-```
-
-
-```{r}
-# saveRDS(Censo2017_Viviendas, "censo_viviendas_con_clave_17.rds")
-```
-
-
-<br>
 
 ### 1.1 **P01**: Tipo de vivienda 
 
@@ -111,6 +66,8 @@ Construimos la clave:
 9 Operativo personas en tránsito (no es vivienda) \
 10 Operativo calle (no es vivienda)
 
+Leemos los datos del censo **viviendas** 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
 ```{r}
 tabla_con_clave <- readRDS("censo_viviendas_con_clave_17.rds")
 b <- tabla_con_clave$COMUNA
@@ -123,52 +80,48 @@ d$anio <- "2017"
 ```
 
 
-```{r}
-d
+```{r, warning = FALSE}
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:10){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
 ```
 
+```{r}
+head(d_t,5)
+```
 
-aca voy
-
+Agregamos un cero a los codigos comunales de 4 digitos:
 
 ```{r}
-# Debemos apilar lado a lado los datos de frecuencias de sexos y agregar un cero al campo de codigo comunal.
-censo_2017_hombres <- filter(d, d$unlist.c. == 1)
-names(censo_2017_hombres)[3] <- "Hombres"  
-
-censo_2017_mujeres <- filter(d, d$unlist.c. == 2)
-names(censo_2017_mujeres)[3] <- "Mujeres"  
-
-#Unimos:
-df_final = merge( x = censo_2017_hombres, y = censo_2017_mujeres, by = "unlist.b.", all.x = TRUE)
-
-# Limpiamos y renombramos columnas:
-
-df_final <- df_final[,-c(2,5,7),drop=FALSE] 
-names(df_final)[1] <- "comuna"  
-
-# Agregamos un cero a los codigos comunales de 4 digitos:
-  
-# recogemos el campo Comuna:
-codigos <- df_final$comuna
-# construimos una secuencia llamada rango del 1 al total de filas del dataset:
-rango <- seq(1:nrow(df_final))
-# Creamos un string que agrega un cero a todos los registros:
+codigos <- d_t$
+unlist.b.
+rango <- seq(1:nrow(d_t))
 cadena <- paste("0",codigos[rango], sep = "")
-
-# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser siempre 5 agregandole un cero al inicio de los que tienen 4.
-# Para ello extraemos un substring de la cadena sobre todas las filas (rangos) comenzando desde el primero o el segundo y llegando siempre al 6.
-
 cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
 codigos <- as.data.frame(codigos)
 cadena <- as.data.frame(cadena)
-comuna_corr <- cbind(df_final,cadena)
-
+comuna_corr <- cbind(d_t,cadena)
 comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
-names(comuna_corr)[4] <- "código" 
+names(comuna_corr)[31] <- "código" 
+```
 
-# Hacemos el merge con los ingresos comunales:
 
+
+```{r}
+tablamadre <- head(comuna_corr,50)
+
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+<br>
+Hacemos el merge con los ingresos comunales:
+
+```{r}
 ingresos_expandidos_2017 <- readRDS("ingresos_expandidos_17.rds")
 
 df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
@@ -181,8 +134,211 @@ kbl(tablamadre) %>%
   scroll_box(width = "100%", height = "300px")
 ```
 
+<br>
+
+Correlacionamos:
+
+1 Casa\
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.x, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+2 Departamento en edificio \
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.y, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+3 Vivienda tradicional indígena (ruka, pae pae u otras) \
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.x.1, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+4 Pieza en casa antigua o en conventillo \
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.y.1, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
 
 
+5 Mediagua, mejora, rancho o choza \
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.x.2, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+6 Móvil (carpa, casa rodante o similar) \
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.y.2, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+
+7 Otro tipo de vivienda particular \
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.x.3, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+8 Vivienda colectiva \
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.y.3, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+9 Operativo personas en tránsito (no es vivienda) \
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.x.4, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+10 Operativo calle (no es vivienda)
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.y.4, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+### 1.2 **P03B**: Material en la cubierta del techo 
+
+1 Tejas o tejuelas de arcilla, metálicas, de cemento, de madera, asfálticas o plásticas\
+2 Losa hormigón\
+3 Planchas metálicas de zinc, cobre, etc. o fibrocemento (tipo pizarreño)\
+4 Fonolita o plancha de fieltro embreado\
+5 Paja, coirón, totora o caña\
+6 Materiales precarios (lata, cartón, plásticos, etc.)\
+7 Sin cubierta sólida de techo\
+98 No aplica\
+99 Missing
+
+
+```{r}
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P03B
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+```
+
+```{r}
+head(d,5)
+```
+
+```{r, warning = FALSE}
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:7){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+```
+
+```{r}
+head(d_t,5)
+```
+
+```{r}
+codigos <- d_t$
+unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+```
+
+
+```{r}
+names(comuna_corr)[22] <- "código" 
+tablamadre <- head(comuna_corr,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+Hacemos el merge con los ingresos comunales:
+
+```{r}
+ingresos_expandidos_2017 <- readRDS("ingresos_expandidos_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+Correlacionamos:
+
+1 Tejas o tejuelas de arcilla, metálicas, de cemento, de madera, asfálticas o plásticas\
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.x, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+
+
+2 Losa hormigón\
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.y, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+
+3 Planchas metálicas de zinc, cobre, etc. o fibrocemento (tipo pizarreño)\
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.x.1, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+
+4 Fonolita o plancha de fieltro embreado\
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.y.1, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+
+5 Paja, coirón, totora o caña\
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.x.2, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+
+6 Materiales precarios (lata, cartón, plásticos, etc.)\
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq.y.2, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
+
+
+7 Sin cubierta sólida de techo\
+
+```{r}
+dat1 <- data.frame(df_2017_2$Freq, df_2017_2$Ingresos_expandidos)
+chart.Correlation(dat1)
+```
 
 
 ## 2 Referencias

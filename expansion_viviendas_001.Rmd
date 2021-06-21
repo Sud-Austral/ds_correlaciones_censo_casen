@@ -1,0 +1,472 @@
+---
+title: Expansión de la CASEN sobre el CENSO
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+  De ingresos sobre una categoría de respuesta 
+
+date: "Viernes 18-06-2021"
+
+abstract: |
+  Expandiremos los ingresos promedios comunales obtenidos de la CASEN sobre la categoría de respuesta: "tejas o tejuelas de arcilla, metálicas, de cemento, de madera, asfálticas o plásticas" del campo P03B del CENSO de viviendas, que fue la categoría de respuesta que más alto correlaciona con los ingresos expandidos, ambos a nivel comunal.
+  Lo anterior, para poder construir un modelo lineal cuya variable independiente será: "porcentaje de población que posee la variable Censal respecto a la zona" y la dependiente: "ingreso expandido por zona".
+
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+```
+
+## 1 Variable CENSO
+
+Necesitamos calcular las frecuencias a nivel censal de las respuestas correspondientes a la categoría: "tejas o tejuelas de arcilla, metálicas, de cemento, de madera, asfálticas o plásticas" del campo **P03B** del censo de viviendas. Recordemos que ésta fué la más alta correlación en relación a los ingresos expandidos [(ver punto 1.2 aquí)](https://rpubs.com/dataintelligence/corr_004_viviendas).
+
+
+### 1.1 Lectura de la tabla de viviendas
+
+Leemos la tabla Casen 2017 de viviendas que ya tiene integrada la clave zonal:
+
+```{r}
+tabla_con_clave <- readRDS("censo_viviendas_con_clave_17.rds")
+
+r3_100 <- tabla_con_clave[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.2 Cálculo de frecuencias
+
+Necesitamos obtener por zona la cantidad de personas que declaran tener como material en la cubierta del techo, tejas o tejuelas de arcilla, metálicas, de cemento, de madera, asfálticas o plásticas (la mayor correlación obtenida en relación al ingreso promedio comunal -CASEN-).
+
+
+```{r}
+tabla_con_clave_f <- tabla_con_clave[,-c(1,2,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20),drop=FALSE] 
+names(tabla_con_clave_f)[2] <- "Tipo de techo"  
+
+# Ahora filtramos por Tipo de techo = 1.
+tabla_con_clave_ff <- filter(tabla_con_clave_f, tabla_con_clave_f$`Tipo de techo` == 1)
+
+# Determinamos las frecuencias por zona:
+b <- tabla_con_clave_ff$clave
+c <- tabla_con_clave_ff$`Tipo de techo`
+d <- tabla_con_clave_ff$COMUNA
+cross_tab =  xtabs( ~ unlist(b) + unlist(c)+ unlist(d))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+names(d)[1] <- "zona" 
+d$anio <- "2017"
+```
+
+
+### 1.3 Veamos los primeros 100 registros
+
+```{r}
+r3_100 <- d[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.4 Calculamos la proporción de las frecuencias en cada comuna a nivel zonal
+
+```{r}
+codigos_com <- unique(d$unlist.d.)
+frec_man_com_parcial_total <- data.frame()
+
+for(i in codigos_com){
+  # debemos dividir por 100 para obtener las proporciones y no los porcentajes:
+  frec_man_com_parcial <- filter(d, d$unlist.d. == i)
+  frec_man_com_parcial$p <- frec_man_com_parcial$Freq*100/sum(frec_man_com_parcial$Freq)/100
+  frec_man_com_parcial_total <- rbind(frec_man_com_parcial_total,frec_man_com_parcial)
+}
+```
+
+
+
+### 1.5 Observemos los primeros 100 registros
+
+```{r}
+r3_100 <- frec_man_com_parcial_total[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+
+### 1.6 Verificación del cálculo correcto de proporciones
+
+Verifiquemos que la suma de las proporciones sea 1 para la comuna 1107:
+
+```{r}
+r3_100_f <- filter(frec_man_com_parcial_total, frec_man_com_parcial_total$unlist.d. == 1107)
+```
+
+
+```{r}
+sum(r3_100_f$p)
+```
+
+```{r}
+nrow(frec_man_com_parcial_total)
+```
+
+### 1.7 Agregamos un cero a los códigos comunales de cuatro digitos
+
+```{r}
+codigos <- frec_man_com_parcial_total$unlist.d.
+rango <- seq(1:nrow(frec_man_com_parcial_total))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(frec_man_com_parcial_total,cadena)
+comuna_corr <- comuna_corr[,-c(2,3),drop=FALSE] 
+names(comuna_corr)[5] <- "código" 
+
+r3_100 <- comuna_corr[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+<br>
+
+En p capturamos la varianza de la categoría 1 Tejas o tejuelas de arcilla, metálicas, de cemento, de madera, asfálticas o plásticas del campo P03B a nivel Censal.
+
+## 2 Variable CASEN
+
+### 2.1 Tabla de ingresos expandidos
+
+Hemos calculado ya éste valor en el punto 1.1.11 de [(aquí)](https://rpubs.com/dataintelligence/corr_casen_censo_002)
+
+```{r}
+h_y_m_2017_censo <- readRDS("ingresos_expandidos_17.rds")
+
+tablamadre <- head(h_y_m_2017_censo,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+## 3 Unión
+
+Hacemos la unión por el campo código con la tabla precedente con la de proporciones por zona para obtener los ingresos expandidos a nivel de zona:
+
+```{r}
+comunas_con_ing_exp = merge( x = comuna_corr, y = h_y_m_2017_censo, by = "código", all.x = TRUE)
+
+r3_100 <- comunas_con_ing_exp[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+<br>
+<br>
+<br>
+<br>
+
+<hr style="height:1px;border-width:1;color:Red;background-color:Red">
+<br>
+
+## 4 Pasos según Notion
+
+### 4.1 Del censo obtener la cantidad de población a nivel de zona y estimar la proporción.
+
+Ya hemos construído una tabla en la que tenemos la proporción de población por zona en cada comuna [(Ver aquí)](https://rpubs.com/dataintelligence/tabla_de_proporciones).
+
+```{r}
+prop_pob <- readRDS("tabla_de_prop_pob.rds")
+```
+
+```{r}
+names(prop_pob)[1] <- "zona"
+names(prop_pob)[3] <- "p_poblacional" 
+```
+```{r}
+nrow(prop_pob)
+```
+
+
+<br>
+Veamos los 100 primeros registros.
+
+```{r}
+r3_100 <- prop_pob[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+
+### 4.2 Obtener el ingreso medio.
+
+Éste valor es el campo promedio_i de la tabla comunas_con_ing_exp, calculada en el punto "3 Unión" de la sección anterior.
+
+
+
+
+```{r}
+r3_100 <- comunas_con_ing_exp[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+```{r}
+nrow(comunas_con_ing_exp)
+```
+
+
+
+<br>
+
+### 4.3 Multiplicar el ingreso medio x población total x la proporción de la población de la zona. 
+
+Para ello integremos a la tabla precedente la proporción poblacional:
+
+```{r}
+h_y_m_comuna_corr_01 = merge( x = comunas_con_ing_exp, y = prop_pob, by = "zona", all.x = TRUE)
+```
+
+```{r}
+nrow(h_y_m_comuna_corr_01)
+```
+
+
+```{r}
+tablamadre <- head(h_y_m_comuna_corr_01,100)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+<br>
+
+Observemos el registro: 1101011001
+
+```{r}
+h_y_m_comuna_corr_01_1101011001 <- filter(h_y_m_comuna_corr_01, h_y_m_comuna_corr_01$zona == 1101011001)
+tablamadre <- head(h_y_m_comuna_corr_01_1101011001,100)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "100px")
+```
+
+<br>
+
+Hacemos la multiplicación que queda almacenada en la variable **multi_pob**:
+
+
+```{r}
+h_y_m_comuna_corr_01$multi_pob <- h_y_m_comuna_corr_01$promedio_i * h_y_m_comuna_corr_01$personas * h_y_m_comuna_corr_01$p_poblacional
+```
+
+```{r}
+tablamadre <- head(h_y_m_comuna_corr_01,100)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+<br>
+
+### 4.4 Obtener la frecuencia de los valores de la variable a nivel de zona (X).
+
+Éste dato lo tenemos en la columna Freq.x
+
+
+<br>
+
+### 4.5 Obtener la proporción de la variable respecto a la población total.
+
+Para ello dividimos la frecuencia de la variable entre la población total a nivel comunal. El resultado queda en la variable **p_variable** 
+
+```{r}
+h_y_m_comuna_corr_01$p_variable <- h_y_m_comuna_corr_01$Freq.x  / h_y_m_comuna_corr_01$personas
+```
+
+```{r}
+tablamadre <- head(h_y_m_comuna_corr_01,100)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+
+
+<br>
+
+### 4.6 Obtenemos los coeficientes de correlación (desde un análisis de regresión).
+
+Donde:
+
+$$ Y(dependiente) = ingreso\_expandido\_por\_zona (multi\_pob)$$
+
+$$ X(independiente) = porcentaje\_de\_poblacion\_respecto\_a\_la\_zona (p\_variable)  $$
+<br>
+
+#### 4.6.1 Diagrama de dispersión
+
+```{r}
+scatter.smooth(x=h_y_m_comuna_corr_01$p_variable, y=h_y_m_comuna_corr_01$multi_pob, main="p_variable ~ multi_pob") 
+```
+
+#### 4.6.2 Observación de outliers mediante diagrama de caja y bigotes.
+
+Cualquier punto que se encuentre fuera del rango  +/- 1.5 * IQR se considera un valor atípico donde, IQR (rango intercuartílico) se calcula como la distancia entre los valores del percentil 25 y el percentil 75 para esa variable.
+
+```{r}
+par(mfrow=c(1, 2))  # divide graph area in 2 columns
+boxplot(h_y_m_comuna_corr_01$p_variable, main="p_variable", sub=paste("Outlier rows: ", boxplot.stats(h_y_m_comuna_corr_01$p_variable)$out))  # box plot for 'speed'
+boxplot(h_y_m_comuna_corr_01$multi_pob, main="multi_pob", sub=paste("Outlier rows: ", boxplot.stats(h_y_m_comuna_corr_01$multi_pob)$out)) 
+```
+
+
+#### 4.6.3 Modelo lineal
+
+
+```{r}
+linearMod <- lm( multi_pob~p_variable , data=h_y_m_comuna_corr_01)  
+```
+
+```{r}
+summary(linearMod) 
+```
+
+<br>
+
+$$ Y = 3.179e08 + 8.328e10 \cdot X  $$
+<br>
+
+### 4.7 Aplicación la regresión a los valores de la variable a nivel de zona.
+<br>
+$$ Y = 3.179e08 + 8.328e10 \cdot p\_variable  $$
+Esta nueva variable se llamará: est_ing
+
+
+
+
+```{r}
+h_y_m_comuna_corr_01$est_ing <- 3.179e+08 + 8.328e+10* h_y_m_comuna_corr_01$p_variable
+```
+
+```{r}
+r3_100 <- h_y_m_comuna_corr_01[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+<br>
+
+
+
+### 4.8 Divido el valor estimado entre la población total de la zona para obtener el ingreso medio por zona
+<br>
+$$ Ingreso Medio/zona = est\_ing / (personas * p\_poblacional) $$
+<br>
+
+La nueva variable se llamará: ing_medio_zona
+
+<br>
+
+```{r}
+h_y_m_comuna_corr_01$ing_medio_zona <- h_y_m_comuna_corr_01$est_ing  /( h_y_m_comuna_corr_01$personas  * h_y_m_comuna_corr_01$p_poblacional)
+```
+
+
+```{r}
+
+r3_100 <- h_y_m_comuna_corr_01[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+
+```
+
+<br>
+<br>
+<br>
+<br>
+
+<hr style="height:1px;border-width:1;color:Red;background-color:Red">
+<br>
+
+## 5 Referencias
+
+https://rpubs.com/osoramirez/316691
+
+https://dataintelligencechile.shinyapps.io/casenfinal
+
+Manual_de_usuario_Censo_2017_16R.pdf\
+
+http://www.censo2017.cl/microdatos/
+
+Censo de Población y Vivienda\
+
+https://www.ine.cl/estadisticas/sociales/censos-de-poblacion-y-vivienda/poblacion-y-vivienda
+
+
+http://r-statistics.co/Linear-Regression.html
+
