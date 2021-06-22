@@ -6,7 +6,7 @@ author:
 subtitle: | 
   De ingresos sobre una categoría de respuesta 
 
-date: "Viernes 18-06-2021"
+date: "Martes 22-06-2021"
 
 abstract: |
   Expandiremos los ingresos promedios comunales obtenidos de la CASEN sobre la categoría de respuesta: "tejas o tejuelas de arcilla, metálicas, de cemento, de madera, asfálticas o plásticas" del campo P03B del CENSO de viviendas, que fue la categoría de respuesta que más alto correlaciona con los ingresos expandidos, ambos a nivel comunal.
@@ -231,12 +231,9 @@ nrow(comunas_con_ing_exp)
 
 
 <br>
-<br>
-<br>
-<br>
+
 
 <hr style="height:1px;border-width:1;color:Red;background-color:Red">
-<br>
 
 ## 4 Pasos según Notion
 
@@ -400,14 +397,11 @@ boxplot(h_y_m_comuna_corr_01$multi_pob, main="multi_pob", sub=paste("Outlier row
 ```
 
 
-#### 4.6.3 Modelo lineal
+## 5 Modelo lineal sobre **p_variable**
 
 
 ```{r}
-linearMod <- lm( multi_pob~p_variable , data=h_y_m_comuna_corr_01)  
-```
-
-```{r}
+linearMod <- lm( multi_pob~p_variable, data=h_y_m_comuna_corr_01)  
 summary(linearMod) 
 ```
 
@@ -428,20 +422,24 @@ ggplot(h_y_m_comuna_corr_01, aes(x = p_variable, y = multi_pob)) +
 $$ Y = 6.198^{08} + 1.865^{10} \cdot X  $$
 <br>
 
-### 4.7 Aplicación la regresión a los valores de la variable a nivel de zona.
+### 5.1 Aplicación la regresión a los valores de la variable a nivel de zona
+
 <br>
 $$ Y = 6.198^{08} + 1.865^{10} \cdot p\_variable  $$
 Esta nueva variable se llamará: est_ing
 
+```{r}
+modelo_lineal <- h_y_m_comuna_corr_01
+```
 
 
 
 ```{r}
-h_y_m_comuna_corr_01$est_ing <- 6.198e+08 + 1.865e+10* h_y_m_comuna_corr_01$p_variable
+modelo_lineal$est_ing <- 6.198e+08 + 1.865e+10* modelo_lineal$p_variable
 ```
 
 ```{r}
-r3_100 <- h_y_m_comuna_corr_01[c(1:100),]
+r3_100 <- modelo_lineal[c(1:100),]
 kbl(r3_100) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
@@ -451,9 +449,7 @@ kbl(r3_100) %>%
 
 <br>
 
-
-
-### 4.8 Divido el valor estimado entre la población total de la zona para obtener el ingreso medio por zona
+### 5.2 División del valor estimado entre la población total de la zona para obtener el ingreso medio por zona
 <br>
 $$ Ingreso Medio/zona = est\_ing / (personas * p\_poblacional) $$
 <br>
@@ -463,13 +459,13 @@ La nueva variable se llamará: ing_medio_zona
 <br>
 
 ```{r}
-h_y_m_comuna_corr_01$ing_medio_zona <- h_y_m_comuna_corr_01$est_ing  /( h_y_m_comuna_corr_01$personas  * h_y_m_comuna_corr_01$p_poblacional)
+modelo_lineal$ing_medio_zona <- modelo_lineal$est_ing  /( modelo_lineal$personas  * modelo_lineal$p_poblacional)
 ```
 
 
 ```{r}
 
-r3_100 <- h_y_m_comuna_corr_01[c(1:100),]
+r3_100 <- modelo_lineal[c(1:100),]
 kbl(r3_100) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
@@ -478,14 +474,141 @@ kbl(r3_100) %>%
 ```
 
 <br>
-<br>
-<br>
-<br>
 
 <hr style="height:1px;border-width:1;color:Red;background-color:Red">
+
+## 6 Modelos sobre **Freq.x**
+
+### 6.1 Modelo cuadrático
+
+```{r}
+linearMod <- lm( multi_pob~(Freq.x^2) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+
+
+### 6.2 Modelo cúbico
+
+```{r}
+linearMod <- lm( multi_pob~(Freq.x^3) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+
+### 6.3 Modelo logarítmico
+
+```{r}
+linearMod <- lm( multi_pob~log(Freq.x) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+
+### 6.4 Modelo exponencial
+
+Debemos reemplazar los NAs de los registros del campo Freq.x y lo hacemos con los valores promedio, generando una nueva columna llamada Freq.x_mean:.
+
+```{r}
+any(is.na(h_y_m_comuna_corr_01$multi_pob))
+```
+
+
+```{r}
+any(is.na(h_y_m_comuna_corr_01$Freq.x))
+```
+
+```{r}
+h_y_m_comuna_corr_01$multi_pob_without_na <- ifelse(is.na(h_y_m_comuna_corr_01$multi_pob),
+                                   mean(h_y_m_comuna_corr_01$multi_pob, na.rm = TRUE),
+                                   h_y_m_comuna_corr_01$multi_pob                 
+                                   )
+```
+
+```{r}
+any(is.na(h_y_m_comuna_corr_01$multi_pob_without_na))
+```
+
+Hay que investigar por qué no corre el modelo para el exponencial.
+
+```{r}
+# linearMod <- lm(multi_pob_without_na~exp(Freq.x) , data=h_y_m_comuna_corr_01)
+# summary(linearMod)
+```
+
+### 6.5 Modelo con raíz cuadrada (**mrc**)
+
+```{r}
+linearMod <- lm( multi_pob~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+
+
+
+### 6.6 Diagrama de dispersión sobre **mrc**
+
+Desplegamos una curva suavizada por loess en el diagrama de dispersión.
+
+```{r}
+scatter.smooth(x=sqrt(h_y_m_comuna_corr_01$Freq.x), y=h_y_m_comuna_corr_01$multi_pob, lpars = list(col = "red", lwd = 2, lty = 1), main="multi_pob ~ Freq.x")
+```
+
+### 6.7 Modelo **mrc**
+
+```{r}
+linearMod <- lm( multi_pob~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+
+### 6.8 Análisis de residuos
+
+```{r}
+par(mfrow = c (2,2))
+plot(linearMod)
+```
+
+### 6.9 Ecuación del modelo
+
 <br>
 
-## 5 Referencias
+$$ \hat Y = -136885689 + 83356602 \cdot \sqrt{X}  $$
+
+<br>
+
+### 6.10 Aplicación la regresión a los valores de la variable a nivel de zona
+
+Esta nueva variable se llamará: est_ing
+
+```{r}
+h_y_m_comuna_corr_01$est_ing <- -136885689 + 83356602*  sqrt(h_y_m_comuna_corr_01$Freq.x)
+r3_100 <- h_y_m_comuna_corr_01[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+<br>
+
+### 6.11 División del valor estimado entre la población total de la zona para obtener el ingreso medio por zona
+
+<br>
+
+$$ Ingreso Medio/zona = est\_ing / (personas * p\_poblacional) $$
+
+<br>
+
+```{r}
+h_y_m_comuna_corr_01$ing_medio_zona <- h_y_m_comuna_corr_01$est_ing  /( h_y_m_comuna_corr_01$personas  * h_y_m_comuna_corr_01$p_poblacional)
+
+r3_100 <- h_y_m_comuna_corr_01[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+<br>
+
+## 7 Referencias
 
 https://rpubs.com/osoramirez/316691
 

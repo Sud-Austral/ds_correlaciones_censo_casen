@@ -1,0 +1,416 @@
+---
+title: "Modelos sobre Casen-Censo"
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+  Regresión lineal 
+
+date: "Lunes 21-06-2021"
+
+abstract: |
+  En un  [trabajo anterior](https://rpubs.com/dataintelligence/expansion_viviendas_001), obtuvimos una tabla la que tiene dos campos sobre los cuales queremos aplicar un modelo de regresión lineal: multi_pob y p_variable. En éste Rpubs excluiremos NAs, outliers, aplicaremos el análisis de regresión y ensayaremos distintas fórmulas de modelos para poder elegir el apropiado.
+
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+```
+
+<br>
+
+## 0 Lectura de la tabla madre
+
+```{r}
+tabla_001 <- readRDS("tabla_001.rds")
+r3_100 <- tabla_001[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+<br>
+```{r}
+nrow(tabla_001)
+```
+
+<br>
+```{r}
+summary(tabla_001)
+```
+
+
+
+## 1 NAs y outliers
+
+### 1.1 Existencia y tratamiento de NAs
+
+Descubramos si los campos multi_pob y p_variable poseen valores NA
+
+```{r}
+any(is.na(tabla_001$multi_pob))
+```
+
+```{r}
+any(is.na(tabla_001$p_variable))
+```
+
+Reemplazaremos los valores NAs con los promedios de cada campo, generando dos nuevas columnas: 
+
+```{r}
+tabla_001$multi_pob_mean <- ifelse(is.na(tabla_001$multi_pob),
+                                   mean(tabla_001$multi_pob, na.rm = TRUE),
+                                   tabla_001$multi_pob                             
+                                   )
+
+tabla_001$p_variable_mean <- ifelse(is.na(tabla_001$p_variable),
+                                   mean(tabla_001$p_variable, na.rm = TRUE),
+                                   tabla_001$p_variable                             
+                                   )
+```
+
+Verificamos:
+
+```{r}
+any(is.na(tabla_001$multi_pob_mean))
+```
+
+```{r}
+any(is.na(tabla_001$p_variable_mean))
+```
+
+
+### 1.2  Outliers
+
+A veces los outliers pueden distorsionar mucho un modelo. La manera más fácil de identificarlos es por medio del análisis de diagramas de caja y bigotes. 
+
+Observemos cómo quedaron nuestros nuevos campos:
+
+```{r}
+r3_100 <- tabla_001[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+<br>
+
+
+```{r}
+par(mfrow = c(1,2))
+boxplot(tabla_001$multi_pob_mean,  col="#FF6B00" , xlab="bottom & left box",
+        main = "multi_pob_mean",
+        boxwex = 0.9)
+boxplot(tabla_001$p_variable_mean , col="#2398AB" , xlab="bottom & left box",
+        main = "p_variable_mean",
+        boxwex = 0.9)
+```
+
+
+
+La línea central es la mediana y los extremos de la caja el primer y el tercer cuartil (rango intercuartílico), en el que cae el 50% de las observaciones.
+
+
+### 1.3 Transformaciones sobre outliers
+
+Podemos enmascarar outliers con transformaciones. Por ejemplo, podemos reemplazar los valores que estén debajo del quinto percentil y los que estén por sobre el 95 avo percentil con los valores medios, tal como lo hicimos previamente sobre los NAs o con las medianas.
+
+#### 1.3.1 Reemplazo de outliers con promedios:
+
+sobre **multi_pob_mean**:
+
+```{r}
+outliers <- function(x, removeNA = TRUE){
+      quantiles <- quantile(x, c(0.05, 0.95), na.rm = removeNA)
+      x[x < quantiles[1]] <- mean(x, na.rm = removeNA)
+      x[x > quantiles[2]] <- mean(x, na.rm = removeNA)
+      x
+}
+
+outliers_data <- outliers(tabla_001$multi_pob_mean)
+
+par(mfrow = c(1,2))
+boxplot(tabla_001$multi_pob,   col="#FF6B00" , xlab="multi_pob_mean", main = "con outliers")
+boxplot(outliers_data,  col="#FF6B00" , xlab="multi_pob_mean", main = "sin outliers")
+```
+
+#### 1.3.2 Reemplazo de outliers con medianas:
+
+sobre **multi_pob_mean**:
+
+```{r}
+outliers <- function(x, removeNA = TRUE){
+      quantiles <- quantile(x, c(0.05, 0.95), na.rm = removeNA)
+      x[x < quantiles[1]] <- median(x, na.rm = removeNA)
+      x[x > quantiles[2]] <- median(x, na.rm = removeNA)
+      x
+}
+
+outliers_data <- outliers(tabla_001$multi_pob_mean)
+
+par(mfrow = c(1,2))
+boxplot(tabla_001$multi_pob_mean,   col="#FF6B00" , xlab="multi_pob_mean medianas", main = "con outliers")
+boxplot(outliers_data,  col="#FF6B00" , xlab="multi_pob_mean medianas", main = "sin outliers")
+```
+
+#### 1.3.3 Sustitución de outliers
+
+Sustituímos los valores que están fuera de los bigotes con los valores del percentil 5 y el 95 respectivamente.
+
+sobre **multi_pob_mean**:
+
+```{r}
+replace_outliers <- function(x, removeNA = TRUE){
+     qrts <- quantile(x, probs = c(0.25, 0.75), na.rm =removeNA) 
+      caps <- quantile(x, probs = c(0.05, 0.95), na.rm =removeNA)  
+      iqr <- qrts[2] - qrts[1]
+      h <- 1.5*iqr
+      x[x < qrts[1] - h] <- caps[1]
+      x[x > qrts[2] + h] <- caps[2]
+      x
+}
+```
+
+```{r}
+multi_pob_capped <- replace_outliers(tabla_001$multi_pob_mean)
+par(mfrow = c(1,2))
+boxplot(tabla_001$multi_pob_mean,    col="#FF6B00" , xlab="multi_pob_mean", main = "con outliers")
+boxplot(multi_pob_capped, col="#FF6B00" , xlab="multi_pob_mean", main = "sin outliers")
+```
+<br>
+
+```{r}
+length(multi_pob_capped)
+```
+
+
+
+Vemos que resulta mucho mejor ésta última técnica, por lo que lo aplicamos para los campos multi_pob_mean y p_variable_mean.
+
+```{r}
+p_variable_capped_multi_pob_mean <- replace_outliers(tabla_001$multi_pob_mean)
+p_variable_capped_p_variable_mean <- replace_outliers(tabla_001$p_variable_mean)
+```
+
+
+
+
+
+```{r}
+par(mfrow = c(1,2))
+
+boxplot(p_variable_capped_multi_pob_mean, col="#FF6B00" , xlab="multi_pob_mean", main = "multi_pob_mean sin outliers")
+
+boxplot(p_variable_capped_p_variable_mean, col="#2398AB" , xlab="p_variable_mean", main = "p_variable_mean sin outliers")
+
+
+
+```
+
+## 2 Histogramas y densidades
+
+Histograma y densidad para multi_pob_mean sin outliers
+
+```{r}
+par(mfrow = c(1,2))
+hist(p_variable_capped_multi_pob_mean, col="#FF6B00", main="Histograma")
+plot(density(p_variable_capped_multi_pob_mean), main="Densidad", col="red")
+```
+
+Histograma y densidad para p_variable_mean sin outliers
+
+```{r}
+par(mfrow = c(1,2))
+hist(p_variable_capped_p_variable_mean, col="#2398AB" ,main="Histograma")
+plot(density(p_variable_capped_p_variable_mean), main="Densidad", col="red")
+```
+
+
+
+
+
+
+
+
+## 3 Aplicación al dataframe
+
+```{r}
+x <- quantile(tabla_001$multi_pob_mean,c(0.05,0.95))
+data_clean <- tabla_001[tabla_001$multi_pob_mean >= x[1] & tabla_001$multi_pob_mean <= x[2],]
+```
+
+
+```{r}
+y <- quantile(data_clean$p_variable_mean,c(0.05,0.95))
+data_clean <- data_clean[data_clean$p_variable_mean >= y[1] & data_clean$p_variable_mean <= y[2],]
+```
+
+
+```{r}
+head(data_clean,10) 
+```
+
+
+
+
+
+
+
+
+## 4 Modelo lineal
+
+```{r}
+scatter.smooth(x=data_clean$p_variable_mean, y=data_clean$multi_pob_mean, main="p_variable ~ multi_pob") 
+```
+
+
+
+```{r, warning = FALSE}
+ggplot(data_clean, aes(x = p_variable_mean, y = multi_pob_mean)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+```
+
+
+
+```{r}
+linearMod <- lm( multi_pob_mean~p_variable_mean , data=data_clean)  
+summary(linearMod) 
+```
+
+
+
+### 4.1 Análisis del $R^2$ (coeficiente de determinación)
+
+El $R^2$ es una medida estadística de qué tan cerca están los datos de la línea de regresión ajustada. 
+
+Es el porcentaje de la variación en la variable de respuesta que es explicado por un modelo lineal. Es decir:
+
+$$ R^2 =  \frac{Variación\ explicada}{variación\ total} $$
+
+Cuanto mayor sea la varianza explicada por el modelo de regresión, más cerca estarán los puntos de los datos de la línea de regresión ajustada.
+
+Un valor bajo de $R^2$ no es inherentemente malo. Si el valor del $R^2$ es bajo pero se tienen predictores estadísticamente significativos, aún se puede obtener conclusiones importantes acerca de la asociación entre los cambios en los valores de los predictores y los cambios en el valor de respuesta. Independientemente del $R^2$, los coeficientes significativos aún representan el cambio medio en la respuesta para una unidad de cambio en el predictor mientras se mantienen constantes los otros predictores del modelo. 
+
+
+### 4.2 Análisis de los residuos
+
+
+Los residuos son los errores que se cometen en la estimación.
+
+```{r}
+boxplot(linearMod$residuals)
+```
+```{r}
+par(mfrow = c (2,2))
+plot(linearMod)
+```
+
+#### 4.2.1 Residuos versus valores ajustados
+
+Corroboramos que los residuos sigan un patrón lineal. La línea es recta y horizontal, por lo que **deducimos que la relación es efectivamente lineal**. Se busca verificar la linealidad entre las variables de entrada y salida. Un modelo lineal nunca podrá capturar una relación no lineal.
+
+#### 4.2.2 Q-Q
+
+Aquí verificamos que los errores del modelo estén normalmente distribuídos. Parece cumplirse pues los valores están muy próximos a la línea recta punteada.
+
+#### 4.2.3 Raíz cuadrada de los residuos ajustados versus valores ajustados
+
+Verificamos las condiciones de homocedasticidad, es decir que todos los residuos posean la misma varianza, que es uno de los supuestos al realizar un análisis de regresión. El supuesto parace cumplirse pues la línea roja no parece seguir ningún patrón.
+
+#### 4.2.4 Residuos versus apalancamiento
+
+Acá podemos identificar los outliers influyentes en el análisis de regresión, que pueden sesgar el modelo. Parece haber dos valores influyentes (caen fuera de la distancia de Cook).
+
+
+<br>
+
+## 5 Fórmulas alternativas del modelo lineal 
+
+### 5.1 Función cuadrática
+
+$$ \hat Y = \beta_0 + \beta_1 X^2 $$
+
+```{r}
+linearMod <- lm( multi_pob_mean~p_variable_mean^2 , data=data_clean)  
+summary(linearMod) 
+```
+
+### 5.2 Función logarítmica
+
+$$ \hat Y = \beta_0 + \beta_1 logX $$
+
+```{r}
+linearMod <- lm( multi_pob_mean~log(p_variable_mean) , data=data_clean)
+summary(linearMod) 
+```
+
+### 5.3 Función cúbica
+
+$$ \hat Y = \beta_0 + \beta_1 X^3 $$
+
+```{r}
+linearMod <- lm( multi_pob_mean~p_variable_mean^3 , data=data_clean)  
+summary(linearMod) 
+```
+
+<br>
+
+Vemos que el ajuste logarítmico nos ofrece el mayor $R^2$.
+
+<br>
+<br>
+
+## 5 Referencias
+
+https://rpubs.com/osoramirez/316691
+
+https://dataintelligencechile.shinyapps.io/casenfinal
+
+Manual_de_usuario_Censo_2017_16R.pdf\
+
+http://www.censo2017.cl/microdatos/
+
+Censo de Población y Vivienda\
+
+https://www.ine.cl/estadisticas/sociales/censos-de-poblacion-y-vivienda/poblacion-y-vivienda
+
+http://r-statistics.co/Linear-Regression.html
+
+https://blog.minitab.com/es/analisis-de-regresion-como-puedo-interpretar-el-r-cuadrado-y-evaluar-la-bondad-de-ajuste
+
