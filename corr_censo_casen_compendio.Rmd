@@ -1,5 +1,5 @@
 ---
-title: Expansión de la CASEN sobre el CENSO compendio
+title: Expansión de la CASEN sobre el CENSO compendio 2017
 author:
 - name: VE-CC-AJ
   affiliation: DataIntelligence
@@ -305,6 +305,10 @@ $$ \hat Y = e^{16.056127+0.865867 \cdot ln{X}} $$
 
 ## Unión de tablas
 
+```{r}
+# casen_censo_region_01.rds
+# casen_censo_region_16.rds
+```
 
 
 
