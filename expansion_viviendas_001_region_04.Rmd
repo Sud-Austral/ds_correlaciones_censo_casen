@@ -1,5 +1,5 @@
 ---
-title: Expansión de la CASEN sobre el CENSO (Región 01)
+title: Expansión de la CASEN sobre el CENSO (Región 04)
 author:
 - name: VE-CC-AJ
   affiliation: DataIntelligence
@@ -91,7 +91,7 @@ regiones
 Hagamos un subset con la 1:
 
 ```{r}
-tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 1) 
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 4) 
 ```
 
 ### 1.2 Cálculo de frecuencias
@@ -421,29 +421,29 @@ summary(linearMod)
 ```
 
 
-## 9 Modelo raíz-raíz (**r-r**)
+## 9 Modelo raíz-log (**r-log**)
 
-Es éste el modelo que nos entrega el mayor coeficiente de determinación de todos (0.9243).
+Es éste el modelo que nos entrega el mayor coeficiente de determinación de todos (0.8117).
 
 
-### 9.1 Diagrama de dispersión sobre **r-r**
+### 9.1 Diagrama de dispersión sobre **r-log**
 
 Desplegamos una curva suavizada por loess en el diagrama de dispersión.
 
 ```{r}
-scatter.smooth(x=sqrt(h_y_m_comuna_corr_01$Freq.x), y=sqrt(h_y_m_comuna_corr_01$multi_pob), lpars = list(col = "red", lwd = 2, lty = 1), main="multi_pob ~ Freq.x")
+scatter.smooth(x=sqrt(h_y_m_comuna_corr_01$Freq.x), y=log(h_y_m_comuna_corr_01$multi_pob), lpars = list(col = "red", lwd = 2, lty = 1), main="multi_pob ~ Freq.x")
 ```
 
-### 9.2 Modelo **r-r**
+### 9.2 Modelo **r-log**
 
-Observemos nuevamente el resultado sobre **r-r**.
+Observemos nuevamente el resultado sobre **r-log**.
 
 ```{r}
-linearMod <- lm(sqrt( multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)
+linearMod <- lm(sqrt( multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)
 summary(linearMod) 
 ```
 ```{r, warning = FALSE, message = FALSE}
-ggplot(h_y_m_comuna_corr_01, aes(x = sqrt(Freq.x) , y = sqrt(multi_pob))) + 
+ggplot(h_y_m_comuna_corr_01, aes(x = sqrt(Freq.x) , y = log(multi_pob))) + 
   geom_point() +
   stat_smooth(method = "lm", col = "red")
 ```
@@ -462,7 +462,7 @@ plot(linearMod)
 
 <br>
 
-$$ \hat Y = 1422.21^2 + 2  \cdot 1422.21 \cdot 1960.87 \sqrt{X} + 1960.87 ^2 \cdot X $$
+$$ \hat Y = 338.14^2 + 2  \cdot 338.14 \cdot 5005.37 \cdot ln{X} + 5005.37 ^2 \cdot ln ^2 X $$
 
 <br>
 
@@ -471,8 +471,11 @@ $$ \hat Y = 1422.21^2 + 2  \cdot 1422.21 \cdot 1960.87 \sqrt{X} + 1960.87 ^2 \cd
 Esta nueva variable se llamará: est_ing
 
 ```{r}
-h_y_m_comuna_corr_01$est_ing <- 1422.21^2 + 1422.21* 1960.87* sqrt(h_y_m_comuna_corr_01$Freq.x)+1960.87 ^2*h_y_m_comuna_corr_01$Freq.x
+h_y_m_comuna_corr_01$est_ing <- 338.14^2 + 2  * 338.14 * 5005.37 * log(h_y_m_comuna_corr_01$Freq.x)+ 5005.37 ^2 * {log(h_y_m_comuna_corr_01$Freq.x)}^2
+```
 
+
+```{r}
 r3_100 <- h_y_m_comuna_corr_01[c(1:100),]
 kbl(r3_100) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
@@ -506,7 +509,7 @@ kbl(r3_100) %>%
 Guardamos:
 
 ```{r}
-saveRDS(h_y_m_comuna_corr_01, "casen_censo_region_01.rds")
+saveRDS(h_y_m_comuna_corr_01, "casen_censo_region_04.rds")
 ```
 
 
