@@ -1,0 +1,92 @@
+---
+title: Expansión de la CASEN sobre el CENSO (Región 02)
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+  De ingresos sobre una categoría de respuesta 
+
+date: "Miércoles 23-06-2021"
+
+abstract: |
+  Expandiremos los ingresos promedios comunales obtenidos de la CASEN sobre la categoría de respuesta: "tejas o tejuelas de arcilla, metálicas, de cemento, de madera, asfálticas o plásticas" del campo P03B del CENSO de viviendas, que fue la categoría de respuesta que más alto correlaciona con los ingresos expandidos (obtenidos de la multiplicación del ingreso promedio y los habitantes), ambos a nivel comunal.
+  
+  Haremos el análisis sobre la región 01.
+  
+  Ensayaremos diferentes modelos dentro del análisis de regresión cuya variable independiente será: "frecuencia de población que posee la variable Censal respecto a la zona" y la dependiente: "ingreso expandido por zona"
+  
+  Lo anterior para elegir el que posea el mayor coeficiente de determinación y así contruir una tabla de valores predichos.
+  
+
+
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library(ggplot2)
+```
+
+El problema de los códigos variables de la Casen entre el 2006 y el 2017.
+
+Análisis para el año 2006 (Casen 2006)
+
+1 Tenemos un diccionario que les asigna códigos comunales a las comunas del 2006, 2009 y 2011 de acuerdo a los Códigos Únicos Territoriales definidos en el Decreto Exento N° 1.115, del Ministerio del Interior y Seguridad Pública, con Fecha edición: Miércoles, Julio 22, 2020. Los códigos entre los años 2013, 2015 y 2017 son constantes.
+
+2 Identificamos las comunas que existen en el 2017 pero que **no** en el 2006.
+
+3 Una vez corregido el código (actualizado al 2017), actualizamos las regiones a las que pertenece cada comuna, asignándoles las que les corresponderían al 2017.
+
+```{r}
+casen_2006 <- readRDS("casen_2006_c.rds")
+head(casen_2006)
+```
+
+```{r}
+unique(casen_2006$R)
+```
+
+
+
+
+
+
+
+
+
+
+
+

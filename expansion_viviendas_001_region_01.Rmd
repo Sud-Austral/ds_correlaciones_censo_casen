@@ -67,7 +67,7 @@ Necesitamos calcular las frecuencias a nivel censal de las respuestas correspond
 
 ### 1.1 Lectura y filtrado de la tabla censal de viviendas
 
-Leemos la tabla Casen 2017 de viviendas que ya tiene integrada la clave zonal:
+Leemos la tabla Censo 2017 de viviendas que ya tiene integrada la clave zonal:
 
 ```{r}
 tabla_con_clave <- readRDS("censo_viviendas_con_clave_17.rds")
@@ -97,10 +97,24 @@ tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 1)
 ### 1.2 Cálculo de frecuencias
 
 ```{r}
-tabla_con_clave_f <- tabla_con_clave[,-c(1,2,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20),drop=FALSE] 
-names(tabla_con_clave_f)[2] <- "Tipo de techo" 
+tabla_con_clave_f <- tabla_con_clave[,-c(1,2,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20),drop=FALSE]
+tabla_con_clave_f
+```
+
+
+```{r}
+names(tabla_con_clave_f)[2] <- "Tipo de techo"
+```
+
+
+```{r}
 # Ahora filtramos por Tipo de techo = 1.
 tabla_con_clave_ff <- filter(tabla_con_clave_f, tabla_con_clave_f$`Tipo de techo` == 1)
+tabla_con_clave_ff
+```
+
+
+```{r}
 # Determinamos las frecuencias por zona:
 b <- tabla_con_clave_ff$clave
 c <- tabla_con_clave_ff$`Tipo de techo`
@@ -110,6 +124,7 @@ tabla <- as.data.frame(cross_tab)
 d <-tabla[!(tabla$Freq == 0),]
 names(d)[1] <- "zona" 
 d$anio <- "2017"
+d
 ```
 
 
@@ -303,7 +318,7 @@ $$ Y(dependiente) = ingreso \ expandido \ por \ zona \ (multi\_pob)$$
 $$ X(independiente) = frecuencia \ de \ población \ que \ posee \ la \ variable \ Censal \ respecto \ a \ la \ zona \ (Freq.x)  $$
 <br>
 
-### 7.1 Diagrama de dispersión
+### 7.1 Diagrama de dispersión loess
 
 ```{r}
 scatter.smooth(x=h_y_m_comuna_corr_01$Freq.x, y=h_y_m_comuna_corr_01$multi_pob, main="multi_pob ~ Freq.x",
