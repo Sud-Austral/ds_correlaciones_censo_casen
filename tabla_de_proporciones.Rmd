@@ -1,0 +1,413 @@
+---
+title: Tabla de proporciones
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+date: "Miércoles 16-06-2021"
+
+abstract: |
+  Construímos una tabla de proporciones de zonas en relación a las comunas e integramos categorías censales (sexo) al ingreso promedio comunal. Concluímos que no podemos expandir el promedio del ingreso a nivel comunal por categorías de población. En el siguiente Rpubs trabajaremos con categorías relacionadas a la calidad de la vivienda.
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+```
+
+## 1 Tabla de proporciones 
+
+Leemos la tabla Casen 2017 de personas que ya tiene integrada la clave:
+
+```{r}
+tabla_con_clave <- readRDS("censo_personas_con_clave_17.rds")
+```
+
+```{r}
+x <- tabla_con_clave
+r3_100 <- x[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+Obtenemos las frecuencias de personas por manzana, por comuna:
+
+```{r}
+r3 <-table(x$COMUNA, as.numeric(x$clave))
+r3 <- as.data.frame(r3)
+
+r3 <- r3[!(r3$Freq == 0),]
+r3_100 <- r3[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+```{r}
+saveRDS(r3, "frec_man_com.rds")
+frec_man_com <- readRDS("frec_man_com.rds")
+```
+<br>
+Calculamos una columna de proporciones para la comuna 1107:
+
+```{r}
+frec_man_com_1107 <- filter(frec_man_com, frec_man_com$Var1 == 1107)
+frec_man_com_1107$p <- frec_man_com_1107$Freq*100/sum(frec_man_com_1107$Freq)
+```
+
+```{r}
+kbl(frec_man_com_1107) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+Calculamos las proporciones ahora para todas las comunas:
+
+```{r}
+codigos_com <- unique(frec_man_com$Var1)
+frec_man_com_parcial_total <- data.frame()
+
+for(i in codigos_com){
+  # debemos dividir por 100 para obtener las proporciones y no los porcentajes:
+  frec_man_com_parcial <- filter(frec_man_com, frec_man_com$Var1 == i)
+  frec_man_com_parcial$p <- frec_man_com_parcial$Freq*100/sum(frec_man_com_parcial$Freq)/100
+  frec_man_com_parcial_total <- rbind(frec_man_com_parcial_total,frec_man_com_parcial)
+}
+```
+<br>
+Observemos los primeros 100 registros:
+
+```{r}
+r3_100 <- frec_man_com_parcial_total[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+Verifiquemos filtrando para la comuna 1107:
+
+```{r}
+frec_man_com_parcial_total_1107 <- filter(frec_man_com_parcial_total,frec_man_com_parcial_total$Var1 == 1107)
+kbl(frec_man_com_parcial_total_1107) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+
+Hay que agregar un cero a los códigos de 4 dígitos:
+
+```{r}
+# recogemos el campo Comuna:
+codigos <- frec_man_com_parcial_total$Var1
+# construimos una secuencia llamada rango del 1 al total de filas del dataset:
+rango <- seq(1:nrow(frec_man_com_parcial_total))
+# Creamos un string que agrega un cero a todos los registros:
+cadena <- paste("0",codigos[rango], sep = "")
+
+# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser siempre 5 agregandole un cero al inicio de los que tienen 4.
+# Para ello extraemos un substring de la cadena sobre todas las filas (rangos) comenzando desde el primero o el segundo y llegando siempre al 6.
+
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(frec_man_com_parcial_total,cadena)
+
+```
+<br>
+Eliminamos columnas y renombramos:
+
+```{r}
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+names(comuna_corr)[4] <- "código" 
+# comuna_corr
+```
+
+<br>
+Veamos los 100 primeros registros:
+
+```{r}
+r3_100 <- comuna_corr[c(1:100),]
+
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+```{r}
+saveRDS(comuna_corr, "tabla_de_prop_pob.rds")
+```
+
+
+
+
+<br>
+<br>
+<hr style="height:1px;border-width:1;color:Gray;background-color:Gray">
+
+## 2 Expansión al nivel zonal 
+
+Leamos nuestra tabla que contiene integrados los ingresos expandidos y las frecuencias de hombres y mujeres por comuna:
+
+```{r}
+h_y_m_2017_censo <- readRDS("h_y_m_2017_censo.rds")
+r3_100 <- h_y_m_2017_censo[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+Hacemos la unión por el campo código con la tabla precedente de cantidad de personas por zona:
+
+```{r}
+h_y_m_comuna_corr = merge( x = comuna_corr, y = h_y_m_2017_censo, by = "código", all.x = TRUE)
+# Renombremos columnas y quitamos las irrelevantes:
+names(h_y_m_comuna_corr)[2] <- "zona"
+names(h_y_m_comuna_corr)[3] <- "hbtes_por_zona"
+names(h_y_m_comuna_corr)[6] <- "anio"
+h_y_m_comuna_corr_f <- h_y_m_comuna_corr[,-c(6,11),drop=FALSE]
+```
+
+<br>
+
+```{r}
+r3_100 <- h_y_m_comuna_corr_f[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+<br>
+
+
+
+
+## 3 Ingresos expandidos por zona y el promedio de los ingresos por zona:
+
+Determinamos los ingresos expandidos por zona y el promedio de los ingresos por zona de acuerdo a las siguientes ecuaciones:
+
+$$ i\_e\_por\_zona = i\_e * p  $$
+
+$$ i\_promedio\_por\_zona = \dfrac{i\_e\_por\_zona}  {hbtes\_por\_zona}  $$
+
+<br>
+
+
+```{r}
+h_y_m_comuna_corr_f$i_e_por_zona <- h_y_m_comuna_corr_f$Ingresos_expandidos*h_y_m_comuna_corr_f$p
+
+h_y_m_comuna_corr_f$i_por_zona_prom <- h_y_m_comuna_corr_f$i_e_por_zona/h_y_m_comuna_corr_f$hbtes_por_zona
+```
+
+
+
+```{r}
+head(h_y_m_comuna_corr_f,5)
+```
+
+
+Queremos obtener el ingreso promedio de los hombres por zona.
+
+Entonces debemos calcular la p pero de los hombres y dividir por los hbtes_por_zona hombres:
+
+
+Cálculo de p de hombres y mujeres:
+
+```{r}
+h_y_m_comuna_corr_f$p_h <- h_y_m_comuna_corr_f$Hombres *  h_y_m_comuna_corr_f$p/(h_y_m_comuna_corr_f$Hombres  + h_y_m_comuna_corr_f$Mujeres)
+
+h_y_m_comuna_corr_f$p_m <- h_y_m_comuna_corr_f$p - h_y_m_comuna_corr_f$p_h
+```
+
+```{r}
+head(h_y_m_comuna_corr_f,5)
+```
+
+Calculo de hbtes_por_zona hombres y mujeres:
+
+```{r, warning = FALSE}
+h_y_m_comuna_corr_f$hbtes_por_zona_h <- h_y_m_comuna_corr_f$Hombres*h_y_m_comuna_corr_f$hbtes_por_zona/(h_y_m_comuna_corr_f$Hombres+h_y_m_comuna_corr_f$Mujeres)
+
+h_y_m_comuna_corr_f$hbtes_por_zona_m <- h_y_m_comuna_corr_f$Mujeres*h_y_m_comuna_corr_f$hbtes_por_zona/(h_y_m_comuna_corr_f$Hombres+h_y_m_comuna_corr_f$Mujeres)
+```
+
+
+```{r}
+head(h_y_m_comuna_corr_f,5)
+```
+
+<br>
+Cálculo del ingreso promedio de los hombres a nivel zonal:
+
+
+```{r}
+# multiplicamos los ingresos expandidos por la proporcion de hombres a nivel zonal:
+h_y_m_comuna_corr_f$i_e_por_zona_h <- h_y_m_comuna_corr_f$Ingresos_expandidos*h_y_m_comuna_corr_f$p_h
+# multiplicamos los ingresos expandidos por la proporcion de mujeres a nivel zonal:
+h_y_m_comuna_corr_f$i_e_por_zona_m <- h_y_m_comuna_corr_f$Ingresos_expandidos*h_y_m_comuna_corr_f$p_m
+# La multiplicacion de los ingresos expandidos por la proporcion de hombres a nivel zonal lo dividimos por la cantidad de hombres a nivel zonal:
+h_y_m_comuna_corr_f$i_por_zona_prom_h <- h_y_m_comuna_corr_f$i_e_por_zona_h/h_y_m_comuna_corr_f$hbtes_por_zona_h
+```
+
+
+```{r}
+r3_100 <- h_y_m_comuna_corr_f[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+
+## 4 Conclusiones
+
+El ingreso promedio por zona de los hombres (i_por_zona_prom_h) resulta ser el mismo siempre, por lo que no podemos expandir el promedio del ingreso a nivel comunal por categorías de población, en éste caso, sexo.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Calculamos una nueva columna, que multiplica la frecuencia de hombres por comuna, la proporción a nivel de zona y los ingresos expandidos a nivel de comuna y divide por la cantidad de personas que viven en la comuna. -->
+
+<!-- ```{r} -->
+<!-- h_y_m_comuna_corr$multi <- h_y_m_comuna_corr$Hombres*h_y_m_comuna_corr$p*h_y_m_comuna_corr$Ingresos_expandidos/h_y_m_comuna_corr$personas -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- r3_100 <- h_y_m_comuna_corr[c(1:100),] -->
+
+<!-- kbl(r3_100) %>% -->
+<!--   kable_styling(bootstrap_options = c("striped", "hover")) %>% -->
+<!--   kable_paper() %>% -->
+<!--   scroll_box(width = "100%", height = "300px") -->
+<!-- ``` -->
+
+<!-- ## 3 Cálculo del promedio de la columna multi -->
+
+<!-- Vamos a calcular el promedio de nuestro campo calculado multi, pues debe dar un valor aproximado al ingreso promedio comunal. -->
+
+<!-- ```{r} -->
+
+<!-- head(h_y_m_comuna_corr,5) -->
+<!-- ``` -->
+
+<!-- Calculamos el promedio de multi para la comuna 01101: -->
+
+<!-- ```{r} -->
+<!-- h_y_m_comuna_corr_01101 <- filter(h_y_m_comuna_corr, h_y_m_comuna_corr$código == "01101") -->
+<!-- head(h_y_m_comuna_corr_01101,5) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- library(dplyr) -->
+<!-- h_y_m_comuna_corr_01101 %>% -->
+<!--   group_by(código) %>% -->
+<!--   summarise_at(vars(multi), list(name = mean)) -->
+<!-- ``` -->
+
+<!-- <br> -->
+<!-- Obtengamos el promedio para todas las comunas: -->
+
+<!-- ```{r} -->
+<!-- codigos_com_2 <- unique(h_y_m_comuna_corr$código) -->
+<!-- frec_man_com_parcial_total_2 <- data.frame() -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- n <-  h_y_m_comuna_corr %>% group_by(código) %>% summarise_at(vars(multi), list(name = mean)) -->
+<!-- names(n)[2] <- "Ingreso_promedio" -->
+<!-- kbl(n) %>% -->
+<!--   kable_styling(bootstrap_options = c("striped", "hover")) %>% -->
+<!--   kable_paper() %>% -->
+<!--   scroll_box(width = "70%", height = "300px") -->
+<!-- ``` -->
+
+<br>
+
+
+
+
+
+
+
+
+
+## 5 Referencias
+
+https://rpubs.com/osoramirez/316691
+
+https://dataintelligencechile.shinyapps.io/casenfinal
+
+Manual_de_usuario_Censo_2017_16R.pdf\
+
+http://www.censo2017.cl/microdatos/
+
+Censo de Población y Vivienda\
+
+https://www.ine.cl/estadisticas/sociales/censos-de-poblacion-y-vivienda/poblacion-y-vivienda
+
+
+
+
