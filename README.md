@@ -1,3 +1,3 @@
 # ds_correlaciones_censo_casen
 
-![title](Images/example.png)
+![title](009-polynomial-and-spline-regression-scatter-plot-1.png)
