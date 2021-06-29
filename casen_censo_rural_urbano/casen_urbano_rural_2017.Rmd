@@ -273,11 +273,11 @@ saveRDS(df_2017_2, "ingresos_expandidos_17_urbano_nacional.rds")
 
 Leemos los datos del censo **viviendas** 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
 
-<span style="color:red">Debemos filtrar la tabla Censal a nivel rural, ésto es, AREA = 2 </span>
+<span style="color:red">Debemos filtrar la tabla Censal a nivel urbano, ésto es, AREA = 1 </span>
 
 ```{r, warning = FALSE}
 tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
-tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
 ```
 
 
@@ -333,7 +333,7 @@ kbl(tablamadre) %>%
 ```
 
 <br>
-Hacemos la unión de las frecuencias con los ingresos promedio comunales expandidos a nivel rural:
+Hacemos la unión de las frecuencias con los ingresos promedio comunales expandidos a nivel urbano:
 
 ```{r}
 ingresos_expandidos_2017 <- readRDS("ingresos_expandidos_17_urbano_nacional.rds")
