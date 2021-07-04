@@ -1,0 +1,93 @@
+---
+title: El Modelo de Regresión Lineal Simple
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+date: "Miércoles 30-06-2021"
+
+abstract: |
+  Desarrollamos los fundamentos teóricos del análisis de regresión lineal
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+```
+
+# 1 Formulación del modelo RLS
+
+El modelo de Regresi¶on lineal Simple de y sobre x se formula según:
+
+$$
+y = \beta_0 + \beta_1 \cdot x + \epsilon
+$$
+
+
+
+
+
+de forma que, para un valor dado de x = x, ² representa una desviaci¶on aleatoria
+de la respuesta y sobre el valor esperado seg¶un la recta de regresi¶on:
+E(yjx = x) = ¯0 + ¯1x: (5.2)
+Los coe¯cientes de la regresi¶on, esto es, los par¶ametros que estimaremos para
+ajustar el modelo RLS son:
+¯0.- la interceptaci¶on de la recta, esto es, la altura de la recta cuando x = 0.
+¯1.- la pendiente de la recta, que re°eja cu¶anto var¶³a la respuesta media E(y)
+cuando pasamos de observar x = x a x = x + 1.
+Dada una muestra de valores observados f(xi; yi)gn i=1, el modelo (5.1) implica
+que todas las observaciones responden a:
+yi = ¯0 + ¯1xi + ²i; i = 1; : : : ; n;
+donde ²i son errores aleatorios e incorrelados, con media cero y varianza cons-
+tante ¾2, caracter¶³sticas que identi¯can las hip¶otesis b¶asicas del modelo RLS, que
+formulamos con m¶as detalle a continuaci¶on sobre los errores aleatorios ²i:
+Incorrelaci¶on: Corr(²i; ²j) = 0. Signi¯ca que las observaciones de la respuesta
+y, y1; y2; : : : ; yn est¶an incorreladas entre s¶³, esto es, los valores de unas no
+afectan a los de otras.
+Media cero: E(²i) = 0. Lo que implica que la respuesta esperada seg¶un el mo-
+delo RLS depende linealmente de los coe¯cientes de regresi¶on ¯0 y ¯1, al
+tener como expresi¶on (5.2).
+Varianza constante: V ar(²i) = ¾2. Lo que signi¯ca que las observaciones
+fyi; i = 1; : : : ; ng provienen de una misma poblaci¶on cuya variabilidad res-
+pecto de sus medias f¯0 + ¯1xi; i = 1; : : : ; ng viene dada por ¾2
+
+
+
+
+
+
+

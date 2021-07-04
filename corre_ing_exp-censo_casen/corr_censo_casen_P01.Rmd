@@ -1,0 +1,339 @@
+---
+title: Correlaciones entre variables del Censo de Viviendas, Hogares y Personas e ingresos promedios comunales de la CASEN 2017.
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+date: "Jueves 01-06-2021"
+
+abstract: |
+  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población comunal** que llamaremos **ingresos expandidos** extraído de la Casen 2017 y las frecuencias de categorías de respuesta para todas las variables del Censo de viviendas, hogares y personas al 2017, también extraídas a nivel comunal.
+  
+  Haremos las correlaciones tanto a nivel Urbano como rural.
+  
+  Importante es aplicar la libreria **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+
+```
+
+# 1 Construcción de tablas con frecuencias de respuesta por categoría desde el Censo: **Viviendas**
+
+## 1.1 Pregunta **P01**: Tipo de vivienda 
+
+Ésta pregunta posee 10 categorías de respuesta:
+
+1 Casa\
+2 Departamento en edificio \
+3 Vivienda tradicional indígena (ruka, pae pae u otras) \
+4 Pieza en casa antigua o en conventillo \
+5 Mediagua, mejora, rancho o choza \
+6 Móvil (carpa, casa rodante o similar) \
+7 Otro tipo de vivienda particular \
+8 Vivienda colectiva \
+9 Operativo personas en tránsito (no es vivienda) \
+10 Operativo calle (no es vivienda)
+
+### 1.1.1 Cálculo de correlaciones a nivel nacional
+
+Leemos las respuestas a la pregunta **P01** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r, warning = FALSE}
+tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
+```
+
+<br>
+Area:
+urbano = 1 rural = 2
+<br>
+
+<hr style="height:5px;border-width:5;color:Green;background-color:Green">
+<span style="color:red">Estamos cometiendo un sesgo, pues los ingresos que hemos utilizado están calculados a nivel nacional, sin hacer distingos entre el nivel urbano y rural. Ésta diferencia es la que construiremos ahora.</span>
+
+
+### 1.1.4 Ingresos promedio por comuna a nivel urbano
+
+```{r}
+casen_2017 <- readRDS(file = "../casen_2017_c.rds")
+casen_2017_u <- filter(casen_2017, casen_2017$zona == "Urbano")
+```
+
+```{r}
+casen_2017_u <- casen_2017_u[!is.na(casen_2017_u$ytotcor),]
+
+Q <- quantile(casen_2017_u$ytotcor, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(casen_2017_u$ytotcor)
+casen_2017_sin_o <- subset(casen_2017_u, casen_2017_u$ytotcor > (Q[1] - 1.5*iqr) & casen_2017_u$ytotcor < (Q[2]+1.5*iqr))
+casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character), stringsAsFactors=FALSE)
+
+b <-  as.numeric(casen_2017_sin_o$ytotcor)
+a <- casen_2017_sin_o$comuna
+
+promedios_grupales <-aggregate(b, by=list(a), FUN = mean , na.rm=TRUE )
+
+names(promedios_grupales)[1] <- "comuna"
+names(promedios_grupales)[2] <- "promedio_i"
+promedios_grupales$año <- "2017"
+
+codigos_comunales <- readRDS(file = "../codigos_comunales_2011-2017.rds")
+names(codigos_comunales)[1] <- "código"
+names(codigos_comunales)[2] <- "comuna"
+
+df_2017 = merge( x = promedios_grupales, y = codigos_comunales, by = "comuna", all.x = TRUE)
+
+library("rio")
+x <- import("../Microdato_Censo2017-Personas.csv")
+
+my_summary_data <- x %>%
+    group_by(x$COMUNA) %>%
+    summarise(Count = n()) 
+
+names(my_summary_data)[1] <- "comuna"     
+names(my_summary_data)[2] <- "personas"
+
+# recogemos el campo Comuna:
+codigos <- my_summary_data$comuna
+
+# construimos una secuencia llamada rango del 1 al total de filas del dataset:
+rango <- seq(1:nrow(my_summary_data))
+
+# Creamos un string que agrega un cero a todos los registros:
+cadena <- paste("0",codigos[rango], sep = "")
+
+# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser siempre 5 agregandole un cero al inicio de los que tienen 4.
+# Para ello extraemos un substring de la cadena sobre todas las filas (rangos) comenzando desde el primero o el segundo y llegando siempre al 6.
+
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(my_summary_data,cadena)
+
+names(comuna_corr)[3] <- "código"  
+
+df_2017_2 = merge( x = df_2017, y = comuna_corr, by = "código", all.x = TRUE)
+
+df_2017_2$Ingresos_expandidos <- df_2017_2$promedio_i*df_2017_2$personas
+
+head(df_2017_2,5)
+saveRDS(df_2017_2, "Ingresos_expandidos_urbano_17.rds")
+```
+
+### 1.1.5 Ingresos promedio por comuna a nivel rural
+
+```{r}
+casen_2017 <- readRDS(file = "../casen_2017_c.rds")
+casen_2017_u <- filter(casen_2017, casen_2017$zona == "Rural")
+```
+
+
+```{r}
+casen_2017_u <- casen_2017_u[!is.na(casen_2017_u$ytotcor),]
+
+Q <- quantile(casen_2017_u$ytotcor, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(casen_2017_u$ytotcor)
+casen_2017_sin_o <- subset(casen_2017_u, casen_2017_u$ytotcor > (Q[1] - 1.5*iqr) & casen_2017_u$ytotcor < (Q[2]+1.5*iqr))
+casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character), stringsAsFactors=FALSE)
+
+b <-  as.numeric(casen_2017_sin_o$ytotcor)
+a <- casen_2017_sin_o$comuna
+
+promedios_grupales <-aggregate(b, by=list(a), FUN = mean , na.rm=TRUE )
+
+names(promedios_grupales)[1] <- "comuna"
+names(promedios_grupales)[2] <- "promedio_i"
+promedios_grupales$año <- "2017"
+
+codigos_comunales <- readRDS(file = "../codigos_comunales_2011-2017.rds")
+names(codigos_comunales)[1] <- "código"
+names(codigos_comunales)[2] <- "comuna"
+
+df_2017 = merge( x = promedios_grupales, y = codigos_comunales, by = "comuna", all.x = TRUE)
+
+library("rio")
+x <- import("../Microdato_Censo2017-Personas.csv")
+
+my_summary_data <- x %>%
+    group_by(x$COMUNA) %>%
+    summarise(Count = n()) 
+
+names(my_summary_data)[1] <- "comuna"     
+names(my_summary_data)[2] <- "personas"
+
+# recogemos el campo Comuna:
+codigos <- my_summary_data$comuna
+
+# construimos una secuencia llamada rango del 1 al total de filas del dataset:
+rango <- seq(1:nrow(my_summary_data))
+
+# Creamos un string que agrega un cero a todos los registros:
+cadena <- paste("0",codigos[rango], sep = "")
+
+# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser siempre 5 agregandole un cero al inicio de los que tienen 4.
+# Para ello extraemos un substring de la cadena sobre todas las filas (rangos) comenzando desde el primero o el segundo y llegando siempre al 6.
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(my_summary_data,cadena)
+
+names(comuna_corr)[3] <- "código"  
+
+df_2017_2 = merge( x = df_2017, y = comuna_corr, by = "código", all.x = TRUE)
+
+df_2017_2$Ingresos_expandidos <- df_2017_2$promedio_i*df_2017_2$personas
+
+head(df_2017_2,5)
+saveRDS(df_2017_2, "Ingresos_expandidos_rural_17.rds")
+```
+
+
+<hr style="height:5px;border-width:5;color:Green;background-color:Green">
+<br>
+
+Despleguemos nuevamente las correlaciones con estos ingresos diferenciados por zona:
+
+### 1.1.6 Cálculo de correlaciones a nivel nacional urbano
+
+
+```{r, warning = FALSE}
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
+b <- tabla_con_clave_u$COMUNA
+c <- tabla_con_clave_u$P01
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:10){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+
+# Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada **código**:
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+names(comuna_corr)[31] <- "código" 
+
+#Hacemos la unión con los ingresos promedio comunales expandidos:
+ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+
+# Renombre de columnas
+names(df_2017_2)[3] <- "Casa"
+names(df_2017_2)[6] <- "Departamento"
+names(df_2017_2)[9] <- "Vivienda_tradicional_ind "
+names(df_2017_2)[12] <- "Pieza"
+names(df_2017_2)[15] <- "Mediagua"
+names(df_2017_2)[18] <- "Móvil"
+names(df_2017_2)[21] <- "Otro_tipo"
+names(df_2017_2)[24] <- "Vivienda_colectiva"
+
+# Correlaciones
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+
+```
+
+
+### 1.1.7 Cálculo de correlaciones a nivel nacional rural
+
+```{r, warning = FALSE}
+tabla_con_clave_r <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
+b <- tabla_con_clave_r$COMUNA
+c <- tabla_con_clave_r$P01
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:10){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+
+# Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada **código**:
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+names(comuna_corr)[31] <- "código" 
+
+# Hacemos la unión con los ingresos promedio comunales expandidos:
+ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_rural_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+
+# Renombre de columnas
+names(df_2017_2)[3] <- "Casa"
+names(df_2017_2)[6] <- "Departamento"
+names(df_2017_2)[9] <- "Vivienda_tradicional_ind "
+names(df_2017_2)[12] <- "Pieza"
+names(df_2017_2)[15] <- "Mediagua"
+names(df_2017_2)[18] <- "Móvil"
+names(df_2017_2)[21] <- "Otro_tipo"
+names(df_2017_2)[24] <- "Vivienda_colectiva"
+
+# Correlaciones
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+
+<span style="color:red">¿Con éstas correlaciones tan bajas, utilizamos también la información a nivel rural?, se propone que si, pues aún falta la aplicación de los diferentes modelos en el momento de la regresión lineal.</span>
+
+<hr style="height:5px;border-width:5;color:Green;background-color:Green">
+
+
+
+Parece no ser relevante el análisis a nivel regional por la pequeña cantidad de comunas que hay en cada una que es menor aún considerando las que pertenecen a cada categoría de respuesta.
+
+<hr style="height:5px;border-width:5;color:Green;background-color:Green">
+<br>
