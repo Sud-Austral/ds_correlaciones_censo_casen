@@ -519,12 +519,50 @@ DataIntelligence<br><h4 class="date">Jueves 24-06-2021</h4>
 <div id="ecuación-de-regresión-16" class="section level3">
 <h3>Ecuación de regresión</h3>
 <p><span class="math display">\[ \hat Y = e^{16.056127+0.865867 \cdot ln{X}} \]</span></p>
+<pre class="r"><code># r_1 &lt;- readRDS(&quot;casen_censo_region_01.rds&quot;)
+# r_1</code></pre>
+<pre class="r"><code># r_1$region &lt;- &quot;Region_01&quot;
+# r_1</code></pre>
 </div>
 </div>
 <div id="unión-de-tablas" class="section level2">
 <h2>Unión de tablas</h2>
 <pre class="r"><code># casen_censo_region_01.rds
 # casen_censo_region_16.rds</code></pre>
+<pre class="r"><code># archivos_unidos &lt;- dir(&quot;casen_censo_2017&quot;)
+# archivos_df &lt;- as.data.frame(archivos_unidos)
+# iguales &lt;- filter(archivos_df, grepl(&quot;casen_censo&quot;, archivos_unidos))
+# iguales
+# nrow(iguales)</code></pre>
+<pre class="r"><code># receptaculo &lt;- data.frame()
+# 
+# for (n in 1:nrow(iguales)) {
+  
+#   nombres &lt;- paste(&quot;casen_censo_2017/&quot;,iguales[n,1], sep = &quot;&quot;)
+#   cargado &lt;- readRDS(nombres)
+#   
+#   # colnames(cargado) &lt;- cargado[1,]
+#   # cargado &lt;- cargado[-1,]
+#   # identificar &lt;- iguales[n,1]
+#   
+#   
+#   identificar &lt;- str_replace(iguales[n,1], &quot;.rds&quot;,&quot;&quot;)
+#   cargado$identificador &lt;- identificar
+#   
+#   receptaculo &lt;- rbind(receptaculo,cargado)
+#   
+# #print(receptaculo)
+# }
+# write_xlsx(receptaculo,&quot;censo_casen_2017.xlsx&quot;)
+#write_csv2(receptaculo,&quot;censo_casen_2017.csv&quot;)</code></pre>
+<pre class="r"><code># receptaculo &lt;- data.frame()
+# for (n in 1:nrow(iguales)) {
+#   
+#   nombres &lt;- paste(&quot;casen_censo_2017/&quot;,iguales[n,1], sep = &quot;&quot;)
+#   cargado &lt;- readRDS(nombres)
+#   print(colnames(cargado))
+# }
+# receptaculo</code></pre>
 </div>
 
 

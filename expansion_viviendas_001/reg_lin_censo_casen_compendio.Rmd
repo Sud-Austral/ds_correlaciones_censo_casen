@@ -321,36 +321,36 @@ $$ \hat Y = e^{16.056127+0.865867 \cdot ln{X}} $$
 ```
 
 ```{r}
-archivos_unidos <- dir("casen_censo_2017")
-archivos_df <- as.data.frame(archivos_unidos)
-iguales <- filter(archivos_df, grepl("casen_censo", archivos_unidos))
-iguales
-nrow(iguales)
+# archivos_unidos <- dir("casen_censo_2017")
+# archivos_df <- as.data.frame(archivos_unidos)
+# iguales <- filter(archivos_df, grepl("casen_censo", archivos_unidos))
+# iguales
+# nrow(iguales)
 ```
 
 
 ```{r}
 
-receptaculo <- data.frame()
-
-for (n in 1:nrow(iguales)) {
+# receptaculo <- data.frame()
+# 
+# for (n in 1:nrow(iguales)) {
   
-  nombres <- paste("casen_censo_2017/",iguales[n,1], sep = "")
-  cargado <- readRDS(nombres)
-  
-  # colnames(cargado) <- cargado[1,]
-  # cargado <- cargado[-1,]
-  # identificar <- iguales[n,1]
-  
-  
-  identificar <- str_replace(iguales[n,1], ".rds","")
-  cargado$identificador <- identificar
-  
-  receptaculo <- rbind(receptaculo,cargado)
-  
-#print(receptaculo)
-}
-write_xlsx(receptaculo,"censo_casen_2017.xlsx")
+#   nombres <- paste("casen_censo_2017/",iguales[n,1], sep = "")
+#   cargado <- readRDS(nombres)
+#   
+#   # colnames(cargado) <- cargado[1,]
+#   # cargado <- cargado[-1,]
+#   # identificar <- iguales[n,1]
+#   
+#   
+#   identificar <- str_replace(iguales[n,1], ".rds","")
+#   cargado$identificador <- identificar
+#   
+#   receptaculo <- rbind(receptaculo,cargado)
+#   
+# #print(receptaculo)
+# }
+# write_xlsx(receptaculo,"censo_casen_2017.xlsx")
 #write_csv2(receptaculo,"censo_casen_2017.csv")
 ```
 ```{r}
