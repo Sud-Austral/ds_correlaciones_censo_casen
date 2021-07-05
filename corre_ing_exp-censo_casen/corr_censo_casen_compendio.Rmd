@@ -59,7 +59,7 @@ library(ggplot2)
 
 [Correlaciones **P01**](https://rpubs.com/dataintelligence/corr_cc_P01)
 
-## 1.2 Variable que más correlaciona a nivel: 
+## 1.2 *Variable que más correlaciona con ingresos expandidos*: 
 
 Urbano: "Casa" (**0,95**) 
 
