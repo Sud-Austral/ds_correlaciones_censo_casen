@@ -8,7 +8,7 @@ subtitle: |
 date: "Jueves 01-06-2021"
 
 abstract: |
-  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población comunal** que llamaremos **ingresos expandidos** extraído de la Casen 2017 y las frecuencias de categorías de respuesta para todas las variables del Censo de viviendas, hogares y personas al 2017, también extraídas a nivel comunal.
+  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población comunal** que llamaremos **ingresos expandidos** extraído de la Casen 2017 y las frecuencias de categorías de respuesta para todas la variable cantidad de personas del Censo de viviendas, hogares y personas al 2017, también extraídas a nivel comunal.
   
   Haremos las correlaciones tanto a nivel Urbano como rural.
   
@@ -89,7 +89,7 @@ urbano = 1 rural = 2
 <span style="color:red">Estamos cometiendo un sesgo, pues los ingresos que hemos utilizado están calculados a nivel nacional, sin hacer distingos entre el nivel urbano y rural. Ésta diferencia es la que construiremos ahora.</span>
 
 
-### 1.1.4 Ingresos promedio por comuna a nivel urbano
+### 1.1.2 Ingresos promedio por comuna a nivel urbano
 
 ```{r}
 casen_2017 <- readRDS(file = "../casen_2017_c.rds")
@@ -156,7 +156,7 @@ head(df_2017_2,5)
 saveRDS(df_2017_2, "Ingresos_expandidos_urbano_17.rds")
 ```
 
-### 1.1.5 Ingresos promedio por comuna a nivel rural
+### 1.1.6 Ingresos promedio por comuna a nivel rural
 
 ```{r}
 casen_2017 <- readRDS(file = "../casen_2017_c.rds")
@@ -229,7 +229,7 @@ saveRDS(df_2017_2, "Ingresos_expandidos_rural_17.rds")
 
 Despleguemos nuevamente las correlaciones con estos ingresos diferenciados por zona:
 
-### 1.1.6 Cálculo de correlaciones a nivel nacional urbano
+### 1.1.7 Cálculo de correlaciones a nivel nacional urbano
 
 
 ```{r, warning = FALSE}
@@ -271,12 +271,32 @@ names(df_2017_2)[15] <- "Mediagua"
 names(df_2017_2)[18] <- "Móvil"
 names(df_2017_2)[21] <- "Otro_tipo"
 names(df_2017_2)[24] <- "Vivienda_colectiva"
+```
 
+#### 1.1.7.1 Pearson
+
+```{r, warning = FALSE}
 # Correlaciones
 my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
 chart.Correlation(my_data, histogram=TRUE, pch=20)
-
 ```
+
+#### 1.1.7.2  Spearman
+
+```{r, attr.source='.numberLines', warning=FALSE}
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "spearman"),pch=20)
+```
+
+#### 1.1.7.3  Kendall
+
+```{r, attr.source='.numberLines'}
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"),pch=20)
+```
+
+
+
 
 
 ### 1.1.7 Cálculo de correlaciones a nivel nacional rural
@@ -320,16 +340,31 @@ names(df_2017_2)[15] <- "Mediagua"
 names(df_2017_2)[18] <- "Móvil"
 names(df_2017_2)[21] <- "Otro_tipo"
 names(df_2017_2)[24] <- "Vivienda_colectiva"
-
-# Correlaciones
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
 ```
 
 
-<span style="color:red">¿Con éstas correlaciones tan bajas, utilizamos también la información a nivel rural?, se propone que si, pues aún falta la aplicación de los diferentes modelos en el momento de la regresión lineal.</span>
+#### 1.1.7.1  Pearson
 
-<hr style="height:5px;border-width:5;color:Green;background-color:Green">
+
+```{r, attr.source='.numberLines', warning=FALSE}
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "pearson"),pch=20)
+```
+
+#### 1.1.7.2 Spearman
+
+```{r, attr.source='.numberLines', warning=FALSE}
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "spearman"),pch=20)
+```
+
+#### 1.1.7.3 Kendall
+
+```{r, attr.source='.numberLines'}
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"),pch=20)
+```
+
 
 
 

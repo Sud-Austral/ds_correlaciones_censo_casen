@@ -264,18 +264,45 @@ ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
 df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, 
                    by = "código", 
                    all.x = TRUE)
+```
+
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
 kbl(df_2017_2) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
   scroll_box(width = "100%", height = "300px")
 ```
 
+
+
+
 ### 3.1.3 Correlaciones
+
+#### 3.1.3.1 Pearson
 
 ```{r, warning = FALSE, attr.source='.numberLines'}
 my_data <- df_2017_2[, c(3,5,7,9,15)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
+chart.Correlation(my_data, histogram=TRUE, method = c( "pearson"),pch=20)
 ```
+
+#### 3.1.3.2 Spearman
+
+```{r, warning=FALSE}
+my_data <- df_2017_2[, c(3,5,7,9,15)]
+chart.Correlation(my_data, histogram=TRUE,   method = c( "spearman"), pch=20)
+```
+
+#### 3.1.3.3 Kendall
+
+```{r}
+my_data <- df_2017_2[, c(3,5,7,9,15)]
+chart.Correlation(my_data, histogram=TRUE,   method = c( "kendall"), pch=20)
+```
+
+
+
 
 ## 4.1 Pregunta **P02**: Ocupación de la vivienda a nivel <span style="color:#C70039">RURAL</span>
 
@@ -351,9 +378,25 @@ kbl(df_2017_2) %>%
 
 ### 4.1.3 Correlaciones
 
+#### 4.1.3.1 Pearson
+
 ```{r, attr.source='.numberLines'}
-my_data <- df_2017_2[, c(3,5,7,9,14)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
+my_data <- df_2017_2[, c(3,5,7,9,15)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "pearson"),pch=20)
+```
+
+#### 4.1.3.2 Spearman
+
+```{r, attr.source='.numberLines', warning=FALSE}
+my_data <- df_2017_2[, c(3,5,7,9,15)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "spearman"),pch=20)
+```
+
+#### 4.1.3.3 Kendall
+
+```{r, attr.source='.numberLines'}
+my_data <- df_2017_2[, c(3,5,7,9,15)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"),pch=20)
 ```
 
 Parece no ser relevante el análisis a nivel regional por la pequeña cantidad de comunas que hay en cada una que es menor aún considerando las que pertenecen a cada categoría de respuesta.

@@ -144,12 +144,28 @@ names(df_2017_2)[39] <- "Magíster"
 names(df_2017_2)[42] <- "Doctorado"
 ```
 
+
 ### 2.3.5 **Correlaciones**
 
+#### 2.3.5.1 Pearson
+
 ```{r}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30,33,36,39,42,49)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30,33,36,39,42,48)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "pearson"), pch=20)
 ```
+
+#### 2.3.5.2 Spearman
+
+```{r, warning=FALSE}
+chart.Correlation(my_data, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+#### 2.3.5.3 Kendall
+
+```{r}
+chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
 
 
 # 1 Pregunta **P15**:  Nivel del curso más alto aprobado, nivel Rural
@@ -238,10 +254,27 @@ names(df_2017_2)[42] <- "Doctorado"
 
 ### 2.3.5 **Correlaciones**
 
+### 2.3.5 **Correlaciones**
+
+#### 2.3.5.1 Pearson
+
 ```{r}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30,33,36,39,42,49)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30,33,36,39,42,48)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "pearson"), pch=20)
 ```
+
+#### 2.3.5.2 Spearman
+
+```{r, warning=FALSE}
+chart.Correlation(my_data, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+#### 2.3.5.3 Kendall
+
+```{r}
+chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
 
 
 

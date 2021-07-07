@@ -101,11 +101,33 @@ df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código"
 
 names(df_2017_2)[3] <- "hombre"
 names(df_2017_2)[6] <- "mujer"
-
-my_data <- df_2017_2[, c(3,6,13)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
 ```
 
+
+
+
+
+
+Pearson
+
+```{r, warning = FALSE}
+my_data <- df_2017_2[, c(3,6,12)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+Spearman
+
+```{r, warning = FALSE}
+my_data <- df_2017_2[, c(3,6,12)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+Kendall
+
+```{r, warning = FALSE}
+my_data <- df_2017_2[, c(3,6,12)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"), pch=20)
+```
 
 # 2 Construcción de tablas con frecuencias de respuesta por categoría desde el Censo: **Personas** Rural
 
@@ -154,11 +176,28 @@ df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código"
 names(df_2017_2)[3] <- "hombre"
 names(df_2017_2)[6] <- "mujer"
 
-my_data <- df_2017_2[, c(3,6,13)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
 ```
 
+Pearson
 
+```{r, warning = FALSE}
+my_data <- df_2017_2[, c(3,6,12)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+Spearman
+
+```{r, warning = FALSE}
+my_data <- df_2017_2[, c(3,6,12)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+Kendall
+
+```{r, warning = FALSE}
+my_data <- df_2017_2[, c(3,6,12)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"), pch=20)
+```
 
 
 

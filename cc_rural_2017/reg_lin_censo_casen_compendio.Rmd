@@ -1,0 +1,147 @@
+---
+title: Expansión de la CASEN sobre el CENSO compendio 2017 RURAL
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+  De ingresos sobre una categoría de respuesta 
+
+date: "Martes 06-07-2021"
+
+abstract: |
+  Expandiremos los ingresos promedios comunales obtenidos de la CASEN sobre la pregunta (P15): “Nivel del curso más alto aprobado” en la categoría de respuesta “Profesional” (12), que más alto correlaciona con los ingresos expandidos (obtenidos de la multiplicación del ingreso promedio y los habitantes), ambos a nivel comunal.
+
+  Haremos el análisis sobre todas las regiones de Chile.
+
+  Ensayaremos diferentes modelos dentro del análisis de regresión cuya variable independiente será: “frecuencia de población que posee la variable Censal respecto a la zona” y la dependiente: “ingreso expandido de la Casen por zona”
+
+  Lo anterior para ir combinando a nivel nacional los mejores modelos para construir una tabla de valores predichos.
+  
+
+
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library(ggplot2)
+```
+
+
+## 0 Matriz de correlaciones:
+
+![Matriz de correlaciones](corr.JPG)
+
+
+## 1 Región 01
+
+### Análisis de regresión
+
+[región 01](https://rpubs.com/dataintelligence/region_01_P15_r)
+
+### Coeficiente de determinación
+
+0.9052
+
+### Ecuación de regresión
+
+$$ \hat Y = 24487784 + 1151850  \cdot X $$
+
+<br>
+
+## 2 Región 02
+
+### Análisis de regresión
+
+[región 02](https://rpubs.com/dataintelligence/region_02_P15_r)
+
+### Coeficiente de determinación
+
+0.8826
+
+### Ecuación de regresión
+$$ \hat Y = {2260.52}^2 + 2 \cdot 2260.52 \cdot 1057.83 \sqrt{X}+  1057.83^2 \cdot X  $$
+<br>
+
+## 3 Región 03
+
+### Análisis de regresión
+
+[región 03](https://rpubs.com/dataintelligence/region_03_P15_r)
+
+### Coeficiente de determinación
+
+0.5439
+
+### Ecuación de regresión
+$$ \hat Y = {2456.4}^2 + 2  2456.4  1834.0  \ln{X}+  1834.0 ^2 ln^2X  $$
+<br>
+
+## 4 Región 04
+
+### Análisis de regresión
+
+[región 04](https://rpubs.com/dataintelligence/region_04_P15_r)
+
+### Coeficiente de determinación
+
+0.6022
+
+### Ecuación de regresión
+
+$$ \hat Y = { 2430.2}^2 + 2 \cdot  2430.2 \cdot  1183.4 \sqrt{X}+  1183.4^2 \cdot X  $$
+<br>
+
+## 5 Región 05
+
+### Análisis de regresión
+
+[región 05](https://rpubs.com/dataintelligence/region_05_P15_r)
+
+### Coeficiente de determinación
+
+0.6772
+
+### Ecuación de regresión
+$$ \hat Y = e^{15.51609+0.76419 ln{X}} $$
+<br>
+
+
+
+
+
+
+

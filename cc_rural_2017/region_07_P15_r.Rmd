@@ -1,0 +1,507 @@
+---
+title: Expansión de la CASEN sobre el CENSO (Región 07)
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+  De ingresos sobre una categoría de respuesta **RURAL**
+
+date: "Martes 06-07-2021"
+
+abstract: |
+  Expandiremos los ingresos promedios comunales obtenidos de la CASEN sobre la pregunta (P15): "Nivel del curso más alto aprobado" en la categoría de respuesta “Profesional” (12), que más alto correlaciona con los ingresos expandidos (obtenidos de la multiplicación del ingreso promedio y los habitantes), ambos a nivel comunal.
+  
+  Haremos el análisis sobre la región 07.
+  
+  Ensayaremos diferentes modelos dentro del análisis de regresión cuya variable independiente será: "frecuencia de población que posee la variable Censal respecto a la zona" y la dependiente: "ingreso expandido de la Casen por zona"
+  
+  Lo anterior para ir combinando a nivel nacional los mejores modelos para construir una tabla de valores predichos.
+  
+
+
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library(ggplot2)
+```
+
+## 1 Variable CENSO
+
+Necesitamos calcular las frecuencias a nivel censal de las respuestas correspondientes a la categoría: "Profesional (4 o más años)" del campo **P15** a nivel **rural** del Censo de personas. Recordemos que ésta fué la más alta correlación en relación a los ingresos expandidos [(ver punto 3.4 aquí)](https://rpubs.com/dataintelligence/corr_censo_casen_2017).
+
+
+### 1.1 Lectura y filtrado de la tabla censal de personas
+
+Leemos la tabla Censo 2017 de personas que ya tiene integrada la clave zonal:
+
+```{r}
+tabla_con_clave <- readRDS("../censo_personas_con_clave_17")
+r3_100 <- tabla_con_clave[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+Despleguemos los códigos de regiones de nuestra tabla:
+
+```{r}
+regiones <- unique(tabla_con_clave$REGION)
+regiones
+```
+
+
+
+Hagamos un subset con la region 07 y con la zona = 2:
+
+```{r}
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 7) 
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA== 2) 
+```
+
+### 1.2 Cálculo de frecuencias
+
+```{r}
+tabla_con_clave_f <- tabla_con_clave[,-c(1,2,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20),drop=FALSE]
+
+```
+
+
+```{r}
+names(tabla_con_clave_f)[9] <- "Nivel del curso más alto aprobado"
+```
+
+
+```{r}
+# Ahora filtramos por Nivel del curso más alto aprobado = 11.
+tabla_con_clave_ff <- filter(tabla_con_clave_f, tabla_con_clave_f$`Nivel del curso más alto aprobado` == 12)
+ 
+```
+
+
+```{r}
+# Determinamos las frecuencias por zona:
+b <- tabla_con_clave_ff$clave
+c <- tabla_con_clave_ff$`Nivel del curso más alto aprobado`
+d <- tabla_con_clave_ff$COMUNA
+cross_tab =  xtabs( ~ unlist(b) + unlist(c)+ unlist(d))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+names(d)[1] <- "zona" 
+d$anio <- "2017"
+```
+
+
+
+Veamos los primeros 100 registros:
+
+```{r}
+r3_100 <- d[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+
+Agregamos un cero a los códigos comunales de cuatro dígitos:
+
+```{r}
+codigos <- d$unlist.d.
+rango <- seq(1:nrow(d))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d,cadena)
+comuna_corr <- comuna_corr[,-c(2,3),drop=FALSE]
+names(comuna_corr)[4] <- "código" 
+r3_100 <- comuna_corr[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+<br>
+
+<!-- En p capturamos la varianza de la categoría 1 Tejas o tejuelas de arcilla, metálicas, de cemento, de madera, asfálticas o plásticas del campo P03B a nivel Censal. -->
+
+## 2 Variable CASEN
+
+### 2.1 Tabla de ingresos expandidos
+
+Hemos calculado ya éste valor como conclusión del punto 1.1 de [aquí](https://rpubs.com/dataintelligence/corr_casen_censo_002)
+
+```{r}
+h_y_m_2017_censo <- readRDS("../corre_ing_exp-censo_casen/Ingresos_expandidos_rural_17.rds")
+tablamadre <- head(h_y_m_2017_censo,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+## 3 Unión Censo-Casen
+
+Integramos a la tabla censal de frecuencias la tabla de ingresos expandidos de la Casen.
+
+```{r}
+comunas_con_ing_exp = merge( x = comuna_corr, y = h_y_m_2017_censo, by = "código", all.x = TRUE)
+
+comunas_con_ing_exp <-comunas_con_ing_exp[!(is.na(comunas_con_ing_exp$Ingresos_expandidos)),]
+
+r3_100 <- comunas_con_ing_exp
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+
+<br>
+
+
+<!-- <hr style="height:1px;border-width:1;color:Red;background-color:Red"> -->
+
+## 4 Proporción poblacional zonal respecto a la comunal
+
+Del censo obtenemos la cantidad de población a nivel de zona y estimamos su proporción a nivel comunal. Ya hemos calculado ésta proporción  [aquí](https://rpubs.com/dataintelligence/tabla_de_proporciones).
+
+```{r}
+prop_pob <- readRDS("../tabla_de_prop_pob.rds")
+names(prop_pob)[1] <- "zona"
+names(prop_pob)[3] <- "p_poblacional" 
+```
+
+Veamos los 100 primeros registros:
+
+```{r}
+r3_100 <- prop_pob[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+
+## 5 Ingreso medio
+
+Deseamos el valor del ingreso promedio a nivel comunal, pero expandido a nivel zonal. Ésta información está contenida en el campo promedio_i de la tabla obtenida en el punto 3.
+
+```{r}
+r3_100 <- comunas_con_ing_exp[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+<br>
+
+## 6 Ingreso promedio expandido por zona (**multi_pob**)
+
+En éste momento vamos a construir nuestra variable dependiente de regresión aplicando la siguiente fórmula:
+
+$$ multi\_pob = promedio\_i \cdot personas \cdot p\_poblacional	$$
+
+Para ello integramos a la tabla de ingresos expandidos a nivel zonal (punto 3) la tabla de proporciones poblacionales zonales respecto al total comunal (punto 4) :
+
+```{r}
+h_y_m_comuna_corr_01 = merge( x = comunas_con_ing_exp, y = prop_pob, by = "zona", all.x = TRUE)
+tablamadre <- head(h_y_m_comuna_corr_01,100)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+<br>
+
+Hacemos la multiplicación que queda almacenada en la variable **multi_pob**:
+
+```{r}
+h_y_m_comuna_corr_01$multi_pob <- h_y_m_comuna_corr_01$promedio_i * h_y_m_comuna_corr_01$personas * h_y_m_comuna_corr_01$p_poblacional
+tablamadre <- head(h_y_m_comuna_corr_01,100)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+
+## 7 Análisis de regresión
+
+Aplicaremos un análisis de regresión donde:
+
+$$ Y(dependiente) = ingreso \ expandido \ por \ zona \ (multi\_pob)$$
+
+$$ X(independiente) = frecuencia \ de \ población \ que \ posee \ la \ variable \ Censal \ respecto \ a \ la \ zona \ (Freq.x)  $$
+<br>
+
+### 7.1 Diagrama de dispersión loess
+
+```{r}
+scatter.smooth(x=h_y_m_comuna_corr_01$Freq.x, y=h_y_m_comuna_corr_01$multi_pob, main="multi_pob ~ Freq.x",
+     xlab = "Freq.x",
+     ylab = "multi_pob",
+           col = 2) 
+```
+
+### 7.2 Outliers 
+
+Hemos demostrado en el punto 5.7.2 de [aquí](https://rpubs.com/dataintelligence/expansion_viviendas_001) que la exclusión de ouliers no genera ninguna mejora en el modelo de regresión.
+
+### 7.3 Modelo lineal 
+
+Aplicaremos un análisis de regresión lineal del ingreso expandido por zona sobre las frecuencias de respuestas zonales.
+
+```{r}
+linearMod <- lm( multi_pob~(Freq.x) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+
+### 7.4 Gráfica de la recta de regresión lineal
+
+```{r, warning = FALSE, message = FALSE}
+ggplot(h_y_m_comuna_corr_01, aes(x = Freq.x , y = multi_pob)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+```
+
+
+Si bien obtenemos nuestro modelo lineal da cuenta del 0.8214 de la variabilidad de los datos de respuesta en torno a su media, modelos alternativos pueden ofrecernos una explicación de la variable dependiente aún mayor.
+
+## 8 Modelos alternativos
+
+### 8.1 Modelo cuadrático
+
+$$ \hat Y = \beta_0 + \beta_1  X^2  $$
+
+```{r}
+linearMod <- lm( multi_pob~(Freq.x^2) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+
+
+### 8.2 Modelo cúbico
+
+$$ \hat Y = \beta_0 + \beta_1  X^3  $$
+
+```{r}
+linearMod <- lm( multi_pob~(Freq.x^3) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+
+### 8.3 Modelo logarítmico
+
+$$ \hat Y = \beta_0 + \beta_1 ln X  $$
+
+```{r}
+linearMod <- lm( multi_pob~log(Freq.x) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+
+### 8.4 Modelo exponencial
+
+$$ \hat Y = \beta_0 + \beta_1  e^X  $$
+
+No es aplicable sin una transformación pues los valores elevados a $e$ de Freq.x tienden a infinito. 
+
+
+### 8.5 Modelo con raíz cuadrada 
+
+$$ \hat Y = \beta_0 + \beta_1  \sqrt {X}  $$
+
+```{r}
+linearMod <- lm( multi_pob~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+
+### 8.6 Modelo raíz-raíz
+
+$$ \hat Y = {\beta_0}^2 + 2  \beta_0  \beta_1 \sqrt{X}+  \beta_1^2 X  $$
+
+```{r}
+linearMod <- lm( sqrt(multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+
+
+### 8.7 Modelo log-raíz
+
+$$ \hat Y = e^{\beta_0 + \beta_1 \sqrt{X}} $$
+
+```{r}
+linearMod <- lm( log(multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+
+
+### 8.8 Modelo raíz-log
+
+$$ \hat Y = {\beta_0}^2 + 2  \beta_0  \beta_1 \ln{X}+  \beta_1^2 ln^2X  $$
+
+```{r}
+linearMod <- lm( sqrt(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+
+### 8.9 Modelo log-log
+
+$$ \hat Y = e^{\beta_0+\beta_1  ln{X}} $$
+
+```{r}
+linearMod <- lm( log(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+
+
+## 9 Modelo elegido: raiz-raiz (**raiz-raiz**)
+
+Es éste el modelo que nos entrega el mayor coeficiente de determinación de todos (0.7154). 
+
+### 9.1 Diagrama de dispersión sobre **raiz-raiz**
+
+Desplegamos una curva suavizada por loess en el diagrama de dispersión.
+
+```{r}
+scatter.smooth(x=sqrt(h_y_m_comuna_corr_01$Freq.x), y=sqrt(h_y_m_comuna_corr_01$multi_pob), lpars = list(col = "red", lwd = 2, lty = 1), main="multi_pob ~ Freq.x")
+```
+
+### 9.2 Modelo **raiz-raiz**
+
+Observemos nuevamente el resultado sobre **raiz-raiz**.
+
+```{r}
+linearMod <- lm(sqrt( multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+```
+```{r, warning = FALSE, message = FALSE}
+ggplot(h_y_m_comuna_corr_01, aes(x = sqrt(Freq.x) , y = sqrt(multi_pob))) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+```
+
+
+
+
+### 9.3 Análisis de residuos
+
+```{r}
+par(mfrow = c (2,2))
+plot(linearMod)
+```
+
+### 9.4 Ecuación del modelo
+
+<br>
+$$ \hat Y = {1740.6}^2 + 2 \cdot 1740.6 \cdot 1554.5 \sqrt{X}+  1554.5^2 X  $$
+<br>
+
+## 10 Aplicación la regresión a los valores de la variable a nivel de zona
+
+Esta nueva variable se llamará: est_ing
+
+```{r}
+h_y_m_comuna_corr_01$est_ing <- 
+(1740.6)^2 + 2 * 1740.6 * 1554.5 * sqrt(h_y_m_comuna_corr_01$Freq.x)+  1554.5^2 * (h_y_m_comuna_corr_01$Freq.x) 
+
+r3_100 <- h_y_m_comuna_corr_01[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+<br>
+
+## 11 División del valor estimado entre la población total de la zona para obtener el ingreso medio por zona
+
+<br>
+
+$$ Ingreso \_ Medio\_zona = est\_ing / (personas * p\_poblacional) $$
+
+<br>
+
+```{r}
+h_y_m_comuna_corr_01$ing_medio_zona <- h_y_m_comuna_corr_01$est_ing  /( h_y_m_comuna_corr_01$personas  * h_y_m_comuna_corr_01$p_poblacional)
+
+r3_100 <- h_y_m_comuna_corr_01[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+<br>
+Guardamos:
+
+```{r}
+saveRDS(h_y_m_comuna_corr_01, "P15/region_07_P15_r.rds")
+```
+
+
+
+<br>
+
+## 12 Referencias
+
+https://rpubs.com/osoramirez/316691
+
+https://dataintelligencechile.shinyapps.io/casenfinal
+
+Manual_de_usuario_Censo_2017_16R.pdf\
+
+http://www.censo2017.cl/microdatos/
+
+Censo de Población y Vivienda\
+
+https://www.ine.cl/estadisticas/sociales/censos-de-poblacion-y-vivienda/poblacion-y-vivienda
+
+
+http://r-statistics.co/Linear-Regression.html
+
+

@@ -1,0 +1,373 @@
+---
+title: Expansión de la CASEN sobre el CENSO compendio 2017
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+  De ingresos sobre una categoría de respuesta 
+
+date: "Jueves 24-06-2021"
+
+abstract: |
+  Expandiremos los ingresos promedios comunales obtenidos de la CASEN sobre la categoría de respuesta: "tejas o tejuelas de arcilla, metálicas, de cemento, de madera, asfálticas o plásticas" del campo P03B del CENSO de viviendas, que fue la categoría de respuesta que más alto correlaciona con los ingresos expandidos (obtenidos de la multiplicación del ingreso promedio y los habitantes), ambos a nivel comunal.
+  
+  Ensayaremos diferentes modelos dentro del análisis de regresión cuya variable independiente será: "frecuencia de población que posee la variable Censal respecto a la zona" y la dependiente: "ingreso expandido por zona"
+  
+  Lo anterior para elegir el que posea el mayor coeficiente de determinación y así contruir una tabla de valores predichos.
+  
+
+
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library(ggplot2)
+```
+
+## 1 Región 01
+
+### Análisis de regresión
+
+[región 01](https://rpubs.com/dataintelligence/exp_viv_region_01)
+
+### Coeficiente de determinación
+
+0.9243
+
+### Ecuación de regresión
+
+$$ \hat Y = 1422.21^2 + 2  \cdot 1422.21 \cdot 1960.87 \sqrt{X} + 1960.87 ^2 \cdot X $$
+
+<br>
+
+## 2 Región 02
+
+### Análisis de regresión
+
+[región 02](https://rpubs.com/dataintelligence/exp_viv_region_02)
+
+### Coeficiente de determinación
+
+0.8819
+
+### Ecuación de regresión
+$$ \hat Y = e^{15.42700 + 0.96940 \cdot ln X} $$
+<br>
+
+## 3 Región 03
+
+### Análisis de regresión
+
+[región 03](https://rpubs.com/dataintelligence/exp_viv_region_03)
+
+### Coeficiente de determinación
+
+0.8192
+
+### Ecuación de regresión
+$$ \hat Y = e^(16.21286 + 0.96940 * lnX)  $$
+<br>
+
+## 4 Región 04
+
+### Análisis de regresión
+
+[región 04](https://rpubs.com/dataintelligence/exp_viv_region_04)
+
+### Coeficiente de determinación
+
+0.8117
+
+### Ecuación de regresión
+
+$$ \hat Y = 338.14^2 + 2  \cdot 338.14 \cdot 5005.37 \cdot ln{X} + 5005.37 ^2 \cdot ln ^2 X $$
+<br>
+
+## 5 Región 05
+
+### Análisis de regresión
+
+[región 05](https://rpubs.com/dataintelligence/exp_viv_region_05)
+
+### Coeficiente de determinación
+
+0.8031
+
+### Ecuación de regresión
+$$ \hat Y = e^{(15.94843+0.86796 \cdot lnX)}$$
+<br>
+
+## 6 Región 06
+
+### Análisis de regresión
+
+[región 06](https://rpubs.com/dataintelligence/exp_viv_region_06)
+
+### Coeficiente de determinación
+
+0.8032
+
+### Ecuación de regresión
+$$ \hat Y = e^{15.76975+0.89426 \cdot ln{X}} $$
+<br>
+
+## 7 Región 07
+
+### Análisis de regresión
+
+[región 07](https://rpubs.com/dataintelligence/exp_viv_region_07)
+
+### Coeficiente de determinación
+
+0.7743
+
+### Ecuación de regresión
+$$ \hat Y = e^{15.49891+0.95618 \cdot ln{X}} $$
+<br>
+
+## 8 Región 08
+
+### Análisis de regresión
+
+[región 08](https://rpubs.com/dataintelligence/exp_viv_region_08)
+
+### Coeficiente de determinación
+
+0.8127
+
+### Ecuación de regresión
+$$ \hat Y = e^{15.84389+0.96276 \cdot ln{X}} $$
+<br>
+
+## 9 Región 09
+
+### Análisis de regresión
+
+[región 09](https://rpubs.com/dataintelligence/exp_viv_region_09)
+
+### Coeficiente de determinación
+
+0.697 
+
+### Ecuación de regresión
+$$ \hat Y = {2072.04}^2 + 2 \cdot 2072.04 \cdot 4867.31 \cdot \ln{X}+  4867.31^2 \cdot ln^2X  $$
+<br>
+
+## 10 Región 10
+
+### Análisis de regresión
+
+[región 10](https://rpubs.com/dataintelligence/exp_viv_region_10)
+
+### Coeficiente de determinación
+
+0.6989
+
+### Ecuación de regresión
+$$ \hat Y = e^{16.27921+0.83440 \cdot ln{X}} $$
+<br>
+
+## 11 Región 11
+
+### Análisis de regresión
+
+[región 11](https://rpubs.com/dataintelligence/exp_viv_region_11)
+
+### Coeficiente de determinación
+
+0.7588
+
+### Ecuación de regresión
+
+$$ \hat Y = e^{15.98455+1.00922 \cdot ln{X}} $$
+<br>
+
+## 12 Región 12
+
+### Análisis de regresión
+
+[región 12](https://rpubs.com/dataintelligence/exp_viv_region_12)
+
+### Coeficiente de determinación
+
+0.8163
+
+### Ecuación de regresión
+
+$$ \hat Y = e^{16.81323+0.80231 \cdot ln{X}} $$
+<br>
+
+## 13 Región 13
+
+### Análisis de regresión
+
+[región 13](https://rpubs.com/dataintelligence/exp_viv_region_13)
+
+### Coeficiente de determinación
+
+0.7569
+
+### Ecuación de regresión
+$$ \hat Y = e^{16.511254+0.786405 \cdot ln{X}} $$
+<br>
+
+## 14 Región 14
+
+### Análisis de regresión
+
+[región 14](https://rpubs.com/dataintelligence/exp_viv_region_14)
+
+### Coeficiente de determinación
+
+0.7386
+
+### Ecuación de regresión
+$$ \hat Y = 2290.24^2 + 2  \cdot 2290.24 \cdot 2468.58 \sqrt{X} + 2468.58 ^2 \cdot X $$
+<br>
+
+## 15 Región 15
+
+### Análisis de regresión
+
+[región 15](https://rpubs.com/dataintelligence/exp_viv_region_15)
+
+### Coeficiente de determinación
+
+0.9042
+
+### Ecuación de regresión
+$$ \hat Y = e^{{15.3235+0.9461} \cdot ln{X}} $$
+<br>
+
+## 16 Región 16
+
+### Análisis de regresión
+
+[región 16](https://rpubs.com/dataintelligence/exp_viv_region_16)
+
+### Coeficiente de determinación
+
+0.7649
+
+### Ecuación de regresión
+$$ \hat Y = -87267028 + 68695610 \cdot \sqrt {X}  $$
+
+<br>
+
+## Nivel nacional
+
+### Análisis de regresión
+
+[nivel nacional](https://rpubs.com/dataintelligence/exp_viv_nivel_nacional)
+
+### Coeficiente de determinación
+
+0.8152 
+
+### Ecuación de regresión
+$$ \hat Y = e^{16.056127+0.865867 \cdot ln{X}} $$
+
+```{r}
+# r_1 <- readRDS("casen_censo_region_01.rds")
+# r_1
+```
+
+
+```{r}
+# r_1$region <- "Region_01"
+# r_1
+```
+
+
+## Unión de tablas
+
+```{r}
+# casen_censo_region_01.rds
+# casen_censo_region_16.rds
+```
+
+```{r}
+# archivos_unidos <- dir("casen_censo_2017")
+# archivos_df <- as.data.frame(archivos_unidos)
+# iguales <- filter(archivos_df, grepl("casen_censo", archivos_unidos))
+# iguales
+# nrow(iguales)
+```
+
+
+```{r}
+
+# receptaculo <- data.frame()
+# 
+# for (n in 1:nrow(iguales)) {
+  
+#   nombres <- paste("casen_censo_2017/",iguales[n,1], sep = "")
+#   cargado <- readRDS(nombres)
+#   
+#   # colnames(cargado) <- cargado[1,]
+#   # cargado <- cargado[-1,]
+#   # identificar <- iguales[n,1]
+#   
+#   
+#   identificar <- str_replace(iguales[n,1], ".rds","")
+#   cargado$identificador <- identificar
+#   
+#   receptaculo <- rbind(receptaculo,cargado)
+#   
+# #print(receptaculo)
+# }
+# write_xlsx(receptaculo,"censo_casen_2017.xlsx")
+#write_csv2(receptaculo,"censo_casen_2017.csv")
+```
+```{r}
+
+# receptaculo <- data.frame()
+# for (n in 1:nrow(iguales)) {
+#   
+#   nombres <- paste("casen_censo_2017/",iguales[n,1], sep = "")
+#   cargado <- readRDS(nombres)
+#   print(colnames(cargado))
+# }
+# receptaculo
+
+```
+
+
+
+
+
+
