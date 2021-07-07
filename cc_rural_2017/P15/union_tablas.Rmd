@@ -74,6 +74,9 @@ receptaculo
 
 
 
+```{r}
+write_xlsx(receptaculo, "P15_12_2017_r.xlsx")
+```
 
  
  

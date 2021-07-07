@@ -399,7 +399,7 @@ summary(linearMod)
 
 ## 9 Modelo elegido: raiz-raiz (**raiz-raiz**)
 
-Es éste el modelo que nos entrega el mayor coeficiente de determinación de todos (0.7154). 
+Es éste el modelo que nos entrega el mayor coeficiente de determinación de todos (0.6037 ). 
 
 ### 9.1 Diagrama de dispersión sobre **raiz-raiz**
 

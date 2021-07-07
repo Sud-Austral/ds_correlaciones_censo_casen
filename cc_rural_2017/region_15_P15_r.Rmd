@@ -397,28 +397,28 @@ summary(linearMod)
 ```
 
 
-## 9 Modelo elegido: lineal (**linear**)
+## 9 Modelo elegido: log-log (**log-log**)
 
-Es éste el modelo que nos entrega el mayor coeficiente de determinación de todos (0.9285). 
+Es éste el modelo que nos entrega el mayor coeficiente de determinación de todos (0.8241), con ambos coeficientes de correlacion significativos. 
 
-### 9.1 Diagrama de dispersión sobre **linear**
+### 9.1 Diagrama de dispersión sobre **log-log**
 
 Desplegamos una curva suavizada por loess en el diagrama de dispersión.
 
 ```{r}
-scatter.smooth(x=(h_y_m_comuna_corr_01$Freq.x), y=(h_y_m_comuna_corr_01$multi_pob), lpars = list(col = "red", lwd = 2, lty = 1), main="multi_pob ~ Freq.x")
+scatter.smooth(x=log(h_y_m_comuna_corr_01$Freq.x), y=log(h_y_m_comuna_corr_01$multi_pob), lpars = list(col = "red", lwd = 2, lty = 1), main="multi_pob ~ Freq.x")
 ```
 
-### 9.2 Modelo **linear**
+### 9.2 Modelo **log-log**
 
-Observemos nuevamente el resultado sobre **linear**.
+Observemos nuevamente el resultado sobre **log-log**.
 
 ```{r}
-linearMod <- lm( (multi_pob)~(Freq.x) , data=h_y_m_comuna_corr_01)
+linearMod <- lm( log(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)
 summary(linearMod) 
 ```
 ```{r, warning = FALSE, message = FALSE}
-ggplot(h_y_m_comuna_corr_01, aes(x = (Freq.x) , y = (multi_pob))) + 
+ggplot(h_y_m_comuna_corr_01, aes(x = log(Freq.x) , y = log(multi_pob))) + 
   geom_point() +
   stat_smooth(method = "lm", col = "red")
 ```
@@ -437,7 +437,7 @@ plot(linearMod)
 
 <br>
 
-$$ \hat Y = -20459127 + 4717735 \cdot X  $$
+$$ \hat Y = e^{15.13523+0.93326  \cdot ln{X}} $$
 <br>
 
 ## 10 Aplicación la regresión a los valores de la variable a nivel de zona
@@ -446,7 +446,7 @@ Esta nueva variable se llamará: est_ing
 
 ```{r}
 h_y_m_comuna_corr_01$est_ing <- 
--20459127 + 4717735 * (h_y_m_comuna_corr_01$Freq.x) 
+exp(15.13523+0.93326  * log(h_y_m_comuna_corr_01$Freq.x))
 
 r3_100 <- h_y_m_comuna_corr_01[c(1:100),]
 kbl(r3_100) %>%
