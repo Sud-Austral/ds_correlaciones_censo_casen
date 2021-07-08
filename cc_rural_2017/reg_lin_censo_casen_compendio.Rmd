@@ -143,7 +143,7 @@ $$ \hat Y = e^{15.51609+0.76419 ln{X}} $$
 
 ### Análisis de regresión
 
-[región 05](https://rpubs.com/dataintelligence/region_06_P15_r)
+[región 06](https://rpubs.com/dataintelligence/region_06_P15_r)
 
 ### Coeficiente de determinación
 
@@ -160,7 +160,7 @@ $$ \hat Y = {1896.07}^2 + 2 \cdot 1896.07 \cdot 1384.54 \sqrt{X}+  1384.54^2 \cd
 
 ### Análisis de regresión
 
-[región 05](https://rpubs.com/dataintelligence/region_07_P15_r)
+[región 07](https://rpubs.com/dataintelligence/region_07_P15_r)
 
 ### Coeficiente de determinación
 
@@ -179,7 +179,7 @@ $$ \hat Y = {1740.6}^2 + 2 \cdot 1740.6 \cdot 1554.5 \sqrt{X}+  1554.5^2 X  $$
 
 ### Análisis de regresión
 
-[región 05](https://rpubs.com/dataintelligence/region_08_P15_r)
+[región 08](https://rpubs.com/dataintelligence/region_08_P15_r)
 
 ### Coeficiente de determinación
 
@@ -199,7 +199,7 @@ $$ \hat Y = (1896.07)^2 + 2 \cdot 1896.07 \cdot 1384.54 \cdot \sqrt{X}+  1384.54
 
 ### Análisis de regresión
 
-[región 05](https://rpubs.com/dataintelligence/region_09_P15_r)
+[región 09](https://rpubs.com/dataintelligence/region_09_P15_r)
 
 ### Coeficiente de determinación
 
@@ -214,7 +214,7 @@ $$ \hat Y = -7978472  + 16016176 \cdot \sqrt {X}  $$
 
 ### Análisis de regresión
 
-[región 05](https://rpubs.com/dataintelligence/region_10_P15_r)
+[región 10](https://rpubs.com/dataintelligence/region_10_P15_r)
 
 ### Coeficiente de determinación
 
@@ -233,7 +233,7 @@ $$ \hat Y = -6129734 + 13841041 \cdot \sqrt {X}  $$
 
 ### Análisis de regresión
 
-[región 05](https://rpubs.com/dataintelligence/region_11_P15_r)
+[región 11](https://rpubs.com/dataintelligence/region_11_P15_r)
 
 ### Coeficiente de determinación
 
@@ -250,7 +250,7 @@ $$ \hat Y = {1294.51}^2 + 2 \cdot 1294.51 \cdot 1003.65 \sqrt{X}+  1003.65^2 \cd
 
 ### Análisis de regresión
 
-[región 05](https://rpubs.com/dataintelligence/region_12_P15_r)
+[región 12](https://rpubs.com/dataintelligence/region_12_P15_r)
 
 ### Coeficiente de determinación
 
@@ -258,14 +258,14 @@ $$ \hat Y = {1294.51}^2 + 2 \cdot 1294.51 \cdot 1003.65 \sqrt{X}+  1003.65^2 \cd
 
 ### Ecuación de regresión
 $$ \hat Y = {1034.6}^2 + 2 \cdot 1034.6 \cdot 1285.4 \sqrt{X}+  1285.4^2 \cdot X  $$
-XXXXXXXX
+
 <br>
 
 ## 13 Región 13
 
 ### Análisis de regresión
 
-[región 05](https://rpubs.com/dataintelligence/region_13_P15_r)
+[región 13](https://rpubs.com/dataintelligence/region_13_P15_r)
 
 ### Coeficiente de determinación
 
@@ -281,7 +281,7 @@ $$ \hat Y = e^{15.57452+0.72853 \cdot ln{X}} $$
 
 ### Análisis de regresión
 
-[región 05](https://rpubs.com/dataintelligence/region_14_P15_r)
+[región 14](https://rpubs.com/dataintelligence/region_14_P15_r)
 
 ### Coeficiente de determinación
 
@@ -298,7 +298,7 @@ $$ \hat Y = {2233.02}^2 + 2 \cdot 2233.02 \cdot 1112.56 \sqrt{X}+  1112.56^2 \cd
 
 ### Análisis de regresión
 
-[región 05](https://rpubs.com/dataintelligence/region_15_P15_r)
+[región 15](https://rpubs.com/dataintelligence/region_15_P15_r)
 
 ### Coeficiente de determinación
 
@@ -307,14 +307,14 @@ $$ \hat Y = {2233.02}^2 + 2 \cdot 2233.02 \cdot 1112.56 \sqrt{X}+  1112.56^2 \cd
 ### Ecuación de regresión
 $$ \hat Y = e^{15.13523+0.93326  \cdot ln{X}} $$
 
-XXXXXXXX
+
 <br>
 
-## 16 Región 15
+## 16 Región 16
 
 ### Análisis de regresión
 
-[región 05](https://rpubs.com/dataintelligence/region_16_P15_r)
+[región 16](https://rpubs.com/dataintelligence/region_16_P15_r)
 
 ### Coeficiente de determinación
 
@@ -323,7 +323,9 @@ XXXXXXXX
 ### Ecuación de regresión
 $$ \hat Y = {1812.16}^2 + 2 \cdot 1812.16 \cdot 1218.55 \cdot \sqrt{X}+  1218.55 ^2 \cdot X  $$
 
+Tabla unida
 
+https://github.com/Sud-Austral/ds_correlaciones_censo_casen/blob/main/cc_rural_2017/P15/P15_12_2017_r.xlsx
 
 
 

@@ -346,50 +346,184 @@ DataIntelligence<br><h4 class="date">Martes 06-07-2021</h4>
 <div id="ecuación-de-regresión-4" class="section level3">
 <h3>Ecuación de regresión</h3>
 <p><span class="math display">\[ \hat Y = e^{15.51609+0.76419 ln{X}} \]</span> <br></p>
-<pre class="r"><code># r_1 &lt;- readRDS(&quot;casen_censo_region_01.rds&quot;)
-# r_1</code></pre>
-<pre class="r"><code># r_1$region &lt;- &quot;Region_01&quot;
-# r_1</code></pre>
 </div>
 </div>
-<div id="unión-de-tablas" class="section level2">
-<h2>Unión de tablas</h2>
-<pre class="r"><code># casen_censo_region_01.rds
-# casen_censo_region_16.rds</code></pre>
-<pre class="r"><code># archivos_unidos &lt;- dir(&quot;casen_censo_2017&quot;)
-# archivos_df &lt;- as.data.frame(archivos_unidos)
-# iguales &lt;- filter(archivos_df, grepl(&quot;casen_censo&quot;, archivos_unidos))
-# iguales
-# nrow(iguales)</code></pre>
-<pre class="r"><code># receptaculo &lt;- data.frame()
-# 
-# for (n in 1:nrow(iguales)) {
-  
-#   nombres &lt;- paste(&quot;casen_censo_2017/&quot;,iguales[n,1], sep = &quot;&quot;)
-#   cargado &lt;- readRDS(nombres)
-#   
-#   # colnames(cargado) &lt;- cargado[1,]
-#   # cargado &lt;- cargado[-1,]
-#   # identificar &lt;- iguales[n,1]
-#   
-#   
-#   identificar &lt;- str_replace(iguales[n,1], &quot;.rds&quot;,&quot;&quot;)
-#   cargado$identificador &lt;- identificar
-#   
-#   receptaculo &lt;- rbind(receptaculo,cargado)
-#   
-# #print(receptaculo)
-# }
-# write_xlsx(receptaculo,&quot;censo_casen_2017.xlsx&quot;)
-#write_csv2(receptaculo,&quot;censo_casen_2017.csv&quot;)</code></pre>
-<pre class="r"><code># receptaculo &lt;- data.frame()
-# for (n in 1:nrow(iguales)) {
-#   
-#   nombres &lt;- paste(&quot;casen_censo_2017/&quot;,iguales[n,1], sep = &quot;&quot;)
-#   cargado &lt;- readRDS(nombres)
-#   print(colnames(cargado))
-# }
-# receptaculo</code></pre>
+<div id="región-06" class="section level2">
+<h2>6 Región 06</h2>
+<div id="análisis-de-regresión-5" class="section level3">
+<h3>Análisis de regresión</h3>
+<p><a href="https://rpubs.com/dataintelligence/region_06_P15_r">región 06</a></p>
+</div>
+<div id="coeficiente-de-determinación-5" class="section level3">
+<h3>Coeficiente de determinación</h3>
+<p>0.6037</p>
+</div>
+<div id="ecuación-de-regresión-5" class="section level3">
+<h3>Ecuación de regresión</h3>
+<p><span class="math display">\[ \hat Y = {1896.07}^2 + 2 \cdot 1896.07 \cdot 1384.54 \sqrt{X}+  1384.54^2 \cdot X  \]</span></p>
+<p><br></p>
+</div>
+</div>
+<div id="región-07" class="section level2">
+<h2>7 Región 07</h2>
+<div id="análisis-de-regresión-6" class="section level3">
+<h3>Análisis de regresión</h3>
+<p><a href="https://rpubs.com/dataintelligence/region_07_P15_r">región 07</a></p>
+</div>
+<div id="coeficiente-de-determinación-6" class="section level3">
+<h3>Coeficiente de determinación</h3>
+<p>0.6037</p>
+</div>
+<div id="ecuación-de-regresión-6" class="section level3">
+<h3>Ecuación de regresión</h3>
+<p><span class="math display">\[ \hat Y = {1740.6}^2 + 2 \cdot 1740.6 \cdot 1554.5 \sqrt{X}+  1554.5^2 X  \]</span></p>
+<p><br></p>
+</div>
+</div>
+<div id="región-08" class="section level2">
+<h2>8 Región 08</h2>
+<div id="análisis-de-regresión-7" class="section level3">
+<h3>Análisis de regresión</h3>
+<p><a href="https://rpubs.com/dataintelligence/region_08_P15_r">región 08</a></p>
+</div>
+<div id="coeficiente-de-determinación-7" class="section level3">
+<h3>Coeficiente de determinación</h3>
+<p>0.6037</p>
+</div>
+<div id="ecuación-de-regresión-7" class="section level3">
+<h3>Ecuación de regresión</h3>
+<p><span class="math display">\[ \hat Y = (1896.07)^2 + 2 \cdot 1896.07 \cdot 1384.54 \cdot \sqrt{X}+  1384.54^2 \cdot X  \]</span></p>
+<p><br></p>
+</div>
+</div>
+<div id="región-09" class="section level2">
+<h2>9 Región 09</h2>
+<div id="análisis-de-regresión-8" class="section level3">
+<h3>Análisis de regresión</h3>
+<p><a href="https://rpubs.com/dataintelligence/region_09_P15_r">región 09</a></p>
+</div>
+<div id="coeficiente-de-determinación-8" class="section level3">
+<h3>Coeficiente de determinación</h3>
+<p>0.5112</p>
+</div>
+<div id="ecuación-de-regresión-8" class="section level3">
+<h3>Ecuación de regresión</h3>
+<p><span class="math display">\[ \hat Y = -7978472  + 16016176 \cdot \sqrt {X}  \]</span></p>
+<p><br></p>
+</div>
+</div>
+<div id="región-10" class="section level2">
+<h2>10 Región 10</h2>
+<div id="análisis-de-regresión-9" class="section level3">
+<h3>Análisis de regresión</h3>
+<p><a href="https://rpubs.com/dataintelligence/region_10_P15_r">región 10</a></p>
+</div>
+<div id="coeficiente-de-determinación-9" class="section level3">
+<h3>Coeficiente de determinación</h3>
+<p>0.631</p>
+</div>
+<div id="ecuación-de-regresión-9" class="section level3">
+<h3>Ecuación de regresión</h3>
+<p><span class="math display">\[ \hat Y = -6129734 + 13841041 \cdot \sqrt {X}  \]</span></p>
+<p><br></p>
+</div>
+</div>
+<div id="región-11" class="section level2">
+<h2>11 Región 11</h2>
+<div id="análisis-de-regresión-10" class="section level3">
+<h3>Análisis de regresión</h3>
+<p><a href="https://rpubs.com/dataintelligence/region_11_P15_r">región 11</a></p>
+</div>
+<div id="coeficiente-de-determinación-10" class="section level3">
+<h3>Coeficiente de determinación</h3>
+<p>0.7675</p>
+</div>
+<div id="ecuación-de-regresión-10" class="section level3">
+<h3>Ecuación de regresión</h3>
+<p><span class="math display">\[ \hat Y = {1294.51}^2 + 2 \cdot 1294.51 \cdot 1003.65 \sqrt{X}+  1003.65^2 \cdot X  \]</span></p>
+<p><br></p>
+</div>
+</div>
+<div id="región-12" class="section level2">
+<h2>12 Región 12</h2>
+<div id="análisis-de-regresión-11" class="section level3">
+<h3>Análisis de regresión</h3>
+<p><a href="https://rpubs.com/dataintelligence/region_12_P15_r">región 12</a></p>
+</div>
+<div id="coeficiente-de-determinación-11" class="section level3">
+<h3>Coeficiente de determinación</h3>
+<p>0.7694</p>
+</div>
+<div id="ecuación-de-regresión-11" class="section level3">
+<h3>Ecuación de regresión</h3>
+<p><span class="math display">\[ \hat Y = {1034.6}^2 + 2 \cdot 1034.6 \cdot 1285.4 \sqrt{X}+  1285.4^2 \cdot X  \]</span></p>
+<p><br></p>
+</div>
+</div>
+<div id="región-13" class="section level2">
+<h2>13 Región 13</h2>
+<div id="análisis-de-regresión-12" class="section level3">
+<h3>Análisis de regresión</h3>
+<p><a href="https://rpubs.com/dataintelligence/region_13_P15_r">región 13</a></p>
+</div>
+<div id="coeficiente-de-determinación-12" class="section level3">
+<h3>Coeficiente de determinación</h3>
+<p>0.7609</p>
+</div>
+<div id="ecuación-de-regresión-12" class="section level3">
+<h3>Ecuación de regresión</h3>
+<p><span class="math display">\[ \hat Y = e^{15.57452+0.72853 \cdot ln{X}} \]</span></p>
+<p><br></p>
+</div>
+</div>
+<div id="región-14" class="section level2">
+<h2>14 Región 14</h2>
+<div id="análisis-de-regresión-13" class="section level3">
+<h3>Análisis de regresión</h3>
+<p><a href="https://rpubs.com/dataintelligence/region_14_P15_r">región 14</a></p>
+</div>
+<div id="coeficiente-de-determinación-13" class="section level3">
+<h3>Coeficiente de determinación</h3>
+<p>0.5408</p>
+</div>
+<div id="ecuación-de-regresión-13" class="section level3">
+<h3>Ecuación de regresión</h3>
+<p><span class="math display">\[ \hat Y = {2233.02}^2 + 2 \cdot 2233.02 \cdot 1112.56 \sqrt{X}+  1112.56^2 \cdot X  \]</span></p>
+<p><br></p>
+</div>
+</div>
+<div id="región-15" class="section level2">
+<h2>15 Región 15</h2>
+<div id="análisis-de-regresión-14" class="section level3">
+<h3>Análisis de regresión</h3>
+<p><a href="https://rpubs.com/dataintelligence/region_15_P15_r">región 15</a></p>
+</div>
+<div id="coeficiente-de-determinación-14" class="section level3">
+<h3>Coeficiente de determinación</h3>
+<p>0.8241</p>
+</div>
+<div id="ecuación-de-regresión-14" class="section level3">
+<h3>Ecuación de regresión</h3>
+<p><span class="math display">\[ \hat Y = e^{15.13523+0.93326  \cdot ln{X}} \]</span></p>
+<p><br></p>
+</div>
+</div>
+<div id="región-16" class="section level2">
+<h2>16 Región 16</h2>
+<div id="análisis-de-regresión-15" class="section level3">
+<h3>Análisis de regresión</h3>
+<p><a href="https://rpubs.com/dataintelligence/region_16_P15_r">región 16</a></p>
+</div>
+<div id="coeficiente-de-determinación-15" class="section level3">
+<h3>Coeficiente de determinación</h3>
+<p>0.6256</p>
+</div>
+<div id="ecuación-de-regresión-15" class="section level3">
+<h3>Ecuación de regresión</h3>
+<p><span class="math display">\[ \hat Y = {1812.16}^2 + 2 \cdot 1812.16 \cdot 1218.55 \cdot \sqrt{X}+  1218.55 ^2 \cdot X  \]</span></p>
+<p>Tabla unida</p>
+<p><a href="https://github.com/Sud-Austral/ds_correlaciones_censo_casen/blob/main/cc_rural_2017/P15/P15_12_2017_r.xlsx" class="uri">https://github.com/Sud-Austral/ds_correlaciones_censo_casen/blob/main/cc_rural_2017/P15/P15_12_2017_r.xlsx</a></p>
+</div>
 </div>
 
 
