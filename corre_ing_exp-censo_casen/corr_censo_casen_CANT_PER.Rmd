@@ -1,31 +1,42 @@
 ---
-title: Correlaciones entre variables del Censo de Viviendas, Hogares y Personas e ingresos promedios comunales de la CASEN 2017.
+title: Correlaciones entre variables del CENSO de Viviendas, Hogares y Personas e Ingresos promedios comunales de la CASEN 2017.
 author:
 - name: VE-CC-AJ
   affiliation: DataIntelligence
 subtitle: | 
 
-date: "Jueves 01-06-2021"
+date: "Viernes 09-07-2021"
 
 abstract: |
-  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población comunal** que llamaremos **ingresos expandidos** extraído de la Casen 2017 y las frecuencias de categorías de respuesta para todas las variables del Censo de viviendas, hogares y personas al 2017, también extraídas a nivel comunal.
+  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población también comunal** que llamaremos **ingresos expandidos** extraídos de la Casen 2017 y las frecuencias de respuesta por categoría a la pregunta **CANT_PER** del Censo de viviendas 2017, también extraídas a nivel comunal. Lo haremos a nivel nacional.
   
-  Haremos las correlaciones tanto a nivel Urbano como rural.
+  Haremos las correlaciones tanto a nivel Urbano como Rural.
   
-  Importante es aplicar la libreria **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
-    
+  Importante es aplicar la librería **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
+   
 header-includes:
    - \usepackage[]{babel}
 
 output:
-  html_document:
+  rmdformats::html_clean:
+    highlight: kate
     toc: true
-    toc_float: true
-    theme: flatly
+    use_bookdown: true    
+    
 ---
 
-```{r, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  class.source = "numberLines lineAnchors"
+  )
 library(ggplot2)
 #library(ggpubr)
 library(markdown)
@@ -55,40 +66,29 @@ library("dplyr")
 
 ```
 
-# 1 Pregunta **CANT_PER**: Cantidad de personas, nivel Urbano
+# Nivel nacional URBANO (código 1)
 
-Area:
-urbano = 1 rural = 2
-<br>
+## Pregunta **CANT_PER**: Ocupación de la vivienda
 
-### 1.1 Cálculo de frecuencias
-Leemos las respuestas a la pregunta CANT_PER del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+Esta pregunta posee un rango de categorías de respuestade 0-9999:
+  
+Leemos las respuestas a la pregunta **CANT_PER** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:
 
 ```{r, warning = FALSE}
 tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
-tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
-```
-
-```{r}
-b <- tabla_con_clave$COMUNA
-c <- tabla_con_clave$CANT_PER
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
+b <- tabla_con_clave_u$COMUNA
+c <- tabla_con_clave_u$CANT_PER
 cross_tab =  xtabs( ~ unlist(b) + unlist(c))
 tabla <- as.data.frame(cross_tab)
 d <-tabla[!(tabla$Freq == 0),]
 d$anio <- "2017"
-
-kbl(d) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
 ```
 
-<br>
 
 Nos encontramos con una anomalía estadística. Tenemos una vivienda cuya cantidad de personas es de 5912, lo que es absurdo. Vamos a fijar un punto de corte arbitrario que nos permita trabajar con coherencia.
 
 A partir del número 30, las frecuencias tienden a 1.
-
 
 
 ```{r, warning = FALSE}
@@ -112,415 +112,105 @@ names(comuna_corr)[94] <- "código"
 # Hacemos la unión con los ingresos promedio comunales expandidos:
 ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
 df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+una_secuencia <- seq(4, 99, 3 )
+df_2017_22 <- data.frame()
+for (i in una_secuencia){
+df_2017_22 <- df_2017_2[,-(una_secuencia),drop=FALSE]
+}
+df_2017_222 <- df_2017_22
+una_secuencia_2 <- seq(3, 68, 2 )
+df_2017_222 = df_2017_222[una_secuencia_2]
+df_2017_222$ingresos_expandidos <- df_2017_222$promedio_i * df_2017_222$personas
+df_2017_222 = df_2017_222[-c(32:33)]
+for(i in 1:31){
+frecuencia <- paste(i-1,'pers',sep = "_")
+names(df_2017_222)[i] <- frecuencia
+}
 ```
-
-### 1.2 Correlaciones
-
-#### 1.2.1 Pearson
 
 ## **Correlaciones**
 
-### Pearson
-
-El coeficiente de correlación de Pearson es probablemente la medida más utilizada para las relaciones lineales entre dos variables distribuidas normales y, por lo tanto, a menudo se denomina simplemente "coeficiente de correlación". Por lo general, el coeficiente de Pearson se obtiene mediante un ajuste de mínimos cuadrados y un valor de 1 representa una relación positiva perfecta, -1 una relación negativa perfecta y 0 indica la ausencia de una relación entre las variables.
-
-$$ \rho = \frac{\text{cov}(X,Y)}{\sigma_x \sigma_y} codigos <- d_t $$
-$$ r = \frac{{}\sum_{i=1}^{n} (x_i - \overline{x})(y_i - \overline{y})}
-{\sqrt{\sum_{i=1}^{n} (x_i - \overline{x})^2(y_i - \overline{y})^2}} $$
-
-
-
-
-
-<br>
+### 1-10 personas
 
 ```{r}
-names(df_2017_2)[3] <- "1 persona"
-names(df_2017_2)[6] <- "2 personas"
-names(df_2017_2)[9] <- "3 personas"
-names(df_2017_2)[12] <- "4 personas"
-names(df_2017_2)[15] <- "5 personas"
-names(df_2017_2)[18] <- "6 personas"
-names(df_2017_2)[21] <- "7 personas"
-names(df_2017_2)[24] <- "8 personas"
-names(df_2017_2)[27] <- "9 personas"
-names(df_2017_2)[30] <- "10 personas"
+df_2017_22a <- df_2017_222[,c(1:10,32)]
 ```
 
-
-
-
-
-```{r}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30, 99)]
-chart.Correlation(my_data, histogram=TRUE,  method = c( "pearson"),pch=20)
-```
-
-```{r}
-names(df_2017_2)[33] <- "11 personas"
-names(df_2017_2)[36] <- "12 personas"
-names(df_2017_2)[39] <- "13 personas"
-names(df_2017_2)[42] <- "14 personas"
-names(df_2017_2)[45] <- "15 personas"
-names(df_2017_2)[48] <- "16 personas"
-names(df_2017_2)[51] <- "17 personas"
-names(df_2017_2)[54] <- "18 personas"
-names(df_2017_2)[57] <- "19 personas"
-names(df_2017_2)[60] <- "20 personas"
-```
-
-```{r}
-my_data <- df_2017_2[, c(33,36,39,42,45,48,51,54,57,60, 99)]
-chart.Correlation(my_data, histogram=TRUE,  method = c( "pearson"),pch=20)
-```
-
-```{r}
-names(df_2017_2)[63] <- "21 personas"
-names(df_2017_2)[66] <- "22 personas"
-names(df_2017_2)[69] <- "23 personas"
-names(df_2017_2)[72] <- "24 personas"
-names(df_2017_2)[75] <- "25 personas"
-names(df_2017_2)[78] <- "26 personas"
-names(df_2017_2)[81] <- "27 personas"
-names(df_2017_2)[84] <- "28 personas"
-names(df_2017_2)[87] <- "29 personas"
-names(df_2017_2)[90] <- "30 personas"
-```
-
-```{r}
-my_data <- df_2017_2[, c(63,66,69,72,75,78,81,84,87,90, 99)]
-chart.Correlation(my_data, histogram=TRUE,  method = c( "pearson"),pch=20)
-```
-
-
-### Spearman
-
-Relacionado con el coeficiente de correlación de Pearson, el coeficiente de correlación de Spearman (rho) mide la relación entre dos variables. La rho de Spearman puede entenderse como una versión basada en rangos del coeficiente de correlación de Pearson, que se puede utilizar para variables que no tienen una distribución normal y tienen una relación no lineal. Además, su uso no solo está restringido a datos continuos, sino que también puede usarse en análisis de atributos ordinales.
-
-
-$$ \rho = 1- {\frac {6 \sum d_i^2}{n(n^2 - 1)}} $$
-
-```{r}
-names(df_2017_2)[3] <- "1 persona"
-names(df_2017_2)[6] <- "2 personas"
-names(df_2017_2)[9] <- "3 personas"
-names(df_2017_2)[12] <- "4 personas"
-names(df_2017_2)[15] <- "5 personas"
-names(df_2017_2)[18] <- "6 personas"
-names(df_2017_2)[21] <- "7 personas"
-names(df_2017_2)[24] <- "8 personas"
-names(df_2017_2)[27] <- "9 personas"
-names(df_2017_2)[30] <- "10 personas"
-```
-
-
-
-
-
-```{r, warning=FALSE}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30, 99)]
-chart.Correlation(my_data, histogram=TRUE,  method = c( "spearman"),pch=20)
-```
-
-```{r, warning=FALSE}
-names(df_2017_2)[33] <- "11 personas"
-names(df_2017_2)[36] <- "12 personas"
-names(df_2017_2)[39] <- "13 personas"
-names(df_2017_2)[42] <- "14 personas"
-names(df_2017_2)[45] <- "15 personas"
-names(df_2017_2)[48] <- "16 personas"
-names(df_2017_2)[51] <- "17 personas"
-names(df_2017_2)[54] <- "18 personas"
-names(df_2017_2)[57] <- "19 personas"
-names(df_2017_2)[60] <- "20 personas"
-```
-
-```{r, warning=FALSE}
-my_data <- df_2017_2[, c(33,36,39,42,45,48,51,54,57,60,99)]
-chart.Correlation(my_data, histogram=TRUE,  method = c( "spearman"),pch=20)
-```
-
-```{r}
-names(df_2017_2)[63] <- "21 personas"
-names(df_2017_2)[66] <- "22 personas"
-names(df_2017_2)[69] <- "23 personas"
-names(df_2017_2)[72] <- "24 personas"
-names(df_2017_2)[75] <- "25 personas"
-names(df_2017_2)[78] <- "26 personas"
-names(df_2017_2)[81] <- "27 personas"
-names(df_2017_2)[84] <- "28 personas"
-names(df_2017_2)[87] <- "29 personas"
-names(df_2017_2)[90] <- "30 personas"
-```
-
-```{r, warning=FALSE}
-my_data <- df_2017_2[, c(63,66,69,72,75,78,81,84,87,90, 99)]
-chart.Correlation(my_data, histogram=TRUE,  method = c( "spearman"),pch=20)
-```
-
-
-
-
-
-
-
-
-### Kendall
-
-Similar al coeficiente de correlación de Pearson, la tau de Kendall mide el grado de una relación monótona entre variables y, como la rho de Spearman, calcula la dependencia entre variables clasificadas, lo que hace que sea factible para datos distribuidos no normales. Kendall tau se puede calcular tanto para datos continuos como ordinales. En términos generales, la tau de Kendall se distingue de la rho de Spearman por una penalización más fuerte de las dislocaciones no secuenciales (en el contexto de las variables clasificadas).
-
-$$ \tau = \frac{c-d}{c+d} = \frac{S}{
-	\left(
-	\begin{matrix} 
- 	n \\
- 	2
-\end{matrix}
-\right)}
-= \frac{2S}{n(n-1)} $$
-
-$$\tau = \frac{S}{\sqrt{n(n-1)/2-T}\sqrt{n(n-1)/2-U}}  \\
-\\
-T = \sum_t t(t-1)/2 \\
-\\
-U = \sum_u u(u-1)/2 \\$$
-
-```{r}
-names(df_2017_2)[3] <- "1 persona"
-names(df_2017_2)[6] <- "2 personas"
-names(df_2017_2)[9] <- "3 personas"
-names(df_2017_2)[12] <- "4 personas"
-names(df_2017_2)[15] <- "5 personas"
-names(df_2017_2)[18] <- "6 personas"
-names(df_2017_2)[21] <- "7 personas"
-names(df_2017_2)[24] <- "8 personas"
-names(df_2017_2)[27] <- "9 personas"
-names(df_2017_2)[30] <- "10 personas"
-```
-
-```{r}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30, 99)]
-chart.Correlation(my_data, histogram=TRUE,  method = c( "kendall"),pch=20)
-```
-
-```{r}
-names(df_2017_2)[33] <- "11 personas"
-names(df_2017_2)[36] <- "12 personas"
-names(df_2017_2)[39] <- "13 personas"
-names(df_2017_2)[42] <- "14 personas"
-names(df_2017_2)[45] <- "15 personas"
-names(df_2017_2)[48] <- "16 personas"
-names(df_2017_2)[51] <- "17 personas"
-names(df_2017_2)[54] <- "18 personas"
-names(df_2017_2)[57] <- "19 personas"
-names(df_2017_2)[60] <- "20 personas"
-```
-
-```{r}
-my_data <- df_2017_2[, c(33,36,39,42,45,48,51,54,57,60, 99)]
-chart.Correlation(my_data, histogram=TRUE,  method = c( "kendall"),pch=20)
-```
-
-```{r}
-names(df_2017_2)[63] <- "21 personas"
-names(df_2017_2)[66] <- "22 personas"
-names(df_2017_2)[69] <- "23 personas"
-names(df_2017_2)[72] <- "24 personas"
-names(df_2017_2)[75] <- "25 personas"
-names(df_2017_2)[78] <- "26 personas"
-names(df_2017_2)[81] <- "27 personas"
-names(df_2017_2)[84] <- "28 personas"
-names(df_2017_2)[87] <- "29 personas"
-names(df_2017_2)[90] <- "30 personas"
-```
-
-```{r, warning=FALSE}
-my_data <- df_2017_2[, c(63,66,69,72,75,78,81,84,87,90, 99)]
-chart.Correlation(my_data, histogram=TRUE,  method = c( "kendall"),pch=20)
-```
-
-
-
-
-
-
-
-
-<hr style="height:3px;border-width:3;color:Green;background-color:Green">
-<br>
-
-# 2 Pregunta **CANT_PER**: Cantidad de personas, nivel Rural
-
-Area:
-urbano = 1 rural = 2
-<br>
-
-### 2.1 Cálculo de frecuencias
-Leemos las respuestas a la pregunta CANT_PER del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+### **Kendall**
 
 ```{r, warning = FALSE}
-tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
-tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
+chart.Correlation(df_2017_22a, histogram=TRUE, method = c( "kendall"), pch=20)
 ```
-
-```{r}
-b <- tabla_con_clave$COMUNA
-c <- tabla_con_clave$CANT_PER
-cross_tab =  xtabs( ~ unlist(b) + unlist(c))
-tabla <- as.data.frame(cross_tab)
-d <-tabla[!(tabla$Freq == 0),]
-d$anio <- "2017"
-
-kbl(d) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-```
-
-<br>
-
-Nos encontramos con una anomalía estadística. Tenemos una vivienda cuya cantidad de personas es de 3706, lo que es absurdo. Vamos a fijar un punto de corte arbitrario que nos permita trabajar con coherencia.
-
-A partir del número 15, las frecuencias tienden a 1.
-
-
-
-```{r, warning = FALSE}
-d_t <- filter(d,d$unlist.c. == 0)
-for(i in 1:15){
-  d_i <- filter(d,d$unlist.c. == i)
-  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
-}
-
-# Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
-codigos <- d_t$unlist.b.
-rango <- seq(1:nrow(d_t))
-cadena <- paste("0",codigos[rango], sep = "")
-cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
-codigos <- as.data.frame(codigos)
-cadena <- as.data.frame(cadena)
-comuna_corr <- cbind(d_t,cadena)
-comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
-names(comuna_corr)[49] <- "código" 
-```
-
-
-```{r, warning = FALSE}
-
-
-# Hacemos la unión con los ingresos promedio comunales expandidos:
-ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_rural_17.rds")
-df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
-```
-
-### 2.2 Correlaciones
 
 ### Pearson
-
-```{r}
-names(df_2017_2)[3] <- "1 persona"
-names(df_2017_2)[6] <- "2 personas"
-names(df_2017_2)[9] <- "3 personas"
-names(df_2017_2)[12] <- "4 personas"
-names(df_2017_2)[15] <- "5 personas"
-names(df_2017_2)[18] <- "6 personas"
-names(df_2017_2)[21] <- "7 personas"
-names(df_2017_2)[24] <- "8 personas"
-names(df_2017_2)[27] <- "9 personas"
-names(df_2017_2)[30] <- "10 personas"
-
-names(df_2017_2)[33] <- "11 personas"
-names(df_2017_2)[36] <- "12 personas"
-names(df_2017_2)[39] <- "13 personas"
-names(df_2017_2)[42] <- "14 personas"
-names(df_2017_2)[45] <- "15 personas"
-
-```
-
-
-
-
-
-
-```{r}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30, 54)]
-chart.Correlation(my_data, histogram=TRUE,  method = c( "pearson"), pch=20)
-```
-
-
-```{r}
-my_data <- df_2017_2[, c(33,36,39,42,45, 54)]
-chart.Correlation(my_data, histogram=TRUE, method = c( "pearson"), pch=20)
+ 
+```{r, warning = FALSE}
+chart.Correlation(df_2017_22a, histogram=TRUE, method = c( "pearson"), pch=20)
 ```
 
 ### Spearman
 
+```{r, warning = FALSE}
+chart.Correlation(df_2017_22a, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+### 11-20 personas
 
 ```{r}
-names(df_2017_2)[3] <- "1 persona"
-names(df_2017_2)[6] <- "2 personas"
-names(df_2017_2)[9] <- "3 personas"
-names(df_2017_2)[12] <- "4 personas"
-names(df_2017_2)[15] <- "5 personas"
-names(df_2017_2)[18] <- "6 personas"
-names(df_2017_2)[21] <- "7 personas"
-names(df_2017_2)[24] <- "8 personas"
-names(df_2017_2)[27] <- "9 personas"
-names(df_2017_2)[30] <- "10 personas"
+df_2017_22b <- df_2017_222[,c(11:20,32)]
 ```
 
-```{r, warning=FALSE}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30, 54)]
-chart.Correlation(my_data, histogram=TRUE,  method = c( "spearman"), pch=20)
+### **Kendall**
+
+```{r, warning = FALSE}
+chart.Correlation(df_2017_22b, histogram=TRUE, method = c( "kendall"), pch=20)
 ```
+
+### Pearson
+ 
+```{r, warning = FALSE}
+chart.Correlation(df_2017_22b, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+### Spearman
+
+```{r, warning = FALSE}
+chart.Correlation(df_2017_22b, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+### 21-30 personas
 
 ```{r}
-names(df_2017_2)[33] <- "11 personas"
-names(df_2017_2)[36] <- "12 personas"
-names(df_2017_2)[39] <- "13 personas"
-names(df_2017_2)[42] <- "14 personas"
-names(df_2017_2)[45] <- "15 personas"
-
+df_2017_22c <- df_2017_222[,c(21:30,32)]
 ```
 
-```{r, warning=FALSE}
-my_data <- df_2017_2[, c(33,36,39,42,45, 54)]
-chart.Correlation(my_data, histogram=TRUE, method = c( "spearman"),
-                  pch=20)
+### **Kendall**
+
+```{r, warning = FALSE}
+chart.Correlation(df_2017_22c, histogram=TRUE, method = c( "kendall"), pch=40)
+```
+
+### Pearson
+ 
+```{r, warning = FALSE}
+chart.Correlation(df_2017_22c, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+### Spearman
+
+```{r, warning = FALSE}
+chart.Correlation(df_2017_22c, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
 
 
 
-### Kendall
 
-```{r}
-names(df_2017_2)[3] <- "1 persona"
-names(df_2017_2)[6] <- "2 personas"
-names(df_2017_2)[9] <- "3 personas"
-names(df_2017_2)[12] <- "4 personas"
-names(df_2017_2)[15] <- "5 personas"
-names(df_2017_2)[18] <- "6 personas"
-names(df_2017_2)[21] <- "7 personas"
-names(df_2017_2)[24] <- "8 personas"
-names(df_2017_2)[27] <- "9 personas"
-names(df_2017_2)[30] <- "10 personas"
-```
 
-```{r}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30, 54)]
-chart.Correlation(my_data, histogram=TRUE,  method = c( "kendall"), pch=20)
-```
 
-```{r}
-names(df_2017_2)[33] <- "11 personas"
-names(df_2017_2)[36] <- "12 personas"
-names(df_2017_2)[39] <- "13 personas"
-names(df_2017_2)[42] <- "14 personas"
-names(df_2017_2)[45] <- "15 personas"
 
-```
 
-```{r}
-my_data <- df_2017_2[, c(33,36,39,42,45, 54)]
-chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"),
-                  pch=20)
-```
+
+
+
+
+

@@ -1,0 +1,323 @@
+---
+title: Correlaciones entre variables del Censo de Viviendas, Hogares y Personas e ingresos promedios comunales de la CASEN 2017.
+author: 
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+date: "Viernes 02-07-2021"
+
+abstract: |
+  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población comunal** que llamaremos **multi_pop** extraído de la Casen 2017 y las frecuencias de categorías de respuesta para todas las variables del Censo de viviendas, hogares y personas al 2017, también extraídas a nivel comunal.
+  
+  Importante es aplicar la libreria **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+```
+
+Area:
+urbano = 1 rural = 2
+<br>
+
+# URBANO
+
+## 1 Pregunta **P04**: Número de piezas usadas exclusivamente como dormitorio 
+
+0 piezas\
+1 pieza\
+2 piezas\
+3 piezas\
+4 piezas\
+5 piezas\
+6 o más piezas\
+
+98 No aplica\
+99 Missing
+
+### 1.1 Cálculo de frecuencias
+Leemos las respuestas a la pregunta P04 del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r, warning = FALSE}
+tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
+
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P04
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+d_t <- filter(d,d$unlist.c. == 0)
+for(i in 1:6){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+
+codigos <- d_t$
+unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+
+names(comuna_corr)[22] <- "código" 
+
+ingresos_expandidos_2017 <- readRDS("ingresos_expandidos_17_urbano_nacional.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+```{r, warning = FALSE}
+names(df_2017_2)[3] <- "0 pieza"
+names(df_2017_2)[6] <- "1 pieza"
+names(df_2017_2)[9] <- "2 piezas"
+names(df_2017_2)[12] <- "3 piezas"
+names(df_2017_2)[15] <- "4 piezas"
+names(df_2017_2)[18] <- "5 piezas"
+names(df_2017_2)[21] <- "6 o más piezas"
+```
+
+
+## 1.2 **Correlaciones**
+
+### Pearson
+
+El coeficiente de correlación de Pearson es probablemente la medida más utilizada para las relaciones lineales entre dos variables distribuidas normales y, por lo tanto, a menudo se denomina simplemente "coeficiente de correlación". Por lo general, el coeficiente de Pearson se obtiene mediante un ajuste de mínimos cuadrados y un valor de 1 representa una relación positiva perfecta, -1 una relación negativa perfecta y 0 indica la ausencia de una relación entre las variables.
+
+$$ \rho = \frac{\text{cov}(X,Y)}{\sigma_x \sigma_y} codigos <- d_t $$
+$$ r = \frac{{}\sum_{i=1}^{n} (x_i - \overline{x})(y_i - \overline{y})}
+{\sqrt{\sum_{i=1}^{n} (x_i - \overline{x})^2(y_i - \overline{y})^2}} $$
+
+```{r, warning = FALSE}
+III <- seq(3,21,3)
+my_data <- df_2017_2[, c(III,ncol(df_2017_2)-1)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+## Spearman
+
+Relacionado con el coeficiente de correlación de Pearson, el coeficiente de correlación de Spearman (rho) mide la relación entre dos variables. La rho de Spearman puede entenderse como una versión basada en rangos del coeficiente de correlación de Pearson, que se puede utilizar para variables que no tienen una distribución normal y tienen una relación no lineal. Además, su uso no solo está restringido a datos continuos, sino que también puede usarse en análisis de atributos ordinales.
+
+
+$$ \rho = 1- {\frac {6 \sum d_i^2}{n(n^2 - 1)}} $$
+
+```{r, warning = FALSE}
+III <- seq(3,21,3)
+my_data <- df_2017_2[, c(III,ncol(df_2017_2)-1)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+## Kendall
+
+Similar al coeficiente de correlación de Pearson, la tau de Kendall mide el grado de una relación monótona entre variables y, como la rho de Spearman, calcula la dependencia entre variables clasificadas, lo que hace que sea factible para datos distribuidos no normales. Kendall tau se puede calcular tanto para datos continuos como ordinales. En términos generales, la tau de Kendall se distingue de la rho de Spearman por una penalización más fuerte de las dislocaciones no secuenciales (en el contexto de las variables clasificadas).
+
+$$ \tau = \frac{c-d}{c+d} = \frac{S}{
+	\left(
+	\begin{matrix} 
+ 	n \\
+ 	2
+\end{matrix}
+\right)}
+= \frac{2S}{n(n-1)} $$
+
+$$\tau = \frac{S}{\sqrt{n(n-1)/2-T}\sqrt{n(n-1)/2-U}}  \\
+\\
+T = \sum_t t(t-1)/2 \\
+\\
+U = \sum_u u(u-1)/2 \\$$
+
+```{r, warning = FALSE}
+III <- seq(3,21,3)
+my_data <- df_2017_2[, c(III,ncol(df_2017_2)-1)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+
+
+<hr style="height:1px;border-width:1;color:Green;background-color:Green">
+<br>
+
+## RURAL
+
+## 2 Pregunta **P04**: Número de piezas usadas exclusivamente como dormitorio 
+
+0 piezas\
+1 pieza\
+2 piezas\
+3 piezas\
+4 piezas\
+5 piezas\
+6 o más piezas\
+
+98 No aplica\
+99 Missing
+
+### 2.1 Cálculo de frecuencias
+Leemos las respuestas a la pregunta P04 del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r, warning = FALSE}
+tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P04
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+d_t <- filter(d,d$unlist.c. == 0)
+for(i in 1:6){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+
+codigos <- d_t$
+unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+
+names(comuna_corr)[22] <- "código" 
+
+ingresos_expandidos_2017 <- readRDS("ingresos_expandidos_17_rural_nacional.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+```{r, warning = FALSE}
+names(df_2017_2)[3] <- "0 pieza"
+names(df_2017_2)[6] <- "1 pieza"
+names(df_2017_2)[9] <- "2 piezas"
+names(df_2017_2)[12] <- "3 piezas"
+names(df_2017_2)[15] <- "4 piezas"
+names(df_2017_2)[18] <- "5 piezas"
+names(df_2017_2)[21] <- "6 o más piezas"
+```
+
+
+## 2.2 **Correlaciones**
+
+### Pearson
+
+El coeficiente de correlación de Pearson es probablemente la medida más utilizada para las relaciones lineales entre dos variables distribuidas normales y, por lo tanto, a menudo se denomina simplemente "coeficiente de correlación". Por lo general, el coeficiente de Pearson se obtiene mediante un ajuste de mínimos cuadrados y un valor de 1 representa una relación positiva perfecta, -1 una relación negativa perfecta y 0 indica la ausencia de una relación entre las variables.
+
+$$ \rho = \frac{\text{cov}(X,Y)}{\sigma_x \sigma_y} codigos <- d_t $$
+$$ r = \frac{{}\sum_{i=1}^{n} (x_i - \overline{x})(y_i - \overline{y})}
+{\sqrt{\sum_{i=1}^{n} (x_i - \overline{x})^2(y_i - \overline{y})^2}} $$
+
+```{r, warning = FALSE}
+III <- seq(3,21,3)
+my_data <- df_2017_2[, c(III,ncol(df_2017_2)-1)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+## Spearman
+
+Relacionado con el coeficiente de correlación de Pearson, el coeficiente de correlación de Spearman (rho) mide la relación entre dos variables. La rho de Spearman puede entenderse como una versión basada en rangos del coeficiente de correlación de Pearson, que se puede utilizar para variables que no tienen una distribución normal y tienen una relación no lineal. Además, su uso no solo está restringido a datos continuos, sino que también puede usarse en análisis de atributos ordinales.
+
+
+$$ \rho = 1- {\frac {6 \sum d_i^2}{n(n^2 - 1)}} $$
+
+```{r, warning = FALSE}
+III <- seq(3,21,3)
+my_data <- df_2017_2[, c(III,ncol(df_2017_2)-1)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+## Kendall
+
+Similar al coeficiente de correlación de Pearson, la tau de Kendall mide el grado de una relación monótona entre variables y, como la rho de Spearman, calcula la dependencia entre variables clasificadas, lo que hace que sea factible para datos distribuidos no normales. Kendall tau se puede calcular tanto para datos continuos como ordinales. En términos generales, la tau de Kendall se distingue de la rho de Spearman por una penalización más fuerte de las dislocaciones no secuenciales (en el contexto de las variables clasificadas).
+
+$$ \tau = \frac{c-d}{c+d} = \frac{S}{
+	\left(
+	\begin{matrix} 
+ 	n \\
+ 	2
+\end{matrix}
+\right)}
+= \frac{2S}{n(n-1)} $$
+
+$$\tau = \frac{S}{\sqrt{n(n-1)/2-T}\sqrt{n(n-1)/2-U}}  \\
+\\
+T = \sum_t t(t-1)/2 \\
+\\
+U = \sum_u u(u-1)/2 \\$$
+
+```{r, warning = FALSE}
+III <- seq(3,21,3)
+my_data <- df_2017_2[, c(III,ncol(df_2017_2)-1)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

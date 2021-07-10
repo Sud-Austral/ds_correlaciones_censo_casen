@@ -1,0 +1,114 @@
+---
+title:  UNION DE TABLAS 
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+date: "Miercoles 07-07-2021"
+
+abstract: |
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library(ggplot2)
+```
+
+
+ 
+```{r}
+archivos <- dir("P03C") # <- carpeta de tablas
+archivos
+```
+
+
+```{r}
+receptaculo <- data.frame()
+
+for (v in archivos) {
+  
+  direccion <- paste0("P03C/",v)
+  cargados <- readRDS(direccion)
+  
+  cargados$region <- str_sub(direccion,6,14) #<- se agrega nueva columna con la region correspondiente de cada tabla( la region se estrae del nombre de la tabla)
+  
+  receptaculo <- rbind(receptaculo,cargados)
+}
+saveRDS(receptaculo,"P03C/P03C_u.rds")
+receptaculo
+```
+
+
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

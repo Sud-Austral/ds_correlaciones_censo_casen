@@ -1,0 +1,485 @@
+---
+title: Correlaciones entre variables del Censo de Viviendas, Hogares y Personas e ingresos promedios comunales de la CASEN 2017.
+author: 
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+      P03C
+date: "Jueves 08-07-2021"
+
+abstract: |
+  Calculamos la correlación entre el ingreso promedio comunal **multiplicado por la población comunal** que llamaremos **multi_pop** extraído de la Casen 2017 y las frecuencias de categorías de respuesta para la pregunta P03C "Material de construcción del piso" del Censo de viviendas del 2017, también extraídas a nivel comunal.
+  
+  Importante es aplicar la libreria **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+```
+
+Area:
+urbano = 1 rural = 2
+<br>
+
+
+# 1 Pregunta **P03C**: Material de construcción del piso <span style="color:  #C70039  ">NIVEL URBANO</span>
+
+Esta pregunta contiene 5 categorias de respuesta:
+
+1 Parquet, piso flotante, cerámico, madera, alfombra, flexit, cubrepiso u otro similar, sobre radier o vigas de madera\
+2 Radier sin revestimiento\
+3 Baldosa de cemento\
+4 Capa de cemento sobre tierra\
+5 Tierra\
+
+# 2 Cálculo de frecuencias
+
+Leemos las respuestas a la pregunta P03C del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r, warning = FALSE}
+tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P03C
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:5){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+  
+### 1.4.2 Construcción de un código comunal ad-hoc
+
+#Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
+ 
+codigos <- d_t$
+unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+
+names(comuna_corr)[16] <- "código" 
+
+### 1.4.3 Unión con los ingresos comunales expandidos 
+# Hacemos la unión con los ingresos promedio comunales expandidos:
+```
+
+```{r}
+# comuna_corr
+
+comuna_corr <- comuna_corr[,-c(3,6,9,12,15),drop=FALSE]
+names(comuna_corr )[2] <- "Parquet"
+names(comuna_corr )[4] <- "Radier"
+names(comuna_corr )[6] <- "Baldosa"
+names(comuna_corr )[8] <- "Capa de cemento"
+names(comuna_corr )[10] <- "Tierra"
+comuna_corr
+```
+
+
+# 3 Cálculo de los ingresos promedio de la Casen por comuna 2017 a nivel <span style="color:  #C70039  ">URBANO</span>.
+
+```{r, attr.source='.numberLines'}
+casen_2017 <- readRDS(file = "../casen_2017_c.rds")
+casen_2017_u <- filter(casen_2017, casen_2017$zona == "Urbano")
+casen_2017_u <- casen_2017_u[!is.na(casen_2017_u$ytotcor),]
+Q <- quantile(casen_2017_u$ytotcor, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(casen_2017_u$ytotcor)
+casen_2017_sin_o <- subset(casen_2017_u, casen_2017_u$ytotcor > 
+                                 (Q[1] - 1.5*iqr) &
+                                 casen_2017_u$ytotcor < (Q[2]+1.5*iqr))
+casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character),
+                               stringsAsFactors=FALSE)
+b <-  as.numeric(casen_2017_sin_o$ytotcor)
+a <- casen_2017_sin_o$comuna
+promedios_grupales <-aggregate(b, by=list(a), FUN = mean , na.rm=TRUE )
+names(promedios_grupales)[1] <- "comuna"
+names(promedios_grupales)[2] <- "promedio_i"
+promedios_grupales$año <- "2017"
+codigos_comunales <- readRDS(file = "../codigos_comunales_2011-2017.rds")
+names(codigos_comunales)[1] <- "código"
+names(codigos_comunales)[2] <- "comuna"
+df_2017 = merge( x = promedios_grupales, y = codigos_comunales, 
+                 by = "comuna", 
+                 all.x = TRUE)
+```
+
+```{r}
+df_2017
+```
+
+
+# 3 unamos frecuencias con ingresos
+
+```{r}
+df_2017_666 = merge( x = df_2017, y = comuna_corr, by = "código", 
+                   all.x = TRUE)
+```
+
+```{r}
+df_2017_666
+```
+
+
+
+# 4 Cálculo de la cantidad de personas por comuna desde el mismo Censo del 2017. Para para años anteriores utilizaremos las proyecciones de población del INE. Unimos con la tabla 1.1.1.
+
+```{r, attr.source='.numberLines'}
+x <- import("../Microdato_Censo2017-Personas.csv")
+my_summary_data <- x %>%
+    group_by(x$COMUNA) %>%
+    summarise(Count = n()) 
+names(my_summary_data)[1] <- "comuna"     
+names(my_summary_data)[2] <- "personas"
+# recogemos el campo Comuna:
+codigos <- my_summary_data$comuna
+# construimos una secuencia llamada rango del 1 al total de filas del 
+# dataset:
+rango <- seq(1:nrow(my_summary_data))
+# Creamos un string que agrega un cero a todos los registros:
+cadena <- paste("0",codigos[rango], sep = "")
+# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser 
+# siempre 5 
+# agregandole un cero al inicio de los que tienen 4.
+# Para ello extraemos un substring de la cadena sobre todas las filas 
+#(rangos) 
+# comenzando desde el primero o el segundo y llegando siempre al 6.
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(my_summary_data,cadena)
+names(comuna_corr)[3] <- "código"
+```
+
+
+```{r, attr.source='.numberLines'}
+comuna_corr
+```
+
+
+# 5 Hacemos un merge de nuestra tabla con la poblacion por comuna:
+
+```{r}
+df_2017_6666 = merge( x = df_2017_666, y = comuna_corr, by = "código", 
+                   all.x = TRUE)
+```
+
+
+```{r}
+df_2017_6666
+```
+
+# 6 Calculemos los ingresos expandidos:
+
+```{r}
+df_2017_6666$Ingresos_expandidos <- df_2017_6666$promedio_i*df_2017_6666$personas
+```
+
+```{r}
+df_2017_6666
+```
+
+# 7 Calculo de la correlacion entre Parquet con ingreso expandido:
+
+```{r, warning = FALSE}
+df_2017_6666_subset <- df_2017_6666[,c(6,17)]
+chart.Correlation(df_2017_6666_subset, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+```{r}
+randNorm <- rnorm(3000)
+#calculo de su densidad
+randDensity <- dnorm(randNorm)
+#gráfica
+library(ggplot2)
+ggplot(data.frame(x = randNorm, y = randDensity )) + 
+  aes(x = x, y = y) +
+geom_point(size=.5, color="#CC6666") + 
+  labs(x = "Random Normal Variable", y = "Densidad")
+```
+
+```{r}
+N <- 10000
+x <- rgeom(N, .2)
+hist(x, 
+     xlim=c(min(x),max(x)), probability=T, nclass=max(x)-min(x)+1, 
+     col='lightblue',
+     main='Geometric distribution, p=.2')
+lines(density(x,bw=1), col='red', lwd=1)
+```
+
+The geometric distribution represents the number of failures before you get a success in a series of Bernoulli trials. This discrete probability distribution is represented by the probability density function:
+
+f(x) = (1 − p)x − 1p
+                                       
+
+Estamos violando un supuesto fundamental del calculo de la correlacion de Pearson:
+La distribucion de las variables no es normal sino que geometrica.
+
+
+
+# Supuestos 
+
+Se sospecha de la extremadamente alta correlacion entre las variables por lo que corrobaremos sus supuestos
+
+
+
+Supuestos de la correlación de Pearson
+
+1) Los datos deben poseer una relación lineal (eso e puede determinar a través de una gráfica de dispersión).
+
+2) Las variables deberían poseer una distribución normal, esto es más importante cuando realicemos pruebas de hipótesis y cálculo de intervalos de confianza: si al menos una de las variables es normal, el test de hipótesis correspondiente es válido, si ambas variables son normales, el intervalo de confianza estimado se considera válido.
+
+3) Las observaciones utilizadas para el análisis deberían recolectarse de forma aleatoria de la población de referencia. Cuando esto no ocurre, el coeficiente de correlación podría estar sub o sobreestimado.
+
+
+
+Supuestos de la correlación Rho de Spearman
+
+
+El coeficiente de correlación no paramétrico de Kendall τ
+El coeficiente de correlación τ de Kendall es no paramétrico, es decir, se puede usar cuando se viola el supuesto de distribución normal de las variables a comparar. La correlación τ de Kendall es particularmente adecuada cuando tenemos un set de datos pequeño con muchos valores en el mismo rango o clase. Se puede usar por ejemplo con datos categóricos codificados binariamene (0,1). Estudios estadísticos han demostrado que el coeficiente de correlación τ de Kendall es un mejor estimador de la correlación en la población que el coeficiente de correlación no paramétrico de Spearman ρ, por lo que se recomienda usar τ para análisis de datos no paramétricos.
+https://www.ccg.unam.mx/~vinuesa/R4biosciences/docs/Tema8_correlacion.html#supuestos-hechos-por-el-estadistico-de-correlacion-de-pearson-r
+
+
+```{r}
+df_2017_6666
+```
+
+
+```{r, warning = FALSE}
+df_2017_6666_subset <- df_2017_6666[,c(6,8,10.12,14,17)]
+chart.Correlation(df_2017_6666_subset, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+
+# Coeficiente de correlación de rango de Kendall ($\tau$ de Kendall)
+
+Similar al coeficiente de correlación de Pearson, la tau de Kendall mide el grado de una relación monótona entre variables y, como la rho de Spearman, calcula la dependencia entre variables clasificadas, lo que hace que sea factible para datos distribuidos no normales. Kendall tau se puede calcular tanto para datos continuos como ordinales. En términos generales, la tau de Kendall se distingue de la rho de Spearman por una penalización más fuerte de las dislocaciones no secuenciales (en el contexto de las variables clasificadas).
+
+El coeficiente tau (τ) de kendall está basada más en los intervalos jerarquizados de las observaciones que los propios datos, esto hace que la distribución de τ sea independiente de la que presentan las variables X y Y, siempre y cuando que los datos representados por estas 2 variables sean (1) independientes y (2) continuas. Este coeficiente es más preferida por algunos investigadores que el de Spearman, pero es más difícil de calcular, pero con una ventaja de que el τ tiende más rápido a la distribución normal que el de Spearman.
+
+Ecuacion:
+
+
+
+$$\tau = \frac{S_a - S_b}{{n(n-1)/2}}  $$
+
+Donde:
+
+τ = Estadística de Kendall
+n = # de casos en el ejemplo
+Sa = Sumatoria de rangos más altos
+Sb = Sumatoria de rangos más bajos
+
+Ejemplo. En una evaluación de los jugadores delanteros de futbol en de un país, hay 9 de ellos catalogados como más intensos para marcar goles. Para analizar esta intensidad durante un periodo de una temporada se registro sistemáticamente el grado de intensidad de cada uno. de estos delanteros tanto en juegos a nivel nacional (NP = puntajes nacional), como a nivel internacional (IP = puntajes en juegos internacionales). Además, se registraron los rangos a nivel nacional (NR = rangos a nivel nacional) y en a nivel internacional (IR = rango a nivel internacional). Los datos se presentan en la Tabla 3. Los rangos se ordenan de máxima a mínima hacia abajo en cada columna de rango.
+
+
+tabla_a
+
+Procedimiento.
+Paso 1.
+Se considera el IR como referencia y comienza a contabilizar a partir del primer rango, es decir, el rango con el valor de 4 y cuenta el número de los rangos menores que 4 (hacia debajo de 4): en este caso los tres números de 2, 1, y 3, es decir tenemos 3 valores menores que el valor 4. Luego cuentan los rangos mayores de 4 a partir e incluyendo el número 5, así tenemos los valores 5, 6, 8, 7, y 9, es decir, hay 5 rangos mayores que el valor 4. Se continúa así contabilizar los rangos menores y mayores para los siguientes valores de la columna de IR, es decir, a partir del valor 2 en adelante. De esta manera se generan los valores de las 2 columnas de Sa (sumatoria de rangos más altos) y Sb (sumatoria de rangos más bajos, Tabla 4).
+
+tabla_b
+
+
+Ahora substituir en la ecuación de Kendall resulta: τ = (Sa – Sb) / [n(n -1) / 2] = (31 – 5) /
+[9(9 – 1)/2] = 26 / 36 = 0.72, hay una asociación de 72%.
+
+
+
+
+1.2.7 El coeficiente de determinación R2
+
+El coeficiente de correlación elevado al cuadrado es el coeficiente de determinación, R2
+, que mide la cantidad de variación en una variable que es compartida por otra. Vimos en el ejemplo anterior que la r para cor(dosis,resp) era de 0.8711651, y por tanto R2=0.7589286. Por tanto podemos decir que la respuesta comparte un ~76% de la variación mostrada por la dosis. Tengan en cuenta de nuevo que compartir variabilidad no implica necesariamente causalidad.
+
+
+
+```{r, warning = FALSE}
+III <- seq(3,ncol(df_2017_2),3)
+my_data <- df_2017_2[, c(III)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+
+<hr style="height:1px;border-width:1;color:Green;background-color:Green">
+<br>
+
+
+# RURAL
+
+## 2 Pregunta **P03C**: Material de construcción del piso 
+
+1 Parquet, piso flotante, cerámico, madera, alfombra, flexit, cubrepiso u otro similar, sobre radier o vigas de madera\
+2 Radier sin revestimiento\
+3 Baldosa de cemento\
+4 Capa de cemento sobre tierra\
+5 Tierra\
+
+### 2.1 Cálculo de frecuencias
+
+Leemos las respuestas a la pregunta P03C del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r, warning = FALSE}
+tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P03C
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:5){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+
+
+### 1.4.2 Construcción de un código comunal ad-hoc
+
+#Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
+
+codigos <- d_t$
+unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+names(comuna_corr)[16] <- "código" 
+
+### 1.4.3 Unión con los ingresos comunales expandidos 
+
+# Hacemos la unión con los ingresos promedio comunales expandidos:
+
+ingresos_expandidos_2017 <- readRDS("ingresos_expandidos_rural_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+
+
+### 1.4.4 Renombre de columnas
+
+names(df_2017_2)[3] <- "Parquet"
+names(df_2017_2)[6] <- "Radier"
+names(df_2017_2)[9] <- "Baldosa"
+names(df_2017_2)[12] <- "Capa de cemento"
+names(df_2017_2)[15] <- "Tierra"
+
+
+
+###  **Correlaciones**
+```
+
+
+## **Correlaciones**
+
+### Pearson
+
+El coeficiente de correlación de Pearson es probablemente la medida más utilizada para las relaciones lineales entre dos variables distribuidas normales y, por lo tanto, a menudo se denomina simplemente "coeficiente de correlación". Por lo general, el coeficiente de Pearson se obtiene mediante un ajuste de mínimos cuadrados y un valor de 1 representa una relación positiva perfecta, -1 una relación negativa perfecta y 0 indica la ausencia de una relación entre las variables.
+
+$$ \rho = \frac{\text{cov}(X,Y)}{\sigma_x \sigma_y} codigos <- d_t $$
+$$ r = \frac{{}\sum_{i=1}^{n} (x_i - \overline{x})(y_i - \overline{y})}
+{\sqrt{\sum_{i=1}^{n} (x_i - \overline{x})^2(y_i - \overline{y})^2}} $$
+
+```{r, warning = FALSE}
+III <- seq(3,ncol(df_2017_2),3)
+my_data <- df_2017_2[, c(III)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+## Spearman
+
+Relacionado con el coeficiente de correlación de Pearson, el coeficiente de correlación de Spearman (rho) mide la relación entre dos variables. La rho de Spearman puede entenderse como una versión basada en rangos del coeficiente de correlación de Pearson, que se puede utilizar para variables que no tienen una distribución normal y tienen una relación no lineal. Además, su uso no solo está restringido a datos continuos, sino que también puede usarse en análisis de atributos ordinales.
+
+
+$$ \rho = 1- {\frac {6 \sum d_i^2}{n(n^2 - 1)}} $$
+
+```{r, warning = FALSE}
+III <- seq(3,ncol(df_2017_2),3)
+my_data <- df_2017_2[, c(III)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+## Kendall
+
+Similar al coeficiente de correlación de Pearson, la tau de Kendall mide el grado de una relación monótona entre variables y, como la rho de Spearman, calcula la dependencia entre variables clasificadas, lo que hace que sea factible para datos distribuidos no normales. Kendall tau se puede calcular tanto para datos continuos como ordinales. En términos generales, la tau de Kendall se distingue de la rho de Spearman por una penalización más fuerte de las dislocaciones no secuenciales (en el contexto de las variables clasificadas).
+
+$$ \tau = \frac{c-d}{c+d} = \frac{S}{
+	\left(
+	\begin{matrix} 
+ 	n \\
+ 	2
+\end{matrix}
+\right)}
+= \frac{2S}{n(n-1)} $$
+
+$$\tau = \frac{S}{\sqrt{n(n-1)/2-T}\sqrt{n(n-1)/2-U}}  \\
+\\
+T = \sum_t t(t-1)/2 \\
+\\
+U = \sum_u u(u-1)/2 \\$$
+
+```{r, warning = FALSE}
+III <- seq(3,ncol(df_2017_2),3)
+my_data <- df_2017_2[, c(III)]
+chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+
+<hr style="height:1px;border-width:1;color:Green;background-color:Green">
+<br>
+
+https://www.ccg.unam.mx/~vinuesa/R4biosciences/docs/Tema8_correlacion.html#supuestos-hechos-por-el-estadistico-de-correlacion-de-pearson-r

@@ -70,123 +70,34 @@ Necesitamos calcular las frecuencias a nivel censal de las respuestas correspond
 Leemos la tabla Censo 2017 de viviendas que ya tiene integrada la clave zonal:
 
 ```{r}
+
+fn1 <- function(r){
+
 tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
-r3_100 <- tabla_con_clave[c(1:100),]
-kbl(r3_100) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-```
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == r)
 
 
-Despleguemos los códigos de regiones de nuestra tabla:
+## 3.2 Cálculo de frecuencias
 
-```{r}
-regiones <- unique(tabla_con_clave$REGION)
-regiones
-```
-
-
-
-Hagamos un subset con la 1:
-
-```{r}
-tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 1) 
-```
-
-### 1.2 Cálculo de frecuencias
-
-```{r}
-tabla_con_clave_f <- tabla_con_clave[,-c(1,2,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20),drop=FALSE]
-tabla_con_clave_f
-```
-
-
-```{r}
-names(tabla_con_clave_f)[2] <- "Tipo de techo"
-```
-
-
-```{r}
+tabla_con_clave_f <- tabla_con_clave[,-c(1,2,4,5,6,7,8,9,10,11,12,14,15,16,17,18,19,20),drop=FALSE]
+names(tabla_con_clave_f)[2] <- "Material_piso"
 # Ahora filtramos por Tipo de techo = 1.
-tabla_con_clave_ff <- filter(tabla_con_clave_f, tabla_con_clave_f$`Tipo de techo` == 1)
-tabla_con_clave_ff
-```
-
-
-```{r}
+tabla_con_clave_ff <- filter(tabla_con_clave_f, tabla_con_clave_f$Material_piso == 1)
 # Determinamos las frecuencias por zona:
 b <- tabla_con_clave_ff$clave
-c <- tabla_con_clave_ff$`Tipo de techo`
+c <- tabla_con_clave_ff$Material_piso
 d <- tabla_con_clave_ff$COMUNA
 cross_tab =  xtabs( ~ unlist(b) + unlist(c)+ unlist(d))
 tabla <- as.data.frame(cross_tab)
 d <-tabla[!(tabla$Freq == 0),]
 names(d)[1] <- "zona" 
 d$anio <- "2017"
-d
-```
 
 
-Veamos los primeros 100 registros:
-
-```{r}
-r3_100 <- d[c(1:100),]
-kbl(r3_100) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-```
+## Agregamos un cero a los códigos comunales de cuatro dígitos:
 
 
-<!-- ### 1.4 Calculamos la proporción de las frecuencias en cada comuna a nivel zonal -->
-
-<!-- ```{r} -->
-<!-- codigos_com <- unique(d$unlist.d.) -->
-<!-- frec_man_com_parcial_total <- data.frame() -->
-<!-- for(i in codigos_com){ -->
-<!--   # debemos dividir por 100 para obtener las proporciones y no los porcentajes: -->
-<!--   frec_man_com_parcial <- filter(d, d$unlist.d. == i) -->
-<!--   frec_man_com_parcial$p <- frec_man_com_parcial$Freq*100/sum(frec_man_com_parcial$Freq)/100 -->
-<!--   frec_man_com_parcial_total <- rbind(frec_man_com_parcial_total,frec_man_com_parcial) -->
-<!-- } -->
-<!-- ``` -->
-
-
-
-<!-- ### 1.5 Observemos los primeros 100 registros -->
-
-<!-- ```{r} -->
-<!-- r3_100 <- frec_man_com_parcial_total[c(1:100),] -->
-
-<!-- kbl(r3_100) %>% -->
-<!--   kable_styling(bootstrap_options = c("striped", "hover")) %>% -->
-<!--   kable_paper() %>% -->
-<!--   scroll_box(width = "100%", height = "300px") -->
-<!-- ``` -->
-
-
-
-<!-- ### 1.6 Verificación del cálculo correcto de proporciones -->
-
-<!-- Verifiquemos que la suma de las proporciones sea 1 para la comuna 15101: -->
-
-<!-- ```{r} -->
-<!-- r3_100_f <- filter(frec_man_com_parcial_total, frec_man_com_parcial_total$unlist.d. == 1107) -->
-<!-- ``` -->
-
-
-<!-- ```{r} -->
-<!-- sum(r3_100_f$p) -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- nrow(frec_man_com_parcial_total) -->
-<!-- ``` -->
-
-Agregamos un cero a los códigos comunales de cuatro dígitos:
-
-```{r}
 codigos <- d$unlist.d.
 rango <- seq(1:nrow(d))
 cadena <- paste("0",codigos[rango], sep = "")
@@ -197,242 +108,375 @@ comuna_corr <- cbind(d,cadena)
 comuna_corr <- comuna_corr[,-c(2,3),drop=FALSE]
 names(comuna_corr)[4] <- "código" 
 r3_100 <- comuna_corr[c(1:100),]
-kbl(r3_100) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-```
 
-<br>
-
-<!-- En p capturamos la varianza de la categoría 1 Tejas o tejuelas de arcilla, metálicas, de cemento, de madera, asfálticas o plásticas del campo P03B a nivel Censal. -->
-
-## 2 Variable CASEN
-
-### 2.1 Tabla de ingresos expandidos
-
-Hemos calculado ya éste valor como conclusión del punto 1.1 de [aquí](https://rpubs.com/dataintelligence/corr_casen_censo_002)
-
-```{r}
+ 
 h_y_m_2017_censo <- readRDS("../ingresos_expandidos_urbano_17.rds")
 tablamadre <- head(h_y_m_2017_censo,50)
-kbl(tablamadre) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-```
 
-## 3 Unión Censo-Casen
+# 4 Unión Censo-Casen
 
-Integramos a la tabla censal de frecuencias la tabla de ingresos expandidos de la Casen.
-
-```{r}
 comunas_con_ing_exp = merge( x = comuna_corr, y = h_y_m_2017_censo, by = "código", all.x = TRUE)
 r3_100 <- comunas_con_ing_exp[c(1:100),]
-kbl(r3_100) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-```
 
-
-
-<br>
-
-
-<!-- <hr style="height:1px;border-width:1;color:Red;background-color:Red"> -->
-
-## 4 Proporción poblacional zonal respecto a la comunal
-
-Del censo obtenemos la cantidad de población a nivel de zona y estimamos su proporción a nivel comunal. Ya hemos calculado ésta proporción  [aquí](https://rpubs.com/dataintelligence/tabla_de_proporciones).
-
-```{r}
-prop_pob <- readRDS("tabla_de_prop_pob.rds")
+ 
+prop_pob <- readRDS("../tabla_de_prop_pob.rds")
 names(prop_pob)[1] <- "zona"
 names(prop_pob)[3] <- "p_poblacional" 
+ 
+## 6 Ingreso medio ######################################################################
+ 
+ 
+h_y_m_comuna_corr_01 = merge( x = comunas_con_ing_exp, y = prop_pob, by = "zona", all.x = TRUE)
+ 
+h_y_m_comuna_corr_01$multi_pob <- h_y_m_comuna_corr_01$promedio_i * h_y_m_comuna_corr_01$personas * h_y_m_comuna_corr_01$p_poblacional
+ 
+scatter.smooth(x=h_y_m_comuna_corr_01$Freq.x, y=h_y_m_comuna_corr_01$multi_pob, main="Diagrama de dispersión - multi_pob ~ Freq.x",
+     xlab = "Freq.x",
+     ylab = "multi_pob",
+           col = 2) 
+ 
+linearMod <- lm( multi_pob~(Freq.x) , data=h_y_m_comuna_corr_01)
+summary(linearMod) 
+ 
+ggplot(h_y_m_comuna_corr_01, aes(x = Freq.x , y = multi_pob)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+
+
+### 8.1 Modelo cuadrático
+
+linearMod <- lm( multi_pob~(Freq.x^2) , data=h_y_m_comuna_corr_01)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "cuadrático"
+sintaxis <- "linearMod <- lm( multi_pob~(Freq.x^2) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = '\'beta_0 + '\'beta_1  X^2  $$"
+modelos1 <- cbind(modelo,dato,sintaxis,latex)
+ 
+### 8.2 Modelo cúbico
+ 
+linearMod <- lm( multi_pob~(Freq.x^3) , data=h_y_m_comuna_corr_01)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "cúbico"
+sintaxis <- "linearMod <- lm( multi_pob~(Freq.x^3) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = '\'beta_0 + '\'beta_1  X^3  $$"
+modelos2 <- cbind(modelo,dato,sintaxis,latex)
+ 
+### 8.3 Modelo logarítmico
+ 
+linearMod <- lm( multi_pob~log(Freq.x) , data=h_y_m_comuna_corr_01)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "logarítmico"
+sintaxis <- "linearMod <- lm( multi_pob~log(Freq.x) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = '\'beta_0 + '\'beta_1 ln X  $$"
+modelos3 <- cbind(modelo,dato,sintaxis,latex)
+ 
+### 8.5 Modelo con raíz cuadrada 
+ 
+linearMod <- lm( multi_pob~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz cuadrada"
+sintaxis <- "linearMod <- lm( multi_pob~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = '\'beta_0 + '\'beta_1  '\'sqrt {X}  $$"
+modelos5 <- cbind(modelo,dato,sintaxis,latex)
+ 
+### 8.6 Modelo raíz-raíz
+ 
+linearMod <- lm( sqrt(multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz-raíz"
+sintaxis <- "linearMod <- lm( sqrt(multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = {'\'beta_0}^2 + 2  '\'beta_0  '\'beta_1 '\'sqrt{X}+  '\'beta_1^2 X  $$"
+modelos6 <- cbind(modelo,dato,sintaxis,latex)
+ 
+### 8.7 Modelo log-raíz
+ 
+linearMod <- lm( log(multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "log-raíz"
+sintaxis <- "linearMod <- lm( log(multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = e^{'\'beta_0 + '\'beta_1 '\'sqrt{X}} $$"
+modelos7 <- cbind(modelo,dato,sintaxis,latex)
+ 
+### 8.8 Modelo raíz-log
+ 
+linearMod <- lm( sqrt(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz-log"
+sintaxis <- "linearMod <- lm( sqrt(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = {'\'beta_0}^2 + 2  '\'beta_0  '\'beta_1 '\'ln{X}+  '\'beta_1^2 ln^2X  $$"
+modelos8 <- cbind(modelo,dato,sintaxis,latex)
+ 
+### 8.9 Modelo log-log
+ 
+linearMod <- lm( log(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "log-log"
+sintaxis <- "linearMod <- lm( log(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = e^{'\'beta_0+'\'beta_1  ln{X}} $$"
+modelos9 <- cbind(modelo,dato,sintaxis,latex)
+ 
+modelos_bind <- rbind(modelos1,modelos2,modelos3,modelos5,modelos6,modelos7,modelos8,modelos9)
+modelos_bind <- as.data.frame(modelos_bind)
+
+modelos_bind <<- modelos_bind[order(modelos_bind$dato ),]
+h_y_m_comuna_corr_01 <<- h_y_m_comuna_corr_01
+
+}
 ```
 
-Veamos los 100 primeros registros:
-
 ```{r}
-r3_100 <- prop_pob[c(1:100),]
-kbl(r3_100) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-```
-<br>
-
-## 5 Ingreso medio
-
-Deseamos el valor del ingreso promedio a nivel comunal, pero expandido a nivel zonal. Ésta información está contenida en el campo promedio_i de la tabla obtenida en el punto 3.
-
-```{r}
-r3_100 <- comunas_con_ing_exp[c(1:100),]
-kbl(r3_100) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
+for (r in 1:16) {
+  fn1(r)
+  
+  tryCatch(
+        {
+          
+          assign(paste("h_y_m_comuna_corr_",r, sep = ""),h_y_m_comuna_corr_01)
+          assign(paste("modelos_bind_",r, sep = ""),modelos_bind)
+          
+        }, error = function(msg){
+            print("variable no encontrada")
+        })
+  
+}
 ```
 
-<br>
 
-## 6 Ingreso promedio expandido por zona (**multi_pob**)
+#######################################################################################
+#######################################################################################
+#######################################################################################
 
-En éste momento vamos a construir nuestra variable dependiente de regresión aplicando la siguiente fórmula:
 
-$$ multi\_pob = promedio\_i \cdot personas \cdot p\_poblacional	$$
 
-Para ello integramos a la tabla de ingresos expandidos a nivel zonal (punto 3) la tabla de proporciones poblacionales zonales respecto al total comunal (punto 4) :
 
 ```{r}
+fn2 <- function(r){
+tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
+r3_100 <- tabla_con_clave[c(1:100),]
+ 
+ 
+regiones <- unique(tabla_con_clave$REGION)
+ 
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 1) 
+ 
+tabla_con_clave_f <- tabla_con_clave[,-c(1,2,4,5,6,7,8,9,10,11,12,14,15,16,17,18,19,20),drop=FALSE]
+ 
+names(tabla_con_clave_f)[2] <- "Tipo de piso"
+ 
+# Ahora filtramos por Tipo de techo = 1.
+tabla_con_clave_ff <- filter(tabla_con_clave_f, tabla_con_clave_f$`Tipo de piso` == 1)
+ 
+# Determinamos las frecuencias por zona:
+b <- tabla_con_clave_ff$clave
+c <- tabla_con_clave_ff$`Tipo de piso`
+d <- tabla_con_clave_ff$COMUNA
+cross_tab =  xtabs( ~ unlist(b) + unlist(c)+ unlist(d))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+names(d)[1] <- "zona" 
+d$anio <- "2017"
+  
+codigos <- d$unlist.d.
+rango <- seq(1:nrow(d))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d,cadena)
+comuna_corr <- comuna_corr[,-c(2,3),drop=FALSE]
+names(comuna_corr)[4] <- "código" 
+ 
+ 
+h_y_m_2017_censo <- readRDS("../ingresos_expandidos_urbano_17.rds")
+tablamadre <- head(h_y_m_2017_censo,50)
+  
+comunas_con_ing_exp = merge( x = comuna_corr, y = h_y_m_2017_censo, by = "código", all.x = TRUE)
+  
+prop_pob <- readRDS("../tabla_de_prop_pob.rds")
+names(prop_pob)[1] <- "zona"
+names(prop_pob)[3] <- "p_poblacional" 
+ 
+ 
 h_y_m_comuna_corr_01 = merge( x = comunas_con_ing_exp, y = prop_pob, by = "zona", all.x = TRUE)
 tablamadre <- head(h_y_m_comuna_corr_01,100)
-kbl(tablamadre) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-```
-
-<br>
-
-Hacemos la multiplicación que queda almacenada en la variable **multi_pob**:
-
-```{r}
+ 
 h_y_m_comuna_corr_01$multi_pob <- h_y_m_comuna_corr_01$promedio_i * h_y_m_comuna_corr_01$personas * h_y_m_comuna_corr_01$p_poblacional
 tablamadre <- head(h_y_m_comuna_corr_01,100)
-kbl(tablamadre) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-```
-
-
-
-## 7 Análisis de regresión
-
-Aplicaremos un análisis de regresión donde:
-
-$$ Y(dependiente) = ingreso \ expandido \ por \ zona \ (multi\_pob)$$
-
-$$ X(independiente) = frecuencia \ de \ población \ que \ posee \ la \ variable \ Censal \ respecto \ a \ la \ zona \ (Freq.x)  $$
-<br>
-
-### 7.1 Diagrama de dispersión loess
-
-```{r}
+ 
 scatter.smooth(x=h_y_m_comuna_corr_01$Freq.x, y=h_y_m_comuna_corr_01$multi_pob, main="multi_pob ~ Freq.x",
      xlab = "Freq.x",
      ylab = "multi_pob",
            col = 2) 
-```
-
-### 7.2 Outliers 
-
-Hemos demostrado en el punto 5.7.2 de [aquí](https://rpubs.com/dataintelligence/expansion_viviendas_001) que la exclusión de ouliers no genera ninguna mejora en el modelo de regresión.
-
-### 7.3 Modelo lineal 
-
-Aplicaremos un análisis de regresión lineal del ingreso expandido por zona sobre las frecuencias de respuestas zonales.
-
-```{r}
+ 
 linearMod <- lm( multi_pob~(Freq.x) , data=h_y_m_comuna_corr_01)
 summary(linearMod) 
-```
-
-### 7.4 Gráfica de la recta de regresión lineal
-
-```{r, warning = FALSE, message = FALSE}
+ 
 ggplot(h_y_m_comuna_corr_01, aes(x = Freq.x , y = multi_pob)) + 
   geom_point() +
   stat_smooth(method = "lm", col = "red")
-```
-
-
-Si bien obtenemos nuestro modelo lineal da cuenta del 0.8214 de la variabilidad de los datos de respuesta en torno a su media, modelos alternativos pueden ofrecernos una explicación de la variable dependiente aún mayor.
-
-## 8 Modelos alternativos
-
+ 
 ### 8.1 Modelo cuadrático
 
-$$ \hat Y = \beta_0 + \beta_1  X^2  $$
-
-```{r}
 linearMod <- lm( multi_pob~(Freq.x^2) , data=h_y_m_comuna_corr_01)
-summary(linearMod) 
-```
-
-
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "cuadrático"
+sintaxis <- "linearMod <- lm( multi_pob~(Freq.x^2) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = '\'beta_0 + '\'beta_1  X^2  $$"
+modelos1 <- cbind(modelo,dato,sintaxis,latex)
+ 
 ### 8.2 Modelo cúbico
-
-$$ \hat Y = \beta_0 + \beta_1  X^3  $$
-
-```{r}
+ 
 linearMod <- lm( multi_pob~(Freq.x^3) , data=h_y_m_comuna_corr_01)
-summary(linearMod) 
-```
-
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "cúbico"
+sintaxis <- "linearMod <- lm( multi_pob~(Freq.x^3) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = '\'beta_0 + '\'beta_1  X^3  $$"
+modelos2 <- cbind(modelo,dato,sintaxis,latex)
+ 
 ### 8.3 Modelo logarítmico
-
-$$ \hat Y = \beta_0 + \beta_1 ln X  $$
-
-```{r}
+ 
 linearMod <- lm( multi_pob~log(Freq.x) , data=h_y_m_comuna_corr_01)
-summary(linearMod) 
-```
-
-### 8.4 Modelo exponencial
-
-$$ \hat Y = \beta_0 + \beta_1  e^X  $$
-
-No es aplicable sin una transformación pues los valores elevados a $e$ de Freq.x tienden a infinito. 
-
-
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "logarítmico"
+sintaxis <- "linearMod <- lm( multi_pob~log(Freq.x) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = '\'beta_0 + '\'beta_1 ln X  $$"
+modelos3 <- cbind(modelo,dato,sintaxis,latex)
+ 
 ### 8.5 Modelo con raíz cuadrada 
-
-$$ \hat Y = \beta_0 + \beta_1  \sqrt {X}  $$
-
-```{r}
+ 
 linearMod <- lm( multi_pob~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)
-summary(linearMod) 
-```
-
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz cuadrada"
+sintaxis <- "linearMod <- lm( multi_pob~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = '\'beta_0 + '\'beta_1  '\'sqrt {X}  $$"
+modelos5 <- cbind(modelo,dato,sintaxis,latex)
+ 
 ### 8.6 Modelo raíz-raíz
-
-$$ \hat Y = {\beta_0}^2 + 2  \beta_0  \beta_1 \sqrt{X}+  \beta_1^2 X  $$
-
-```{r}
+ 
 linearMod <- lm( sqrt(multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)
-summary(linearMod) 
-```
-
-
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz-raíz"
+sintaxis <- "linearMod <- lm( sqrt(multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = {'\'beta_0}^2 + 2  '\'beta_0  '\'beta_1 '\'sqrt{X}+  '\'beta_1^2 X  $$"
+modelos6 <- cbind(modelo,dato,sintaxis,latex)
+ 
 ### 8.7 Modelo log-raíz
-
-$$ \hat Y = e^{\beta_0 + \beta_1 \sqrt{X}} $$
-
-```{r}
+ 
 linearMod <- lm( log(multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)
-summary(linearMod) 
-```
-
-
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "log-raíz"
+sintaxis <- "linearMod <- lm( log(multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = e^{'\'beta_0 + '\'beta_1 '\'sqrt{X}} $$"
+modelos7 <- cbind(modelo,dato,sintaxis,latex)
+ 
 ### 8.8 Modelo raíz-log
-
-$$ \hat Y = {\beta_0}^2 + 2  \beta_0  \beta_1 \ln{X}+  \beta_1^2 ln^2X  $$
-
-```{r}
+ 
 linearMod <- lm( sqrt(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)
-summary(linearMod) 
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz-log"
+sintaxis <- "linearMod <- lm( sqrt(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = {'\'beta_0}^2 + 2  '\'beta_0  '\'beta_1 '\'ln{X}+  '\'beta_1^2 ln^2X  $$"
+modelos8 <- cbind(modelo,dato,sintaxis,latex)
+ 
+### 8.9 Modelo log-log
+ 
+linearMod <- lm( log(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "log-log"
+sintaxis <- "linearMod <- lm( log(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)"
+latex <- "$$ '\'hat Y = e^{'\'beta_0+'\'beta_1  ln{X}} $$"
+modelos9 <- cbind(modelo,dato,sintaxis,latex)
+ 
+modelos_bind <- rbind(modelos1,modelos2,modelos3,modelos5,modelos6,modelos7,modelos8,modelos9)
+modelos_bind <- as.data.frame(modelos_bind)
+
+modelos_bind <<- modelos_bind[order(modelos_bind$dato ),]
+modelos_bind
+h_y_m_comuna_corr_01 <<- h_y_m_comuna_corr_01
+}
 ```
 
-### 8.9 Modelo log-log
-
-$$ \hat Y = e^{\beta_0+\beta_1  ln{X}} $$
+```{r}
+for (r in 1:16) {
+  fn2(r)
+  
+  tryCatch(
+        {
+          
+          assign(paste("h_y_m_comuna_corr_",r, sep = ""),h_y_m_comuna_corr_01)
+          assign(paste("modelos_bind_",r, sep = ""),modelos_bind)
+          
+        }, error = function(msg){
+            print("variable no encontrada")
+        })
+  
+}
+```
 
 ```{r}
-linearMod <- lm( log(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)
-summary(linearMod) 
+modelos_bind_1
+```
+```{r}
+h_y_m_comuna_corr
+```
+
+```{r}
+
+region_switch <- 1
+h_y_m_switch <- h_y_m_comuna_corr_1
+metodo <- 5
+
+
+switch (metodo,
+        case = linearMod <- lm( multi_pob~(Freq.x^2) , data=h_y_m_switch),
+        case = linearMod <- lm( multi_pob~(Freq.x^3) , data=h_y_m_switch),
+        case = linearMod <- lm( multi_pob~log(Freq.x) , data=h_y_m_switch),
+        case = linearMod <- lm( multi_pob~sqrt(Freq.x) , data=h_y_m_switch),
+        case = linearMod <- lm( sqrt(multi_pob)~sqrt(Freq.x) , data=h_y_m_switch),
+        case = linearMod <- lm( log(multi_pob)~sqrt(Freq.x) , data=h_y_m_switch),
+        case = linearMod <- lm( sqrt(multi_pob)~log(Freq.x) , data=h_y_m_switch),
+        case = linearMod <- lm( log(multi_pob)~log(Freq.x) , data=h_y_m_switch)
+)
+summary(linearMod)
+aa <- linearMod$coefficients[1]
+bb <- linearMod$coefficients[2]
+
+
+switch (region_switch,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_01,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_2,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_3,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_4,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_5,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_6,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_7,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_8,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_9,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_10,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_11,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_12,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_13,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_14,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_15,
+        case = h_y_m_comuna_corr <- h_y_m_comuna_corr_16,
+        
+)
 ```
 
 
@@ -521,7 +565,7 @@ kbl(r3_100) %>%
 Guardamos:
 
 ```{r}
-saveRDS(h_y_m_comuna_corr_01, "casen_censo_region_01.rds")
+saveRDS(h_y_m_comuna_corr_01, "region_01_P03C_u.rds")
 ```
 
 

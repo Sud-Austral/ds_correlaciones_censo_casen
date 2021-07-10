@@ -1,37 +1,34 @@
 ---
-title: Correlaciones entre variables del Censo de Viviendas, Hogares y Personas e ingresos promedios comunales de la CASEN 2017.
+title: Correlaciones entre variables del CENSO de Viviendas, Hogares y Personas e Ingresos promedios comunales de la CASEN 2017.
 author:
 - name: VE-CC-AJ
   affiliation: DataIntelligence
 subtitle: | 
 
-date: "Lunes 05-07-2021"
+date: "Jueves 09-07-2021"
 
 abstract: |
-  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población comunal** que llamaremos **ingresos expandidos** extraído de la Casen 2017 y las frecuencias de categorías de respuesta para todas las variables del Censo de viviendas, hogares y personas al 2017, también extraídas a nivel comunal.
+  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población también comunal** que llamaremos **ingresos expandidos** extraídos de la Casen 2017 y las frecuencias de respuesta por categoría a la pregunta **P02** del Censo de viviendas 2017, también extraídas a nivel comunal. Lo haremos a nivel nacional.
   
-  En éste markdown nos concentraremos en Pregunta P02: "Ocupación de la vivienda".
+  Haremos las correlaciones tanto a nivel Urbano como Rural.
   
-  Haremos las correlaciones tanto a nivel urbano como rural.
-  
-  Importante es aplicar la libreria **dplyr** para evitar que en los merges recursivos no se desplieguen series de tiempo.
-  
-  Cometíamos un sesgo, pues los ingresos que habíamos utilizado estaban calculados a nivel nacional, sin hacer distingos entre el nivel urbano y rural. Ésta diferencia es la que construiremos ahora.
-    
+  Importante es aplicar la librería **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
+   
 header-includes:
    - \usepackage[]{babel}
 
 output:
-  html_document:
+  rmdformats::html_clean:
+    highlight: kate
     toc: true
-    toc_float: true
-    theme: flatly
-    highlight: pygment
-    pdf_document: default
+    use_bookdown: true    
+    
 ---
 
-```{r, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  class.source = "numberLines lineAnchors"
+  )
 library(ggplot2)
 #library(ggpubr)
 library(markdown)
@@ -61,174 +58,46 @@ library("dplyr")
 
 ```
 
-Area: urbano = 1 rural = 2
 
+# Nivel nacional URBANO (código 1)
 
+## Pregunta **P02**: Ocupación de la vivienda
 
-## 1.1 Ingresos expandidos a nivel <span style="color:  #C70039  ">URBANO</span> 2017 
-
-#### 1.1.1 Cálculo de los ingresos promedio de la Casen por comuna 2017 a nivel <span style="color:  #C70039  ">URBANO</span>.
-
-```{r, attr.source='.numberLines'}
-casen_2017 <- readRDS(file = "../casen_2017_c.rds")
-casen_2017_u <- filter(casen_2017, casen_2017$zona == "Urbano")
-casen_2017_u <- casen_2017_u[!is.na(casen_2017_u$ytotcor),]
-Q <- quantile(casen_2017_u$ytotcor, probs=c(.25, .75), na.rm = FALSE)
-iqr <- IQR(casen_2017_u$ytotcor)
-casen_2017_sin_o <- subset(casen_2017_u, casen_2017_u$ytotcor > 
-                                 (Q[1] - 1.5*iqr) &
-                                 casen_2017_u$ytotcor < (Q[2]+1.5*iqr))
-casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character),
-                               stringsAsFactors=FALSE)
-b <-  as.numeric(casen_2017_sin_o$ytotcor)
-a <- casen_2017_sin_o$comuna
-promedios_grupales <-aggregate(b, by=list(a), FUN = mean , na.rm=TRUE )
-names(promedios_grupales)[1] <- "comuna"
-names(promedios_grupales)[2] <- "promedio_i"
-promedios_grupales$año <- "2017"
-codigos_comunales <- readRDS(file = "../codigos_comunales_2011-2017.rds")
-names(codigos_comunales)[1] <- "código"
-names(codigos_comunales)[2] <- "comuna"
-df_2017 = merge( x = promedios_grupales, y = codigos_comunales, 
-                 by = "comuna", 
-                 all.x = TRUE)
-head(df_2017,5)
-```
-
-#### 1.1.2 Cálculo de la cantidad de personas por comuna desde el mismo Censo del 2017. Para para años anteriores utilizaremos las proyecciones de población del INE. Unimos con la tabla 1.1.1.
-
-```{r, attr.source='.numberLines'}
-x <- import("../Microdato_Censo2017-Personas.csv")
-my_summary_data <- x %>%
-    group_by(x$COMUNA) %>%
-    summarise(Count = n()) 
-names(my_summary_data)[1] <- "comuna"     
-names(my_summary_data)[2] <- "personas"
-# recogemos el campo Comuna:
-codigos <- my_summary_data$comuna
-# construimos una secuencia llamada rango del 1 al total de filas del 
-# dataset:
-rango <- seq(1:nrow(my_summary_data))
-# Creamos un string que agrega un cero a todos los registros:
-cadena <- paste("0",codigos[rango], sep = "")
-# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser 
-# siempre 5 
-# agregandole un cero al inicio de los que tienen 4.
-# Para ello extraemos un substring de la cadena sobre todas las filas 
-#(rangos) 
-# comenzando desde el primero o el segundo y llegando siempre al 6.
-cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
-codigos <- as.data.frame(codigos)
-cadena <- as.data.frame(cadena)
-comuna_corr <- cbind(my_summary_data,cadena)
-names(comuna_corr)[3] <- "código"  
-df_2017_2 = merge( x = df_2017, y = comuna_corr, by = "código", 
-                   all.x = TRUE)
-df_2017_2$Ingresos_expandidos <- df_2017_2$promedio_i*df_2017_2$personas
-df_2017_2 <- df_2017_2[-5] 
-head(df_2017_2,5)
-saveRDS(df_2017_2, "Ingresos_expandidos_urbano_17.rds")
-```
-
-<hr style="height:3px;border-width:3;color:Grey;background-color:Grey">
-
-## 2.1 Ingresos expandidos a nivel <span style="color:  #C70039  ">RURAL</span> 2017 
-
-#### 2.1.1 Cálculo de los ingresos promedio de la Casen por comuna 2017 a nivel RURAL.
-
-```{r, attr.source='.numberLines'}
-casen_2017 <- readRDS(file = "../casen_2017_c.rds")
-casen_2017_u <- filter(casen_2017, casen_2017$zona == "Rural")
-casen_2017_u <- casen_2017_u[!is.na(casen_2017_u$ytotcor),]
-Q <- quantile(casen_2017_u$ytotcor, probs=c(.25, .75), na.rm = FALSE)
-iqr <- IQR(casen_2017_u$ytotcor)
-casen_2017_sin_o <- subset(casen_2017_u, casen_2017_u$ytotcor > 
-(Q[1] - 1.5*iqr) & casen_2017_u$ytotcor < (Q[2]+1.5*iqr))
-casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character),
-                               stringsAsFactors=FALSE)
-b <-  as.numeric(casen_2017_sin_o$ytotcor)
-a <- casen_2017_sin_o$comuna
-promedios_grupales <-aggregate(b, by=list(a), FUN = mean , na.rm=TRUE )
-names(promedios_grupales)[1] <- "comuna"
-names(promedios_grupales)[2] <- "promedio_i"
-promedios_grupales$año <- "2017"
-codigos_comunales <- readRDS(file = "../codigos_comunales_2011-2017.rds")
-names(codigos_comunales)[1] <- "código"
-names(codigos_comunales)[2] <- "comuna"
-df_2017 = merge( x = promedios_grupales, y = codigos_comunales, 
-                 by = "comuna", 
-                 all.x = TRUE)
-head(df_2017,5)
-```
-
-#### 2.1.2 Cálculo de la cantidad de personas por comuna desde el mismo Censo del 2017. Para para años anteriores utilizaremos las proyecciones de población del INE. Unimos con la tabla 2.1.1.
-
-```{r, attr.source='.numberLines'}
-x <- import("../Microdato_Censo2017-Personas.csv")
-my_summary_data <- x %>%
-    group_by(x$COMUNA) %>%
-    summarise(Count = n()) 
-names(my_summary_data)[1] <- "comuna"     
-names(my_summary_data)[2] <- "personas"
-# recogemos el campo Comuna:
-codigos <- my_summary_data$comuna
-# construimos una secuencia llamada rango del 1 al total de filas 
-# del dataset:
-rango <- seq(1:nrow(my_summary_data))
-# Creamos un string que agrega un cero a todos los registros:
-cadena <- paste("0",codigos[rango], sep = "")
-# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser
-# siempre 5 
-# agregandole un cero al inicio de los que tienen 4.
-# Para ello extraemos un substring de la cadena sobre todas las filas 
-#(rangos) comenzando 
-# desde el primero o el segundo y llegando siempre al 6.
-cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
-codigos <- as.data.frame(codigos)
-cadena <- as.data.frame(cadena)
-comuna_corr <- cbind(my_summary_data,cadena)
-names(comuna_corr)[3] <- "código"  
-df_2017_2 = merge( x = df_2017, y = comuna_corr, by = "código", 
-                   all.x = TRUE)
-df_2017_2$Ingresos_expandidos <- df_2017_2$promedio_i*df_2017_2$personas
-df_2017_2 <- df_2017_2[-5] 
-head(df_2017_2,5)
-saveRDS(df_2017_2, "Ingresos_expandidos_rural_17.rds")
-```
-
-<hr style="height:3px;border-width:3;color:Grey;background-color:Grey">
-
-## 3.1  Pregunta **P02**: Ocupación de la vivienda a nivel <span style="color:  #C70039  ">URBANO</span>
-
-Ésta pregunta posee 4 categorías de respuesta:
-
+Esta pregunta posee 4 categorias de respuesta:
+   
 1 Con moradores presentes.\
 2 Con moradores ausentes.\
 3 En venta, para arriendo, abandonada u otro.\
 4 De temporada (vacacional u otro).\
+  
+  
+Leemos las respuestas a la pregunta **P02** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:
 
-### 3.1.1 Despliegue de una tabla de contingencia con cada una de las categorías de respuesta por comuna urbana.
-
-<!-- #### 1.1.6 Cálculo de correlaciones a nivel nacional urbano -->
-
-Area: urbano = 1 rural = 2
-
-```{r, warning = FALSE, attr.source='.numberLines'}
+```{r, warning = FALSE}
 tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
 tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
 b <- tabla_con_clave_u$COMUNA
-c <- tabla_con_clave_u$P01
+c <- tabla_con_clave_u$P02
 cross_tab =  xtabs( ~ unlist(b) + unlist(c))
 tabla <- as.data.frame(cross_tab)
 d <-tabla[!(tabla$Freq == 0),]
 d$anio <- "2017"
-d_t <- filter(d,d$unlist.c. == 1)
-for(i in 2:4){
+
+
+categorias <- sort(unique(tabla_con_clave_u$P02 ))
+categorias <- as.data.frame(categorias)
+names(categorias)[1] <- "cat"
+
+categorias <- filter(categorias, categorias$cat != 99)
+categorias <- filter(categorias, categorias$cat != 98)
+
+d_t <- filter(d,d$unlist.c. == categorias[1,1])
+for(i in categorias[2,1]:categorias[nrow(categorias),1]){
   d_i <- filter(d,d$unlist.c. == i)
   d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
 }
-# Agregamos un cero a los códigos comunales de 4 dígitos, 
-# que queda en la columna llamada **código**:
+ 
+# Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada **código**:
 codigos <- d_t$unlist.b.
 rango <- seq(1:nrow(d_t))
 cadena <- paste("0",codigos[rango], sep = "")
@@ -236,104 +105,120 @@ cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
 codigos <- as.data.frame(codigos)
 cadena <- as.data.frame(cadena)
 comuna_corr <- cbind(d_t,cadena)
-comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
-names(comuna_corr)[13] <- "código"
-# Renombre de columnas
-names(comuna_corr)[2] <- "Con moradores presentes"
-names(comuna_corr)[5] <- "Con moradores ausentes"
-names(comuna_corr)[8] <- "En venta, para arriendo, abandonada u otro"
-names(comuna_corr)[11] <- "De temporada (vacacional u otro)"
-comuna_corr <- comuna_corr[-3] 
-comuna_corr <- comuna_corr[-5] 
-comuna_corr <- comuna_corr[-7] 
-names(comuna_corr)[1] <- "Categ. 1"
-names(comuna_corr)[3] <- "Categ. 2"
-names(comuna_corr)[5] <- "Categ. 3"
-names(comuna_corr)[7] <- "Categ. 4"
-names(comuna_corr)[9] <- "Año"
-kbl(comuna_corr) %>%
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+ 
+names(comuna_corr)[ncol(comuna_corr)] <- "código"
+ 
+quitar <- seq(3,(ncol(comuna_corr)-1),3)
+
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+names(comuna_corr )[2] <- "Con moradores presentes"
+names(comuna_corr )[4] <- "Con moradores ausentes"
+names(comuna_corr )[6] <- "En venta, para arriendo, abandonada u otro"
+names(comuna_corr )[8] <- "De temporada (vacacional u otro)"
+
+renombrar <- seq(1,(ncol(comuna_corr)-2),2)
+for (v in renombrar) {
+  names(comuna_corr )[v] <- "categoria"
+}
+ 
+kbl(head(comuna_corr,50)) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
   scroll_box(width = "100%", height = "300px")
+
+
 ```
+## Generación de ingresos promedios a nivel urbano y su unión con la tabla de contingencia
 
-### 3.1.2 Hacemos la unión con los ingresos promedio comunales expandidos
-
-```{r, warning = FALSE, attr.source='.numberLines'}
+```{r, attr.source='.numberLines'}
 ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
-df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, 
-                   by = "código", 
-                   all.x = TRUE)
-```
-
-
-
-```{r, warning = FALSE, attr.source='.numberLines'}
-kbl(df_2017_2) %>%
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+df_2017_2 <- df_2017_2[,-c(3)]
+comuna_corr <- readRDS("cant_personas_17.rds")
+df_2017_exp = merge( x = df_2017_2, y = comuna_corr, by = "código", all.x = TRUE)
+df_2017_exp$Ingresos_expandidos <- df_2017_exp$promedio_i*df_2017_exp$personas
+df_2017_exp <- filter(df_2017_exp, df_2017_exp$Ingresos_expandidos != 'is.na')
+write_xlsx(df_2017_exp,"P02_urbano.xlsx")
+kbl(head(df_2017_exp,50)) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
   scroll_box(width = "100%", height = "300px")
+
 ```
-
-
-
-
-### 3.1.3 Correlaciones
-
-#### 3.1.3.1 Pearson
-
-```{r, warning = FALSE, attr.source='.numberLines'}
-my_data <- df_2017_2[, c(3,5,7,9,15)]
-chart.Correlation(my_data, histogram=TRUE, method = c( "pearson"),pch=20)
-```
-
-#### 3.1.3.2 Spearman
-
-```{r, warning=FALSE}
-my_data <- df_2017_2[, c(3,5,7,9,15)]
-chart.Correlation(my_data, histogram=TRUE,   method = c( "spearman"), pch=20)
-```
-
-#### 3.1.3.3 Kendall
+ 
+### Estadísticas a nivel urbano
 
 ```{r}
-my_data <- df_2017_2[, c(3,5,7,9,15)]
-chart.Correlation(my_data, histogram=TRUE,   method = c( "kendall"), pch=20)
+III <- seq(3,(ncol(df_2017_exp)-6),2)
+df_2017_exp_subset <- df_2017_exp[,c(III,(ncol(df_2017_exp)))]
+data_sum <- summary(df_2017_exp_subset)
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
+```
+ 
+
+## **Correlaciones**
+
+### Kendall
+
+```{r, warning = FALSE}
+III <- seq(3,(ncol(df_2017_exp)-6),2)
+df_2017_exp_subset <- df_2017_exp[,c(III,(ncol(df_2017_exp)))]
+chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "kendall"), pch=20)
 ```
 
+### Pearson
+ 
+```{r, warning = FALSE}
+III <- seq(3,(ncol(df_2017_exp)-6),2)
+df_2017_exp_subset <- df_2017_exp[,c(III,(ncol(df_2017_exp)))]
+chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "pearson"), pch=20)
+```
 
+### Spearman
 
+```{r, warning = FALSE}
+III <- seq(3,(ncol(df_2017_exp)-6),2)
+df_2017_exp_subset <- df_2017_exp[,c(III,(ncol(df_2017_exp)))]
+chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "spearman"), pch=20)
+```
 
-## 4.1 Pregunta **P02**: Ocupación de la vivienda a nivel <span style="color:#C70039">RURAL</span>
+ 
 
-Ésta pregunta posee 4 categorías de respuesta:
+# Nivel nacional RURAL (código 2)
 
-1 Con moradores presentes.\
-2 Con moradores ausentes.\
-3 En venta, para arriendo, abandonada u otro.\
-4 De temporada (vacacional u otro).
+##  Pregunta **P02**: Ocupación de la vivienda
+  
+Leemos las respuestas a la pregunta **P02** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:
 
-### 4.1.1 Despliegue de una tabla de contingencia con cada una de las categorías de respuesta por comuna rural.
-
-Area: urbano = 1 rural = 2
-
-
-```{r, warning = FALSE, attr.source='.numberLines'}
+```{r, warning = FALSE}
 tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
 tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
 b <- tabla_con_clave_u$COMUNA
-c <- tabla_con_clave_u$P01
+c <- tabla_con_clave_u$P02
 cross_tab =  xtabs( ~ unlist(b) + unlist(c))
 tabla <- as.data.frame(cross_tab)
 d <-tabla[!(tabla$Freq == 0),]
 d$anio <- "2017"
-d_t <- filter(d,d$unlist.c. == 1)
-for(i in 2:4){
+
+
+categorias <- sort(unique(tabla_con_clave_u$P02 ))
+categorias <- as.data.frame(categorias)
+names(categorias)[1] <- "cat"
+
+categorias <- filter(categorias, categorias$cat != 99)
+categorias <- filter(categorias, categorias$cat != 98)
+
+d_t <- filter(d,d$unlist.c. == categorias[1,1])
+for(i in categorias[2,1]:categorias[nrow(categorias),1]){
   d_i <- filter(d,d$unlist.c. == i)
   d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
 }
-# Agregamos un cero a los códigos comunales de 4 dígitos, que queda 
-# en la columna llamada **código**:
+ 
+# Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada **código**:
 codigos <- d_t$unlist.b.
 rango <- seq(1:nrow(d_t))
 cadena <- paste("0",codigos[rango], sep = "")
@@ -341,64 +226,92 @@ cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
 codigos <- as.data.frame(codigos)
 cadena <- as.data.frame(cadena)
 comuna_corr <- cbind(d_t,cadena)
-comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
-names(comuna_corr)[13] <- "código"
-# Renombre de columnas
-names(comuna_corr)[2] <- "Con moradores presentes"
-names(comuna_corr)[5] <- "Con moradores ausentes"
-names(comuna_corr)[8] <- "En venta, para arriendo, abandonada u otro"
-names(comuna_corr)[11] <- "De temporada (vacacional u otro)"
-comuna_corr <- comuna_corr[-3] 
-comuna_corr <- comuna_corr[-5] 
-comuna_corr <- comuna_corr[-7] 
-names(comuna_corr)[1] <- "Categ. 1"
-names(comuna_corr)[3] <- "Categ. 2"
-names(comuna_corr)[5] <- "Categ. 3"
-names(comuna_corr)[7] <- "Categ. 4"
-names(comuna_corr)[9] <- "Año"
-kbl(comuna_corr) %>%
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+ 
+names(comuna_corr)[ncol(comuna_corr)] <- "código"
+ 
+quitar <- seq(3,(ncol(comuna_corr)-1),3)
+
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+names(comuna_corr )[2] <- "Con moradores presentes"
+names(comuna_corr )[4] <- "Con moradores ausentes"
+names(comuna_corr )[6] <- "En venta, para arriendo, abandonada u otro"
+names(comuna_corr )[8] <- "De temporada (vacacional u otro)"
+
+renombrar <- seq(1,(ncol(comuna_corr)-2),2)
+for (v in renombrar) {
+  names(comuna_corr )[v] <- "categoria"
+}
+ 
+kbl(head(comuna_corr,50)) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
   scroll_box(width = "100%", height = "300px")
-```
 
-### 4.1.2 Hacemos la unión con los ingresos promedio comunales expandidos
+```
+ 
+ 
+## Generación de ingresos promedios a nivel rural y su unión con la tabla de contingencia
 
 ```{r, attr.source='.numberLines'}
-ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
-df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, 
-                   by = "código", 
-                   all.x = TRUE)
-kbl(df_2017_2) %>%
+ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_rural_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+df_2017_2 <- df_2017_2[,-c(3)]
+comuna_corr <- readRDS("cant_personas_17.rds")
+df_2017_exp = merge( x = df_2017_2, y = comuna_corr, by = "código", all.x = TRUE)
+df_2017_exp$Ingresos_expandidos <- df_2017_exp$promedio_i*df_2017_exp$personas
+df_2017_exp <- filter(df_2017_exp, df_2017_exp$Ingresos_expandidos != 'is.na')
+write_xlsx(df_2017_exp,"P02_rural.xlsx")
+kbl(head(df_2017_exp,50)) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
   scroll_box(width = "100%", height = "300px")
+ 
+```
+ 
+### Estadísticas a nivel Rural
+
+```{r}
+III <- seq(3,(ncol(df_2017_exp)-6),2)
+df_2017_exp_subset <- df_2017_exp[,c(III,(ncol(df_2017_exp)))]
+data_sum <- summary(df_2017_exp_subset)
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
+```
+
+## **Correlaciones**
+
+### Kendall
+
+```{r, warning = FALSE}
+III <- seq(3,(ncol(df_2017_exp)-6),2)
+df_2017_exp_subset <- df_2017_exp[,c(III,(ncol(df_2017_exp)))]
+chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+### Pearson
+ 
+```{r, warning = FALSE}
+III <- seq(3,(ncol(df_2017_exp)-6),2)
+df_2017_exp_subset <- df_2017_exp[,c(III,(ncol(df_2017_exp)))]
+chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+### Spearman
+
+```{r, warning = FALSE}
+III <- seq(3,(ncol(df_2017_exp)-6),2)
+df_2017_exp_subset <- df_2017_exp[,c(III,(ncol(df_2017_exp)))]
+chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
 
 
-### 4.1.3 Correlaciones
 
-#### 4.1.3.1 Pearson
 
-```{r, attr.source='.numberLines'}
-my_data <- df_2017_2[, c(3,5,7,9,15)]
-chart.Correlation(my_data, histogram=TRUE, method = c( "pearson"),pch=20)
-```
-
-#### 4.1.3.2 Spearman
-
-```{r, attr.source='.numberLines', warning=FALSE}
-my_data <- df_2017_2[, c(3,5,7,9,15)]
-chart.Correlation(my_data, histogram=TRUE, method = c( "spearman"),pch=20)
-```
-
-#### 4.1.3.3 Kendall
-
-```{r, attr.source='.numberLines'}
-my_data <- df_2017_2[, c(3,5,7,9,15)]
-chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"),pch=20)
-```
-
-Parece no ser relevante el análisis a nivel regional por la pequeña cantidad de comunas que hay en cada una que es menor aún considerando las que pertenecen a cada categoría de respuesta.
-
-<hr style="height:3px;border-width:3;color:Grey;background-color:Grey">
+<!-- df_2017_2f <- filter(df_2017_2, df_2017_2$Ingresos_expandidos != 'is.na') -->
+<!-- df_2017_2f -->
+<!-- III <- seq(3,30,3) -->
+<!-- my_data <- df_2017_2f[, c(III)] -->
+<!-- cor(x=df_2017_2f$Ingresos_expandidos, y=my_data, method=c("pearson")) -->

@@ -1,0 +1,11 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/788844/23d070942c704778a7204a0e020a5058
+bundleId: https://api.rpubs.com/api/v1/document/788844/23d070942c704778a7204a0e020a5058
+url: http://rpubs.com/dataintelligence/788844
+when: 1625695174.9755
+lastSyncTime: 1625695174.9755
