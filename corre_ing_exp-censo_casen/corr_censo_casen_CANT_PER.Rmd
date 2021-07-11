@@ -136,7 +136,7 @@ names(df_2017_222)[i] <- frecuencia
 df_2017_22a <- df_2017_222[,c(1:10,32)]
 ```
 
-### **Kendall**
+### El coeficiente de correlación de los rangos. $\tau$ de <span style="color:red">**Kendall**</span>
 
 ```{r, warning = FALSE}
 chart.Correlation(df_2017_22a, histogram=TRUE, method = c( "kendall"), pch=20)
@@ -302,7 +302,7 @@ chart.Correlation(df_2017_22a, histogram=TRUE, method = c( "spearman"), pch=20)
 df_2017_22b <- df_2017_222[,c(11:20,32)]
 ```
 
-### **Kendall**
+#### <span style="color: #900C3F ">**Kendall**</span>
 
 ```{r, warning = FALSE}
 chart.Correlation(df_2017_22b, histogram=TRUE, method = c( "kendall"), pch=20)
@@ -319,32 +319,6 @@ chart.Correlation(df_2017_22b, histogram=TRUE, method = c( "pearson"), pch=20)
 ```{r, warning = FALSE}
 chart.Correlation(df_2017_22b, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
-
-### 21-30 personas
-
-```{r}
-df_2017_22c <- df_2017_222[,c(21:24,32)]
-```
-
-### **Kendall**
-
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22c, histogram=TRUE, method = c( "kendall"), pch=40)
-```
-
-### Pearson
- 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22c, histogram=TRUE, method = c( "pearson"), pch=20)
-```
-
-### Spearman
-
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22c, histogram=TRUE, method = c( "spearman"), pch=20)
-```
-
-
 
 
 

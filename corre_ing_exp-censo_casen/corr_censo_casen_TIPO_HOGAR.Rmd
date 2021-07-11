@@ -1,0 +1,351 @@
+---
+title: Correlaciones entre variables del CENSO de Viviendas, Hogares y Personas e Ingresos promedios comunales de la CASEN 2017.
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+date: "Sabado 10-07-2021"
+
+abstract: |
+  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población también comunal** que llamaremos **ingresos expandidos** extraídos de la Casen 2017 y las frecuencias de respuesta por categoría a la pregunta **TIPO_HOGAR** del Censo de viviendas 2017, también extraídas a nivel comunal. Lo haremos a nivel nacional.
+  
+  Haremos las correlaciones tanto a nivel Urbano como Rural.
+  
+  Importante es aplicar la librería **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
+   
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true    
+    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  class.source = "numberLines lineAnchors"
+  )
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+
+```
+
+
+# Nivel nacional URBANO (código 1)
+
+## Pregunta **TIPO_HOGAR**: 
+
+Esta pregunta posee 7 categorias de respuesta:
+   
+1 Hogar unipersonal\
+2 Hogar nuclear monoparental\
+3 Hogar nuclear biparental sin hijos 
+4 Hogar nuclear biparental con hijos\
+5 Hogar compuesto\
+6 Hogar extenso\
+7 Hogar sin núcleo\
+  
+  
+Leemos las respuestas a la pregunta **TIPO_HOGAR** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+tabla_con_clave <- readRDS("censos/censo_hogares_con_clave_17")
+```
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
+b <- tabla_con_clave_u$COMUNA
+c <- tabla_con_clave_u$TIPO_HOGAR
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+# apilamos:
+
+ d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:7){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+# Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada **código**:
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+names(comuna_corr)[ncol(comuna_corr)] <- "código"
+```
+
+
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(3,(ncol(comuna_corr)-1),3)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+```
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+names(comuna_corr )[2] <- "Hogar unipersonal"
+names(comuna_corr )[4] <- "Hogar nuclear monoparental"
+names(comuna_corr )[6] <- "Hogar nuclear biparental sin hijos "
+names(comuna_corr )[8] <- "Hogar nuclear biparental con hijos"
+names(comuna_corr )[10] <- "Hogar compuesto"
+names(comuna_corr )[12] <- "Hogar extenso"
+names(comuna_corr )[14] <- "Hogar sin núcleo"
+```
+
+
+
+
+
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(1,(ncol(comuna_corr)-1),2)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+
+```
+
+
+## Generación de ingresos promedios a nivel urbano y su unión con la tabla de contingencia
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+
+```
+
+<br>
+
+```{r, warning = FALSE, attr.source='.numberLines', message=FALSE}
+library(plotly)
+fig <- plot_ly(df_2017_2, x = ~`código`, y = ~`Hogar unipersonal`
+, name = 'Hogar unipersonal', type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+fig <- fig %>% add_trace(y = ~`Hogar nuclear monoparental`
+, name = 'Hogar nuclear monoparental', mode = 'lines+markers',
+                 width=7000, height=400) 
+fig <- fig %>% layout(autosize = F, width = 800, height = 500)
+fig 
+```
+
+<br>
+
+<br>
+<br>
+<br>
+
+### Estadísticas a nivel urbano
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+df_2017_2_sub <- df_2017_2[,-c(1,9,10,11,12,13)]
+
+data_sum <- summary(df_2017_2_sub )
+
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
+```
+ 
+
+## **Correlaciones**
+
+### Kendall
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+### Pearson
+ 
+```{r, warning = FALSE, attr.source='.numberLines'}
+
+chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+### Spearman
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+
+chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+
+# Nivel nacional RURAL (código 2)
+
+## Pregunta **TIPO_HOGAR**: 
+
+Esta pregunta posee 7 categorias de respuesta:
+   
+1 Hogar unipersonal\
+2 Hogar nuclear monoparental\
+3 Hogar nuclear biparental sin hijos 
+4 Hogar nuclear biparental con hijos\
+5 Hogar compuesto\
+6 Hogar extenso\
+7 Hogar sin núcleo\
+  
+  
+Leemos las respuestas a la pregunta **TIPO_HOGAR** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+tabla_con_clave <- readRDS("censos/censo_hogares_con_clave_17")
+```
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
+b <- tabla_con_clave_u$COMUNA
+c <- tabla_con_clave_u$TIPO_HOGAR
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+# apilamos:
+
+ d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:7){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+# Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada **código**:
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+names(comuna_corr)[ncol(comuna_corr)] <- "código"
+```
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(3,(ncol(comuna_corr)-1),3)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+```
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+names(comuna_corr )[2] <- "Hogar unipersonal"
+names(comuna_corr )[4] <- "Hogar nuclear monoparental"
+names(comuna_corr )[6] <- "Hogar nuclear biparental sin hijos "
+names(comuna_corr )[8] <- "Hogar nuclear biparental con hijos"
+names(comuna_corr )[10] <- "Hogar compuesto"
+names(comuna_corr )[12] <- "Hogar extenso"
+names(comuna_corr )[14] <- "Hogar sin núcleo"
+```
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(1,(ncol(comuna_corr)-1),2)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+
+```
+
+## Integración de ingresos promedios a nivel urbano y su unión con la tabla de contingencia
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+
+```
+
+<br>
+
+```{r, warning = FALSE, attr.source='.numberLines', message=FALSE}
+library(plotly)
+fig <- plot_ly(df_2017_2, x = ~`código`, y = ~`Hogar unipersonal`
+, name = 'Hogar unipersonal', type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+fig <- fig %>% add_trace(y = ~`Hogar nuclear monoparental`
+, name = 'Hogar nuclear monoparental', mode = 'lines+markers',
+                 width=7000, height=400) 
+fig <- fig %>% layout(autosize = F, width = 800, height = 500)
+fig 
+```
+
+<br>
+
+<br>
+<br>
+<br>
+
+### Estadísticas a nivel urbano
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+df_2017_2_sub <- df_2017_2[,-c(1,9,10,11,12,13)]
+
+data_sum <- summary(df_2017_2_sub )
+
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
+```
+ 
+
+## **Correlaciones**
+
+### Kendall
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+### Pearson
+ 
+```{r, warning = FALSE, attr.source='.numberLines'}
+
+chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+### Spearman
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+
+chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+
+
+
+
+
+
+
+
+ 

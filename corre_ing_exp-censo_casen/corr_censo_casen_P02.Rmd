@@ -110,8 +110,9 @@ comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
 names(comuna_corr)[ncol(comuna_corr)] <- "código"
  
 quitar <- seq(3,(ncol(comuna_corr)-1),3)
-
 comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+
+
 names(comuna_corr )[2] <- "Con moradores presentes"
 names(comuna_corr )[4] <- "Con moradores ausentes"
 names(comuna_corr )[6] <- "En venta, para arriendo, abandonada u otro"
@@ -307,11 +308,3 @@ df_2017_exp_subset <- df_2017_exp[,c(III,(ncol(df_2017_exp)))]
 chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
 
-
-
-
-<!-- df_2017_2f <- filter(df_2017_2, df_2017_2$Ingresos_expandidos != 'is.na') -->
-<!-- df_2017_2f -->
-<!-- III <- seq(3,30,3) -->
-<!-- my_data <- df_2017_2f[, c(III)] -->
-<!-- cor(x=df_2017_2f$Ingresos_expandidos, y=my_data, method=c("pearson")) -->

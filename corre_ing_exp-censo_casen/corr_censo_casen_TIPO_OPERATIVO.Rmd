@@ -1,0 +1,404 @@
+---
+title: Correlaciones entre variables del CENSO de Viviendas, Hogares y Personas e Ingresos promedios comunales de la CASEN 2017.
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+date: "Domingo 11-07-2021"
+
+abstract: |
+  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población ambos a nivel comunal** que llamaremos **ingresos expandidos** extraídos de la Casen 2017 y las frecuencias de respuesta por categoría a la pregunta **TIPO_OPERATIVO** del Censo de viviendas 2017, también extraídas a nivel comunal. Lo haremos a nivel nacional.
+  
+  Haremos las correlaciones tanto a nivel Urbano como Rural.
+  
+  Importante es aplicar la librería **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
+   
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true    
+    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  class.source = "numberLines lineAnchors"
+  )
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+
+```
+
+
+# Nivel nacional URBANO (código 1)
+
+## Antecedentes Pregunta **TIPO_OPERATIVO**: 
+
+POBLACIÓN TOTAL POR TIPO DE OPERATIVO
+En este tabulado se presenta la cantidad de personas efectivamente censadas de acuerdo al tipo de operativo en que fueron censadas. Es decir, se muestra la cantidad de población censada en viviendas particulares ocupadas con moradores presentes, en viviendas colectivas, en operativo especial de tránsito y en operativo especial calle.
+
+1. Población efectivamente censada: Corresponde al total de personas que fueron censadas en los distintos operativos de empadronamiento, es decir, viviendas particulares ocupadas con moradores presentes, viviendas colectivas, operativo especial tránsito y operativo especial calle.
+
+2. Personas en viviendas particulares ocupadas con moradores presentes: Corresponde a aquellas personas que fueron censadas en viviendas dentro de una propiedad, destinada total o parcialmente a la habitación permanente o temporal de personas. Para ser considerada vivienda particular, debe necesariamente disponer de acceso independiente para sus moradores. El concepto de propiedad no hace alusión a la propiedad legal, sino que se refiere a un espacio geográfico con límites reconocibles, en el que se ubica una o más viviendas particulares.
+
+3. Personas en otros operativos: Hace alusión a aquellas personas que fueron censadas a través de alguno de los operativos adicionales al de viviendas particulares. Estos son: operativo de viviendas colectivas, operativo especial tránsito y operativo especial calle.
+
+El objetivo de estos operativos fue censar a las personas que pasaron el momento censal (00:00 horas del 19 de abril de 2017) en territorio nacional, pero que no alojaron esa noche en una vivienda particular.
+
+## Las categorías de respuesta:
+
+Esta pregunta posee 4 categorías de respuesta:
+   
+1 Hogar en vivienda particular\
+8 Vivienda colectiva (no es hogar)\
+9 Operativo personas en tránsito (no es hogar)\
+10 Operativo calle (no es hogar)
+  
+Leemos las respuestas a la pregunta **TIPO_OPERATIVO** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+tabla_con_clave <- readRDS("censos/censo_hogares_con_clave_17")
+```
+
+Tenemos sospechas de que solo existen respuestas de categoria 1.
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
+b <- tabla_con_clave_u$COMUNA
+c <- tabla_con_clave_u$TIPO_OPERATIVO
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+```
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+# apilamos:
+
+ d_t <- filter(d,d$unlist.c. == 1)
+for(i in c(8,9,10)){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+```
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+# Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada **código**:
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+names(comuna_corr)[ncol(comuna_corr)] <- "código"
+```
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(3,(ncol(comuna_corr)-1),3)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+```
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+names(comuna_corr)[1] <- "Categoría 1"
+names(comuna_corr)[3] <- "Categoría 8"
+names(comuna_corr)[5] <- "Categoría 9"
+names(comuna_corr)[7] <- "Categoría 10"
+
+names(comuna_corr)[2] <- "Hogar en vivienda particular"
+names(comuna_corr)[4] <- "Vivienda colectiva (no es hogar)"
+names(comuna_corr)[6] <- "Operativo personas en tránsito (no es hogar)"
+names(comuna_corr)[8] <- "Operativo calle (no es hogar)"
+
+```
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(1,(ncol(comuna_corr)-1),2)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+```
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+```
+
+<br>
+
+```{r, warning = FALSE, attr.source='.numberLines', message=FALSE}
+library(plotly)
+
+fig <- plot_ly(df_2017_2, x = ~`código`, y = ~`Hogar en vivienda particular`
+, name = 'Hogar en vivienda particular', type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+
+fig <- fig %>% add_trace(y = ~`Vivienda colectiva (no es hogar)`
+, name = 'Vivienda colectiva (no es hogar)', mode = 'lines',
+                 width=7000, height=400) 
+
+fig <- fig %>% add_trace(y = ~`Operativo personas en tránsito (no es hogar)`
+, name = 'Operativo personas en tránsito (no es hogar)', mode = 'lines',
+                 width=7000, height=400) 
+
+fig <- fig %>% add_trace(y = ~`Operativo calle (no es hogar)`
+, name = 'Operativo calle (no es hogar)', mode = 'lines',
+                 width=7000, height=400) 
+
+fig <- fig %>% layout(autosize = F, width = 800, height = 500)
+fig 
+```
+
+<br>
+<br>
+<br>
+<br>
+
+### Estadísticas a nivel urbano
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+df_2017_2_sub <- df_2017_2[,-c(1,6,7,8,9,10)]
+```
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(df_2017_2_sub )
+
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
+```
+
+
+## **Correlaciones**
+
+### Kendall
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+### Pearson
+ 
+```{r, warning = FALSE, attr.source='.numberLines'}
+
+chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+### Spearman
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+
+chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+
+
+# Nivel nacional RURAL (código 2)
+
+  
+Leemos las respuestas a la pregunta **TIPO_OPERATIVO** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+tabla_con_clave <- readRDS("censos/censo_hogares_con_clave_17")
+```
+
+Tenemos sospechas de que solo existen respuestas de categoria 1.
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
+b <- tabla_con_clave_u$COMUNA
+c <- tabla_con_clave_u$TIPO_OPERATIVO
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+```
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+# apilamos:
+
+ d_t <- filter(d,d$unlist.c. == 1)
+for(i in c(8,9,10)){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+```
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+# Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada **código**:
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+names(comuna_corr)[ncol(comuna_corr)] <- "código"
+```
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(3,(ncol(comuna_corr)-1),3)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+```
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+names(comuna_corr)[1] <- "Categoría 1"
+names(comuna_corr)[3] <- "Categoría 8"
+names(comuna_corr)[5] <- "Categoría 9"
+names(comuna_corr)[7] <- "Categoría 10"
+
+names(comuna_corr)[2] <- "Hogar en vivienda particular"
+names(comuna_corr)[4] <- "Vivienda colectiva (no es hogar)"
+names(comuna_corr)[6] <- "Operativo personas en tránsito (no es hogar)"
+names(comuna_corr)[8] <- "Operativo calle (no es hogar)"
+
+```
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(1,(ncol(comuna_corr)-1),2)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+```
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_rural_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+```
+
+```{r}
+df_2017_2
+```
+
+
+
+
+<br>
+
+```{r, warning = FALSE, attr.source='.numberLines', message=FALSE}
+library(plotly)
+
+fig <- plot_ly(df_2017_2, x = ~`código`, y = ~`Hogar en vivienda particular`
+, name = 'Hogar en vivienda particular', type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+
+fig <- fig %>% add_trace(y = ~`Vivienda colectiva (no es hogar)`
+, name = 'Vivienda colectiva (no es hogar)', mode = 'lines',
+                 width=7000, height=400) 
+
+fig <- fig %>% add_trace(y = ~`Operativo personas en tránsito (no es hogar)`
+, name = 'Operativo personas en tránsito (no es hogar)', mode = 'lines',
+                 width=7000, height=400) 
+
+fig <- fig %>% add_trace(y = ~`Operativo calle (no es hogar)`
+, name = 'Operativo calle (no es hogar)', mode = 'lines',
+                 width=7000, height=400) 
+
+fig <- fig %>% layout(autosize = F, width = 800, height = 500)
+fig 
+```
+
+<br>
+<br>
+<br>
+<br>
+
+### Estadísticas a nivel urbano
+
+```{r}
+df_2017_2
+```
+
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+df_2017_2_sub_sub <- df_2017_2[,-c(1,4,5,6,7,8,9,10)]
+```
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(df_2017_2_sub_sub )
+
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
+```
+
+
+## **Correlaciones**
+
+### Kendall
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+chart.Correlation(df_2017_2_sub_sub, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+### Pearson
+ 
+```{r, warning = FALSE, attr.source='.numberLines'}
+
+chart.Correlation(df_2017_2_sub_sub, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+### Spearman
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+
+chart.Correlation(df_2017_2_sub_sub, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+
+
+
+
+
+
+
+
+
+
+Referencias:
+
+
+Conceptos Tabulados Censo 2017
+INSTITUTO NACIONAL DE ESTADÍSTICAS
+Mayo / 2018
+
+
+
