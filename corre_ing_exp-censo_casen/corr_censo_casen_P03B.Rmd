@@ -71,7 +71,7 @@ library("dplyr")
 
 # Nivel nacional URBANO (código 1)
 
-## Pregunta **P03B**: Ocupación de la vivienda
+## Pregunta **P03B**: Material en la cubierta del techo
 
 Esta pregunta posee 6 categorias de respuesta:
    
@@ -143,69 +143,124 @@ ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
 
 df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
 
-df_2017_2 <- filter(df_2017_2, df_2017_2$Ingresos_expandidos != 'is.na')
-```
+df_2017_exp_subset <- df_2017_2 [,-c(2,4,6,8,10,12,14,16),drop=FALSE] 
 
 
 
+union_final_urb <- df_2017_exp_subset
 
-```{r, attr.source='.numberLines'}
-write_xlsx(df_2017_2 ,"P03B_urbano.xlsx")
-
-kbl(head(df_2017_2 ,50)) %>%
+kbl(union_final_urb) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
   scroll_box(width = "100%", height = "300px")
 ```
- 
 
 
- 
- 
-### Estadísticas a nivel urbano
+#### Tabla a correlacionar:
+
 
 ```{r}
-
-df_2017_exp_subset <- df_2017_2 [,-c(1,2,4,6,8,10,12,14,16,17,18,19,20),drop=FALSE] 
-
+#union_final_urb_corr  <- union_final_urb[,-c(1)]
+write_xlsx(union_final_urb, "P03B_urbano.xlsx")
 ```
 
 
+#### Estadísticos básicos de nuestras frecuencias
 
-```{r}
-data_sum <- summary(df_2017_exp_subset)
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(union_final_urb)
+
 kbl(head(data_sum)) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
   scroll_box(width = "100%", height = "500px")
 ```
 
-## **Correlaciones**
+#### Gráficas:
 
-### Kendall
+```{r, warning=FALSE,message=FALSE}
+library(plotly)
+df_2017_fig <- union_final_urb 
 
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "kendall"), pch=20)
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=7000, height=400) 
+}
+
+for (g in 3:(ncol(union_final_urb))) {
+grafica_fn(g)
+}
+
+fig <- fig %>% layout(autosize = T)%>%
+  layout(xaxis = list(rangeslider = list()))
+fig 
 ```
 
-### Pearson
+# $\tau$
+
+```{r}
+
+df_2017_fig <- union_final_urb
+
+df_2017_2f <- filter(df_2017_fig, df_2017_fig$ingresos_expandidos != 'is.na')
+III <- seq(2,(ncol(df_2017_2f)-1),1)
+my_data <- df_2017_2f[, c(III)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+data.frame(tabla)
+```
+
+##  Kendall
+
+```{r}
+df_2017_fig <- df_2017_fig[,-c(1)]
+```
+
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+##  Pearson
  
-```{r, warning = FALSE}
-chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "pearson"), pch=20)
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
 ```
 
-### Spearman
+##  Spearman
 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "spearman"), pch=20)
+```{r,attr.source='.numberLines', warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
 
- 
+<br>
+<hr style="height:3px;border-width:1;color:Gray;background-color:Gray">
+<br>
+
+
+
 
 # Nivel nacional RURAL (código 2)
 
-##  Pregunta **P03B**: Ocupación de la vivienda
+## Pregunta **P03B**: Material en la cubierta del techo
+
+Esta pregunta posee 6 categorias de respuesta:
+   
+1 Tejas o tejuelas de arcilla, metálicas, de cemento, de madera, asfálticas o plásticas\
+2 Losa hormigón\
+3 Planchas metálicas de zinc, cobre, etc. o fibrocemento (tipo pizarreño)\
+4 Fonolita o plancha de fieltro embreado\
+5 Paja, coirón, totora o caña\
+6 Materiales precarios (lata, cartón, plásticos, etc.)\
+7 Sin cubierta sólida de techo\
   
 Leemos las respuestas a la pregunta **P03B** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:
 
@@ -267,62 +322,110 @@ ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_rural_17.rds")
 
 df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
 
-df_2017_2 <- filter(df_2017_2, df_2017_2$Ingresos_expandidos != 'is.na')
-```
- 
- 
+df_2017_exp_subset <- df_2017_2 [,-c(2,4,6,8,10,12,14,16),drop=FALSE] 
 
-```{r, attr.source='.numberLines'}
-write_xlsx(df_2017_2 ,"P03B_rural.xlsx")
 
-kbl(head(df_2017_2 ,50)) %>%
+
+union_final_urb <- df_2017_exp_subset
+
+kbl(union_final_urb) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
   scroll_box(width = "100%", height = "300px")
-``` 
- 
- 
-  
-### Estadísticas a nivel rural
-
-```{r}
-
-df_2017_exp_subset <- df_2017_2 [,-c(1,2,4,6,8,10,12,14,16,17,18,19,20),drop=FALSE] 
-
 ```
 
 
+#### Tabla a correlacionar:
+
+
 ```{r}
-data_sum <- summary(df_2017_exp_subset)
+#union_final_urb_corr  <- union_final_urb[,-c(1)]
+write_xlsx(union_final_urb, "P03B_rural.xlsx")
+```
+
+
+#### Estadísticos básicos de nuestras frecuencias
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(union_final_urb)
+
 kbl(head(data_sum)) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
   scroll_box(width = "100%", height = "500px")
 ```
- 
- ## **Correlaciones**
 
-### Kendall
+#### Gráficas:
 
+```{r, warning=FALSE,message=FALSE}
+library(plotly)
+df_2017_fig <- union_final_urb 
 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "kendall"), pch=20)
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=7000, height=400) 
+}
+
+for (g in 3:(ncol(union_final_urb))) {
+grafica_fn(g)
+}
+
+fig <- fig %>% layout(autosize = T)%>%
+  layout(xaxis = list(rangeslider = list()))
+fig 
 ```
 
-### Pearson
- 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "pearson"), pch=20)
+# $\tau$
+
+```{r}
+
+df_2017_fig <- union_final_urb
+
+df_2017_2f <- filter(df_2017_fig, df_2017_fig$ingresos_expandidos != 'is.na')
+III <- seq(2,(ncol(df_2017_2f)-1),1)
+my_data <- df_2017_2f[, c(III)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+data.frame(tabla)
 ```
 
-### Spearman
+##  Kendall
 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "spearman"), pch=20)
+
+
+
+```{r}
+df_2017_fig <- df_2017_fig[,-c(1)]
 ```
 
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+##  Pearson
  
- 
- 
- 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+##  Spearman
+
+```{r,attr.source='.numberLines', warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+
+
+
+
+
  

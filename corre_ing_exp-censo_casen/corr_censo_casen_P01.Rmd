@@ -4,7 +4,7 @@ author:
 - name: VE-CC-AJ
   affiliation: DataIntelligence
 subtitle: | 
-
+  P01: Tipo de vivienda
 date: "Lunes 08-07-2021"
 
 abstract: |
@@ -68,8 +68,9 @@ library("dplyr")
 
 <br>
 
+# Generación de ingresos expandidos a nivel Urbano
 
-##  Generación de ingresos expandidos a nivel Urbano (de ahora en adelante sólo llamaremos al rds ya construído):
+En los siguientes rpubs sólo llamaremos al rds ya construído llamado "Ingresos_expandidos_urbano_17.rds": 
 
 ```{r, attr.source='.numberLines'}
 x <- import("../Microdato_Censo2017-Personas.csv")
@@ -144,11 +145,9 @@ saveRDS(df_2017_2_urbano, "Ingresos_expandidos_urbano_17.rds")
 
 ```
 
+# Generación de ingresos expandidos a nivel rural:
 
-
-
-
-##  Generación de ingresos expandidos a nivel rural:
+En los siguientes rpubs sólo llamaremos al rds ya construído llamado "Ingresos_expandidos_rural_17.rds": 
 
 ```{r, attr.source='.numberLines'}
 x <- import("../Microdato_Censo2017-Personas.csv")
@@ -222,17 +221,13 @@ saveRDS(df_2017_2_rural, "Ingresos_expandidos_rural_17.rds")
 
 ```
 
-
-
-
-
 # Nivel nacional URBANO (código 1)
 
-#  **Construcción de la tabla a correlacionar**
+## Construcción de la tabla a correlacionar
 
  Construcción de tablas con frecuencias de respuesta por categoría desde el Censo: **Viviendas**
 
-## Pregunta **P01**: Tipo de vivienda 
+Pregunta **P01**: Tipo de vivienda 
 
 Ésta pregunta posee 10 categorías de respuesta:
 
@@ -247,7 +242,7 @@ saveRDS(df_2017_2_rural, "Ingresos_expandidos_rural_17.rds")
 9 Operativo personas en tránsito (no es vivienda) \
 10 Operativo calle (no es vivienda)
 
-##  Generación de tabla de contingencia para la variable P01
+Generación de tabla de contingencia para la variable P01
 
 Leemos las respuestas a la pregunta **P01** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría 
 
@@ -304,20 +299,18 @@ kbl(head(comuna_corr_urbano,50)) %>%
 
 ```
 
-## Union de frecuencias con ingresos expandidos:
+### Unión de frecuencias con ingresos expandidos:
+
+#### Ingresos expandidos:
 
 ```{r}
 urb <- readRDS("Ingresos_expandidos_urbano_17.rds")
 head(urb,5)
 ```
 
-```{r}
-head(comuna_corr_urbano,5)
-```
 
 
-
-
+#### Generación de tabla a correlacionar:
 
 ```{r}
 union_final_urb = merge( x = comuna_corr_urbano, y = urb, by = "código", all.x = TRUE)
@@ -330,12 +323,15 @@ kbl(union_final_urb) %>%
   scroll_box(width = "100%", height = "300px")
 ```
 
-generacion de tabla a correlacionar:
+
+#### Tabla a correlacionar:
 
 ```{r}
 #union_final_urb_corr  <- union_final_urb[,-c(1)]
-write_xlsx(union_final_urb, "P01.xlsx")
+write_xlsx(union_final_urb, "P01_urbano.xlsx")
 ```
+
+#### Estadísticos básicos de nuestras frecuencias
 
 
 ```{r, warning = FALSE, attr.source='.numberLines'}
@@ -348,29 +344,12 @@ kbl(head(data_sum)) %>%
 ```
 
 
-### Graficas:
-
-```{r}
-kbl(union_final_urb) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-```
-
-
+#### Gráficas:
 
 ```{r, warning=FALSE,message=FALSE}
 library(plotly)
-
 df_2017_fig <- union_final_urb 
 ```
-```{r}
-kbl(df_2017_fig) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-```
-
 
 ```{r, warning=FALSE,message=FALSE}
 fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
@@ -387,26 +366,33 @@ for (g in 3:(ncol(union_final_urb))) {
 grafica_fn(g)
 }
 
-fig <- fig %>% layout(autosize = T)
+fig <- fig %>% layout(autosize = T)%>%
+  layout(xaxis = list(rangeslider = list()))
 fig 
 ```
 
-
-
-
-
-
-
-
-#  **Correlaciones**
-
-La distribución es asimétrica, poseyendo un sesgo positivo.
-
 ```{r}
-union_final_urb_corr <- df_2017_fig[,-c(1)]
+union_final_urb <- df_2017_fig
+
 ```
 
 
+
+
+
+# $\tau$
+
+```{r}
+df_2017_2f <- filter(union_final_urb, union_final_urb$ingresos_expandidos != 'is.na')
+my_data <- df_2017_2f[, -c(1)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+data.frame(tabla)
+```
+
+
+```{r}
+union_final_urb_corr <- union_final_urb[,-c(1)]
+```
 
 ##  Kendall
 
@@ -436,12 +422,219 @@ chart.Correlation(union_final_urb_corr, histogram=TRUE, method = c( "spearman"),
 
 
 
+# Nivel nacional RURAL (código 2)
+
+## Construcción de la tabla a correlacionar
+
+ Construcción de tablas con frecuencias de respuesta por categoría desde el Censo: **Viviendas**
+
+Pregunta **P01**: Tipo de vivienda 
+
+Ésta pregunta posee 10 categorías de respuesta:
+
+1 Casa\
+2 Departamento en edificio \
+3 Vivienda tradicional indígena (ruka, pae pae u otras) \
+4 Pieza en casa antigua o en conventillo \
+5 Mediagua, mejora, rancho o choza \
+6 Móvil (carpa, casa rodante o similar) \
+7 Otro tipo de vivienda particular \
+8 Vivienda colectiva \
+9 Operativo personas en tránsito (no es vivienda) \
+10 Operativo calle (no es vivienda)
+
+Generación de tabla de contingencia para la variable P01
+
+Leemos las respuestas a la pregunta **P01** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría 
+
+```{r,attr.source='.numberLines', warning=FALSE}
+# más adelante utilizaremos éste dataframe para calcular la población por comuna:
+# x <- import("../Microdato_Censo2017-Personas.csv")
+
+tabla_con_clave <- readRDS("censos/censo_viviendas_con_clave_17.rds")
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
+b <- tabla_con_clave_u$COMUNA
+c <- tabla_con_clave_u$P01
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:10){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+ 
+# Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada **código**:
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+ 
+names(comuna_corr)[31] <- "código"
+
+comuna_corr <- comuna_corr[,-c(3,6,9,12,15,18,21,24,27),drop=FALSE]
+names(comuna_corr )[2] <- "Casa"
+names(comuna_corr )[4] <- "Departamento en edificio"
+names(comuna_corr )[6] <- "Vivienda tradicional indígena"
+names(comuna_corr )[8] <- "Pieza en casa antigua o en conventillo"
+names(comuna_corr )[10] <- "Mediagua, mejora, rancho o choza"
+names(comuna_corr )[12] <- "(carpa, casa rodante o similar)"
+names(comuna_corr )[14] <- "Otro tipo de vivienda particular"
+names(comuna_corr )[16] <- "Vivienda colectiva"
+names(comuna_corr )[18] <- "Operativo personas en tránsito (no es vivienda)"
+names(comuna_corr )[20] <- "Operativo calle (no es vivienda)"
+names(comuna_corr )[21] <- "año"
+ 
+comuna_corr_rural <- comuna_corr[,-c(1,3,5,7,9,11,13,15,17,19),drop=FALSE]
+
+kbl(head(comuna_corr_rural,50)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+
+```
+
+### Unión de frecuencias con ingresos expandidos:
+
+#### Ingresos expandidos:
+
+```{r}
+rur <- readRDS("Ingresos_expandidos_rural_17.rds")
+head(rur,5)
+```
+
+
+
+#### Generación de tabla a correlacionar:
+
+```{r}
+union_final_rur = merge( x = comuna_corr_rural, y = rur, by = "código", all.x = TRUE)
+union_final_rur <- union_final_rur[,-c(12,13)]
+
+```
+
+
+```{r}
+
+#union_final_rur <- union_final_urb[,-c(12,13)]
+  
+kbl(union_final_rur) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+Tabla a correlacionar:
+
+
+```{r}
+#union_final_urb_corr  <- union_final_urb[,-c(1)]
+write_xlsx(union_final_rur, "P01_rural.xlsx")
+```
+
+#### Estadísticos básicos de nuestras frecuencias
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(union_final_rur)
+
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
+```
+
+
+#### Gráficas:
+
+
+```{r, warning=FALSE,message=FALSE}
+df_2017_fig <- union_final_rur 
+
+```
+
+
+```{r, warning=FALSE,message=FALSE}
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=5000, height=400) 
+}
+
+for (g in 3:(ncol(union_final_rur))) {
+grafica_fn(g)
+}
+
+fig <- fig %>% layout(autosize = T)%>%
+  layout(xaxis = list(rangeslider = list()))
+fig 
+```
+
+```{r}
+union_final_urb <- df_2017_fig
+
+```
 
 
 
 
 
-# 2 **Correlaciones**
+# $\tau$
+
+```{r}
+df_2017_2f <- filter(union_final_urb, union_final_urb$ingresos_expandidos != 'is.na')
+my_data <- df_2017_2f[, -c(1)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+data.frame(tabla)
+```
+
+
+
+
+```{r}
+union_final_urb_corr <- union_final_urb[,-c(1,10,11)]
+```
+
+##  Kendall
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(union_final_urb_corr, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+##  Pearson
+ 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(union_final_urb_corr, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+##  Spearman
+
+```{r,attr.source='.numberLines', warning=FALSE}
+
+chart.Correlation(union_final_urb_corr, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+
+
+
+
+#  Argumento para aplicar la $\tau$ de Kendall
+
+La distribución es asimétrica, poseyendo un sesgo positivo.
+
+## Correlaciones
 
 El coeficiente de correlación de Pearson es probablemente la medida más utilizada para las relaciones lineales entre dos variables distribuidas <span style="color:red">*normales*</span> y, por lo tanto, a menudo se denomina simplemente "coeficiente de correlación". Por lo general, el coeficiente de Pearson se obtiene mediante un ajuste de mínimos cuadrados correspondiendo un valor de 1 una relación positiva perfecta, -1 una relación negativa perfecta y 0 la ausencia de una relación entre las variables.
 
@@ -505,7 +698,7 @@ Supuestos de la correlación de Pearson:
 3) Las observaciones utilizadas para el análisis deberían recolectarse de forma aleatoria de la población de referencia. Cuando esto no ocurre, el coeficiente de correlación podría estar sub o sobreestimado.
 
 
-#  **Coeficiente de correlación de rango de Kendall ($\tau$ de Kendall)**
+##  **Coeficiente de correlación de rango de Kendall ($\tau$ de Kendall)**
  
 El coeficiente de correlación τ de Kendall es no paramétrico, es decir, se puede usar cuando se viola el supuesto de distribución normal de las variables a comparar. La correlación τ de Kendall es particularmente adecuada cuando tenemos un set de datos pequeño con muchos valores en el mismo rango o clase. Se puede usar por ejemplo con datos categóricos codificados binariamente (0,1). <span style="color:red">Estudios estadísticos han demostrado que el coeficiente de correlación τ de Kendall es un mejor estimador de la correlación en la población que el coeficiente de correlación no paramétrico de Spearman ρ, por lo que se recomienda usar τ para análisis de datos no paramétricos<span>^[https://www.ccg.unam.mx/~vinuesa/R4biosciences/docs/Tema8_correlacion.html#supuestos-hechos-por-el-estadistico-de-correlacion-de-pearson-r].
 
@@ -582,7 +775,7 @@ $$\tau = \frac{S_a - S_b}{{n(n-1)/2}}  = \frac{31 - 5}{{9(9-1)/2}}  = 0,72$$
 hay una asociación de 72%.
 
 
-#  Aplicación de Kendall a nuestros datos
+##  Aplicación de Kendall a nuestros datos
 
 
 
@@ -607,11 +800,13 @@ library(moments)
 Se intentará comprobar si el campo casa tiene una distribución normal.
 
 ```{r, attr.source='.numberLines'}
-# abc <- head(df_2017_6666,5) 
-# kbl(abc) %>%
-#   kable_styling(bootstrap_options = c("striped", "hover")) %>%
-#   kable_paper() %>%
-#   scroll_box(width = "100%", height = "300px")
+
+abc <- read_xlsx("P01_urbano.xlsx")
+abc <- abc$Casa
+kbl(abc) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
 ```
 
 
@@ -633,14 +828,14 @@ Si p >= $\alpha$ No se rechaza Ho
 
 Histograma
 
-<!-- # ```{r, attr.source='.numberLines'} -->
-<!-- # hist(df_2017_6666[,3]) -->
-<!-- # ``` -->
-<!-- #  -->
-<!-- # ```{r, attr.source='.numberLines'} -->
-<!-- # ###Prueba de Anderson-Darling### -->
-<!-- # ad.test(df_2017_6666[,3]) -->
-<!-- # ``` -->
+```{r, attr.source='.numberLines'}
+hist(abc)
+```
+#
+```{r, attr.source='.numberLines'}
+#Prueba de Anderson-Darling###
+ad.test(abc)
+```
 
 p-value < 2.2e-16 < 0.05 \Rightarrow  Se rechaza Ho = La muestra proviene de una distribución normal.
 
