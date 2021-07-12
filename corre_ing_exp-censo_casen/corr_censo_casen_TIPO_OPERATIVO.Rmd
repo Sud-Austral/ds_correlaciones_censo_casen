@@ -163,6 +163,11 @@ ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
 df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
 ```
 
+```{r}
+ingresos_expandidos_2017
+```
+
+
 <br>
 
 ```{r, warning = FALSE, attr.source='.numberLines', message=FALSE}
