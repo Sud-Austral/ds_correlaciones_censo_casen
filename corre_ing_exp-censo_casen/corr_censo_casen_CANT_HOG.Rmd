@@ -78,7 +78,7 @@ Esta pregunta posee 36 categorías de respuesta:
 Leemos las respuestas a la pregunta **CANT_HOG** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:
 
 ```{r, warning = FALSE}
-tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
+tabla_con_clave <- readRDS("censos/censo_viviendas_con_clave_17.rds")
 tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
 b <- tabla_con_clave_u$COMUNA
 c <- tabla_con_clave_u$CANT_HOG
@@ -230,7 +230,7 @@ Leemos las respuestas a la pregunta **CANT_HOG** del censo de viviendas 2017 y o
 
 
 ```{r, warning = FALSE}
-tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
+tabla_con_clave <- readRDS("censos/censo_viviendas_con_clave_17.rds")
 tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
 b <- tabla_con_clave_u$COMUNA
 c <- tabla_con_clave_u$CANT_HOG

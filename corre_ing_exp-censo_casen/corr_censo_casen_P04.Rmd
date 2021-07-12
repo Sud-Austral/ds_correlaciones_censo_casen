@@ -86,7 +86,7 @@ Esta pregunta posee 7 categorias de respuesta:
 Leemos las respuestas a la pregunta **P04** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:
 
 ```{r, warning = FALSE}
-tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
+tabla_con_clave <- readRDS("censos/censo_viviendas_con_clave_17.rds")
 tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
 b <- tabla_con_clave_u$COMUNA
 c <- tabla_con_clave_u$P04
@@ -123,8 +123,6 @@ names(comuna_corr)[ncol(comuna_corr)] <- "código"
 quitar <- seq(3,(ncol(comuna_corr)-1),3)
 
 comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
-
-comuna_corr 
 ```
 
 
@@ -173,7 +171,6 @@ kbl(head(df_2017_2 ,50)) %>%
 
 df_2017_exp_subset <- df_2017_2 [,-c(1,2,4,6,8,10,12,14,16,17,18,19,20),drop=FALSE] 
 df_2017_exp_subset <- df_2017_exp_subset[,-c(7),drop=FALSE] 
-df_2017_exp_subset 
 ```
 
 
@@ -187,10 +184,7 @@ kbl(head(data_sum)) %>%
 
 ## **Correlaciones**
 
-```{r}
-df_2017_exp_subset
 
-```
 
 ### Kendall
 
@@ -220,7 +214,7 @@ Leemos las respuestas a la pregunta **P04** del censo de viviendas 2017 y obtene
 
 
 ```{r, warning = FALSE}
-tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
+tabla_con_clave <- readRDS("censos/censo_viviendas_con_clave_17.rds")
 tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
 b <- tabla_con_clave_u$COMUNA
 c <- tabla_con_clave_u$P04
@@ -257,8 +251,6 @@ names(comuna_corr)[ncol(comuna_corr)] <- "código"
 quitar <- seq(3,(ncol(comuna_corr)-1),3)
 
 comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
-
-comuna_corr 
 ```
 
 
@@ -303,7 +295,6 @@ kbl(head(df_2017_2 ,50)) %>%
 
 df_2017_exp_subset <- df_2017_2 [,-c(1,2,4,6,8,10,12,14,16,17,18,19,20),drop=FALSE] 
 df_2017_exp_subset <- df_2017_exp_subset[,-c(7),drop=FALSE] 
-df_2017_exp_subset 
 ```
  
  
@@ -318,10 +309,7 @@ kbl(head(data_sum)) %>%
  
  ## **Correlaciones**
 
-```{r}
-df_2017_exp_subset
 
-```
 
 ### Kendall
 

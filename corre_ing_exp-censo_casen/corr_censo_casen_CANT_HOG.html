@@ -213,7 +213,7 @@
 <h2><span class="header-section-number">1.1</span> Pregunta <strong>CANT_HOG</strong>: Ocupación de la vivienda</h2>
 <p>Esta pregunta posee 36 categorías de respuesta:</p>
 <p>Leemos las respuestas a la pregunta <strong>CANT_HOG</strong> del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r numberLines lineAnchors"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>tabla_con_clave <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">&quot;../censo_viviendas_con_clave_17.rds&quot;</span>)</span>
+<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r numberLines lineAnchors"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>tabla_con_clave <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">&quot;censos/censo_viviendas_con_clave_17.rds&quot;</span>)</span>
 <span id="cb1-2"><a href="#cb1-2"></a>tabla_con_clave_u <span class="ot">&lt;-</span> <span class="fu">filter</span>(tabla_con_clave, tabla_con_clave<span class="sc">$</span>AREA <span class="sc">==</span> <span class="dv">1</span>)</span>
 <span id="cb1-3"><a href="#cb1-3"></a>b <span class="ot">&lt;-</span> tabla_con_clave_u<span class="sc">$</span>COMUNA</span>
 <span id="cb1-4"><a href="#cb1-4"></a>c <span class="ot">&lt;-</span> tabla_con_clave_u<span class="sc">$</span>CANT_HOG</span>
@@ -13648,7 +13648,7 @@ Max. :1.870e+11
 <div id="pregunta-cant_hog-ocupación-de-la-vivienda-1" class="section level2" number="2.1">
 <h2><span class="header-section-number">2.1</span> Pregunta <strong>CANT_HOG</strong>: Ocupación de la vivienda</h2>
 <p>Leemos las respuestas a la pregunta <strong>CANT_HOG</strong> del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode numberSource r numberLines lineAnchors"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>tabla_con_clave <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">&quot;../censo_viviendas_con_clave_17.rds&quot;</span>)</span>
+<div class="sourceCode" id="cb11"><pre class="sourceCode numberSource r numberLines lineAnchors"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>tabla_con_clave <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">&quot;censos/censo_viviendas_con_clave_17.rds&quot;</span>)</span>
 <span id="cb11-2"><a href="#cb11-2"></a>tabla_con_clave_u <span class="ot">&lt;-</span> <span class="fu">filter</span>(tabla_con_clave, tabla_con_clave<span class="sc">$</span>AREA <span class="sc">==</span> <span class="dv">2</span>)</span>
 <span id="cb11-3"><a href="#cb11-3"></a>b <span class="ot">&lt;-</span> tabla_con_clave_u<span class="sc">$</span>COMUNA</span>
 <span id="cb11-4"><a href="#cb11-4"></a>c <span class="ot">&lt;-</span> tabla_con_clave_u<span class="sc">$</span>CANT_HOG</span>

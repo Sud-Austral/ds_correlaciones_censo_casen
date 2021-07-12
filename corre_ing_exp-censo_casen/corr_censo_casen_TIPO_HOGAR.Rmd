@@ -17,6 +17,7 @@ abstract: |
 header-includes:
    - \usepackage[]{babel}
 
+
 output:
   rmdformats::html_clean:
     highlight: kate
@@ -24,6 +25,14 @@ output:
     use_bookdown: true    
     
 ---
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -187,7 +196,7 @@ kbl(head(data_sum)) %>%
 ### Kendall
 
 ```{r, warning = FALSE, attr.source='.numberLines'}
-chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "kendall"), pch=20)
+chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "kendall"), pch=2)
 ```
 
 ### Pearson

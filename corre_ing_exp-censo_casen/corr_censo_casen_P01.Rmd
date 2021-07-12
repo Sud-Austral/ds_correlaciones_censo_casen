@@ -1,5 +1,5 @@
 ---
-title: Correlaciones entre variables del Censo de Viviendas, Hogares y Personas e ingresos promedios comunales de la CASEN 2017.
+title: Correlaciones entre variables del CENSO de Viviendas, Hogares y Personas e Ingresos promedios comunales de la CASEN 2017.
 author:
 - name: VE-CC-AJ
   affiliation: DataIntelligence
@@ -8,21 +8,32 @@ subtitle: |
 date: "Jueves 08-07-2021"
 
 abstract: |
-  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población comunal** que llamaremos **ingresos expandidos** extraído de la Casen 2017 y las frecuencias de categorías de respuesta para **P01** del Censo de viviendas, hogares y personas al 2017, también extraídas a nivel comunal.
+  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población también comunal** que llamaremos **ingresos expandidos** extraídos de la Casen 2017 y las frecuencias de respuesta por categoría a la pregunta **P01** del Censo de viviendas 2017, también extraídas a nivel comunal. Lo haremos a nivel nacional.
   
-  Haremos las correlaciones tanto a nivel Urbano como rural.
+  Haremos las correlaciones tanto a nivel Urbano como Rural.
   
-  Importante es aplicar la libreria **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
+  Importante es aplicar la librería **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
+    
+    Identificamos una violación a un supuesto a la correlación de Pearson; demostramos que lo correcto es aplicar la $\tau$ de Kendall.  
     
 header-includes:
    - \usepackage[]{babel}
 
 output:
-  html_document:
+  rmdformats::html_clean:
+    highlight: kate
     toc: true
-    toc_float: true
-    theme: flatly
+    use_bookdown: true    
 ---
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
 
 ```{r, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -55,9 +66,15 @@ library("dplyr")
 
 ```
 
-# 1 Construcción de tablas con frecuencias de respuesta por categoría desde el Censo: **Viviendas**
+<br>
 
-## 1.1 Pregunta **P01**: Tipo de vivienda 
+# Nivel nacional URBANO (código 1)
+
+#  **Construcción de la tabla a correlacionar**
+
+ Construcción de tablas con frecuencias de respuesta por categoría desde el Censo: **Viviendas**
+
+## Pregunta **P01**: Tipo de vivienda 
 
 Ésta pregunta posee 10 categorías de respuesta:
 
@@ -72,167 +89,12 @@ library("dplyr")
 9 Operativo personas en tránsito (no es vivienda) \
 10 Operativo calle (no es vivienda)
 
-### 1.1.1 Cálculo de correlaciones a nivel nacional
+##  Generación de tabla de contingencia para la variable P01
 
-Leemos las respuestas a la pregunta **P01** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+Leemos las respuestas a la pregunta **P01** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría 
 
-```{r, warning = FALSE}
-tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
-```
-
-<br>
-Area:
-urbano = 1 rural = 2
-<br>
-
-<hr style="height:5px;border-width:5;color:Green;background-color:Green">
-<span style="color:red">Estamos cometiendo un sesgo, pues los ingresos que hemos utilizado están calculados a nivel nacional, sin hacer distingos entre el nivel urbano y rural. Ésta diferencia es la que construiremos ahora.</span>
-
-
-### 1.1.2 Ingresos promedio por comuna a nivel urbano
-
-```{r}
-casen_2017 <- readRDS(file = "../casen_2017_c.rds")
-casen_2017_u <- filter(casen_2017, casen_2017$zona == "Urbano")
-```
-
-```{r}
-casen_2017_u <- casen_2017_u[!is.na(casen_2017_u$ytotcor),]
-
-Q <- quantile(casen_2017_u$ytotcor, probs=c(.25, .75), na.rm = FALSE)
-iqr <- IQR(casen_2017_u$ytotcor)
-casen_2017_sin_o <- subset(casen_2017_u, casen_2017_u$ytotcor > (Q[1] - 1.5*iqr) & casen_2017_u$ytotcor < (Q[2]+1.5*iqr))
-casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character), stringsAsFactors=FALSE)
-
-b <-  as.numeric(casen_2017_sin_o$ytotcor)
-a <- casen_2017_sin_o$comuna
-
-promedios_grupales <-aggregate(b, by=list(a), FUN = mean , na.rm=TRUE )
-
-names(promedios_grupales)[1] <- "comuna"
-names(promedios_grupales)[2] <- "promedio_i"
-promedios_grupales$año <- "2017"
-
-codigos_comunales <- readRDS(file = "../codigos_comunales_2011-2017.rds")
-names(codigos_comunales)[1] <- "código"
-names(codigos_comunales)[2] <- "comuna"
-
-df_2017 = merge( x = promedios_grupales, y = codigos_comunales, by = "comuna", all.x = TRUE)
-
-library("rio")
-x <- import("../Microdato_Censo2017-Personas.csv")
-
-my_summary_data <- x %>%
-    group_by(x$COMUNA) %>%
-    summarise(Count = n()) 
-
-names(my_summary_data)[1] <- "comuna"     
-names(my_summary_data)[2] <- "personas"
-
-# recogemos el campo Comuna:
-codigos <- my_summary_data$comuna
-
-# construimos una secuencia llamada rango del 1 al total de filas del dataset:
-rango <- seq(1:nrow(my_summary_data))
-
-# Creamos un string que agrega un cero a todos los registros:
-cadena <- paste("0",codigos[rango], sep = "")
-
-# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser siempre 5 agregandole un cero al inicio de los que tienen 4.
-# Para ello extraemos un substring de la cadena sobre todas las filas (rangos) comenzando desde el primero o el segundo y llegando siempre al 6.
-
-cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
-codigos <- as.data.frame(codigos)
-cadena <- as.data.frame(cadena)
-comuna_corr <- cbind(my_summary_data,cadena)
-
-names(comuna_corr)[3] <- "código"  
-
-df_2017_2 = merge( x = df_2017, y = comuna_corr, by = "código", all.x = TRUE)
-
-df_2017_2$Ingresos_expandidos <- df_2017_2$promedio_i*df_2017_2$personas
-
-head(df_2017_2,5)
-saveRDS(df_2017_2, "Ingresos_expandidos_urbano_17.rds")
-```
-
-### 1.1.6 Ingresos promedio por comuna a nivel rural
-
-```{r}
-casen_2017 <- readRDS(file = "../casen_2017_c.rds")
-casen_2017_u <- filter(casen_2017, casen_2017$zona == "Rural")
-```
-
-
-```{r}
-casen_2017_u <- casen_2017_u[!is.na(casen_2017_u$ytotcor),]
-
-Q <- quantile(casen_2017_u$ytotcor, probs=c(.25, .75), na.rm = FALSE)
-iqr <- IQR(casen_2017_u$ytotcor)
-casen_2017_sin_o <- subset(casen_2017_u, casen_2017_u$ytotcor > (Q[1] - 1.5*iqr) & casen_2017_u$ytotcor < (Q[2]+1.5*iqr))
-casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character), stringsAsFactors=FALSE)
-
-b <-  as.numeric(casen_2017_sin_o$ytotcor)
-a <- casen_2017_sin_o$comuna
-
-promedios_grupales <-aggregate(b, by=list(a), FUN = mean , na.rm=TRUE )
-
-names(promedios_grupales)[1] <- "comuna"
-names(promedios_grupales)[2] <- "promedio_i"
-promedios_grupales$año <- "2017"
-
-codigos_comunales <- readRDS(file = "../codigos_comunales_2011-2017.rds")
-names(codigos_comunales)[1] <- "código"
-names(codigos_comunales)[2] <- "comuna"
-
-df_2017 = merge( x = promedios_grupales, y = codigos_comunales, by = "comuna", all.x = TRUE)
-
-library("rio")
-x <- import("../Microdato_Censo2017-Personas.csv")
-
-my_summary_data <- x %>%
-    group_by(x$COMUNA) %>%
-    summarise(Count = n()) 
-
-names(my_summary_data)[1] <- "comuna"     
-names(my_summary_data)[2] <- "personas"
-
-# recogemos el campo Comuna:
-codigos <- my_summary_data$comuna
-
-# construimos una secuencia llamada rango del 1 al total de filas del dataset:
-rango <- seq(1:nrow(my_summary_data))
-
-# Creamos un string que agrega un cero a todos los registros:
-cadena <- paste("0",codigos[rango], sep = "")
-
-# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser siempre 5 agregandole un cero al inicio de los que tienen 4.
-# Para ello extraemos un substring de la cadena sobre todas las filas (rangos) comenzando desde el primero o el segundo y llegando siempre al 6.
-cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
-codigos <- as.data.frame(codigos)
-cadena <- as.data.frame(cadena)
-comuna_corr <- cbind(my_summary_data,cadena)
-
-names(comuna_corr)[3] <- "código"  
-
-df_2017_2 = merge( x = df_2017, y = comuna_corr, by = "código", all.x = TRUE)
-
-df_2017_2$Ingresos_expandidos <- df_2017_2$promedio_i*df_2017_2$personas
-
-head(df_2017_2,5)
-saveRDS(df_2017_2, "Ingresos_expandidos_rural_17.rds")
-```
-
-
-<hr style="height:5px;border-width:5;color:Green;background-color:Green">
-<br>
-
-Despleguemos nuevamente las correlaciones con estos ingresos diferenciados por zona:
-
-### 1.1.7 Cálculo de correlaciones a nivel nacional urbano
-
-
-```{r, warning = FALSE}
+```{r,attr.source='.numberLines', warning=FALSE}
+tabla_con_clave <- readRDS("censos/censo_viviendas_con_clave_17.rds")
 tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
 b <- tabla_con_clave_u$COMUNA
 c <- tabla_con_clave_u$P01
@@ -246,7 +108,7 @@ for(i in 2:10){
   d_i <- filter(d,d$unlist.c. == i)
   d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
 }
-
+ 
 # Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada **código**:
 codigos <- d_t$unlist.b.
 rango <- seq(1:nrow(d_t))
@@ -256,55 +118,291 @@ codigos <- as.data.frame(codigos)
 cadena <- as.data.frame(cadena)
 comuna_corr <- cbind(d_t,cadena)
 comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
-names(comuna_corr)[31] <- "código" 
+ 
+names(comuna_corr)[31] <- "código"
+```
+ 
 
+
+```{r, attr.source='.numberLines'}
+comuna_corr <- comuna_corr[,-c(3,6,9,12,15,18,21,24,27),drop=FALSE]
+names(comuna_corr )[2] <- "Casa"
+names(comuna_corr )[4] <- "Departamento en edificio"
+names(comuna_corr )[6] <- "Vivienda tradicional indígena"
+names(comuna_corr )[8] <- "Pieza en casa antigua o en conventillo"
+names(comuna_corr )[10] <- "Mediagua, mejora, rancho o choza"
+names(comuna_corr )[12] <- "(carpa, casa rodante o similar)"
+names(comuna_corr )[14] <- "Otro tipo de vivienda particular"
+names(comuna_corr )[16] <- "Vivienda colectiva"
+names(comuna_corr )[18] <- "Operativo personas en tránsito (no es vivienda)"
+names(comuna_corr )[20] <- "Operativo calle (no es vivienda)"
+names(comuna_corr )[21] <- "año"
+ 
+kbl(head(comuna_corr,50)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+
+```
+
+##  Generación de ingresos promedios a nivel urbano y su unión con la tabla de contingencia
+
+```{r, attr.source='.numberLines'}
+casen_2017 <- readRDS(file = "../casen_2017_c.rds")
+casen_2017_u <- filter(casen_2017, casen_2017$zona == "Urbano")
+casen_2017_u <- casen_2017_u[!is.na(casen_2017_u$ytotcor),]
+Q <- quantile(casen_2017_u$ytotcor, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(casen_2017_u$ytotcor)
+casen_2017_sin_o <- subset(casen_2017_u, casen_2017_u$ytotcor > 
+                                 (Q[1] - 1.5*iqr) &
+                                 casen_2017_u$ytotcor < (Q[2]+1.5*iqr))
+casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character),
+                               stringsAsFactors=FALSE)
+b <-  as.numeric(casen_2017_sin_o$ytotcor)
+a <- casen_2017_sin_o$comuna
+promedios_grupales <-aggregate(b, by=list(a), FUN = mean , na.rm=TRUE )
+names(promedios_grupales)[1] <- "comuna"
+names(promedios_grupales)[2] <- "promedio_i"
+promedios_grupales$año <- "2017"
+codigos_comunales <- readRDS(file = "../codigos_comunales_2011-2017.rds")
+names(codigos_comunales)[1] <- "código"
+names(codigos_comunales)[2] <- "comuna"
+df_2017 = merge( x = promedios_grupales, y = codigos_comunales, 
+                 by = "comuna", 
+                 all.x = TRUE)
+
+saveRDS(df_2017,"Ingresos_expandidos_Urbano_17.rds")
+ 
 #Hacemos la unión con los ingresos promedio comunales expandidos:
 ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
 df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
 
-# Renombre de columnas
-names(df_2017_2)[3] <- "Casa"
-names(df_2017_2)[6] <- "Departamento"
-names(df_2017_2)[9] <- "Vivienda_tradicional_ind "
-names(df_2017_2)[12] <- "Pieza"
-names(df_2017_2)[15] <- "Mediagua"
-names(df_2017_2)[18] <- "Móvil"
-names(df_2017_2)[21] <- "Otro_tipo"
-names(df_2017_2)[24] <- "Vivienda_colectiva"
+kbl(head(df_2017_2,50)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
 ```
+ 
 
-#### 1.1.7.1 Pearson
-
-```{r, warning = FALSE}
-# Correlaciones
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
-
-#### 1.1.7.2  Spearman
-
-```{r, attr.source='.numberLines', warning=FALSE}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
-chart.Correlation(my_data, histogram=TRUE, method = c( "spearman"),pch=20)
-```
-
-#### 1.1.7.3  Kendall
+##  Calculo de la cantidad de personas por comuna apartir del censo del 2017
 
 ```{r, attr.source='.numberLines'}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
-chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"),pch=20)
+x <- import("../Microdato_Censo2017-Personas.csv")
+my_summary_data <- x %>%
+    group_by(x$COMUNA) %>%
+    summarise(Count = n()) 
+names(my_summary_data)[1] <- "comuna"     
+names(my_summary_data)[2] <- "personas"
+# recogemos el campo Comuna:
+codigos <- my_summary_data$comuna
+# construimos una secuencia llamada rango del 1 al total de filas del 
+# dataset:
+rango <- seq(1:nrow(my_summary_data))
+# Creamos un string que agrega un cero a todos los registros:
+cadena <- paste("0",codigos[rango], sep = "")
+# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser 
+# siempre 5 
+# agregandole un cero al inicio de los que tienen 4.
+# Para ello extraemos un substring de la cadena sobre todas las filas 
+#(rangos) 
+# comenzando desde el primero o el segundo y llegando siempre al 6.
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(my_summary_data,cadena)
+names(comuna_corr)[3] <- "código"
+saveRDS(comuna_corr,"cant_personas_17.rds")
+```
+
+##  Unificacion de las tablas y construcción de los ingresos expandidos
+
+```{r, attr.source='.numberLines'}
+df_2017_6666 = merge( x = df_2017_2, y = comuna_corr, by = "código", all.x = TRUE)
+```
+
+##  Construccionde las columna de ingresos expandidos.
+
+Eliminamos ingresos expandidos que contengan **NA**
+
+```{r, attr.source='.numberLines'}
+df_2017_6666$Ingresos_expandidos <- df_2017_6666$promedio_i*df_2017_6666$personas
+df_2017_6666 <- filter(df_2017_6666, df_2017_6666$Ingresos_expandidos != 'is.na')
+```
+
+
+# 2 **Correlaciones**
+
+El coeficiente de correlación de Pearson es probablemente la medida más utilizada para las relaciones lineales entre dos variables distribuidas <span style="color:red">*normales*</span> y, por lo tanto, a menudo se denomina simplemente "coeficiente de correlación". Por lo general, el coeficiente de Pearson se obtiene mediante un ajuste de mínimos cuadrados correspondiendo un valor de 1 una relación positiva perfecta, -1 una relación negativa perfecta y 0 la ausencia de una relación entre las variables.
+
+Apliquemos los coeficientes de **Pearson** a los ingresos expandidos y a todas las categorias de respuesta de la pregunta **P01**
+
+```{r,attr.source='.numberLines', warning=FALSE}
+df_2017_6666_subset <- df_2017_6666[,c(3,5,7,9,11,13,15,17,19,21,28)]
+chart.Correlation(df_2017_6666_subset, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+La alta correlación que nos dá utilizando **Pearson**, entre los *ingresos expandidos* y la categoria *casa* nos hace sospechar de un error. El error es que las variables no cumplen uno de los supuestos básicos del método de **Pearson** que es el de la normalidad de las variables, distribución que debiese  poseer la forma de la siguiente gráfica. Como veremos enseguida la distribución de nuestras variables es geométrica.
+
+```{r, attr.source='.numberLines'}
+df_2017_6666_subset <- df_2017_6666[,c(3,28)]
+chart.Correlation(df_2017_6666_subset, histogram=TRUE, method = c( "pearson"), pch=20)
 ```
 
 
 
+##  La distribución normal
+
+Una distribución normal se identifica fácilmente pues sigue la forma de una campana, las distribuciones de nuestras variables no son normales.
+
+```{r, attr.source='.numberLines'}
+randNorm <- rnorm(3000)
+#calculo de su densidad
+randDensity <- dnorm(randNorm)
+#gráfica
+library(ggplot2)
+ggplot(data.frame(x = randNorm, y = randDensity )) + 
+  aes(x = x, y = y) +
+geom_point(size=.5, color="#CC6666") + 
+  labs(x = "Random Normal Variable", y = "Densidad")
+```
+
+##  La distribución geométrica.
+
+Observamos que la distribución de nuestras variables es geométrica, tal como lo muestra la siguiente gráfica.
+
+```{r, attr.source='.numberLines'}
+N <- 10000
+x <- rgeom(N, .2)
+hist(x, 
+     xlim=c(min(x),max(x)), probability=T, nclass=max(x)-min(x)+1, 
+     col='#117a65',
+     main='Distribución Geométrica, p=.2')
+lines(density(x,bw=1), col='red', lwd=1)
+```
+
+La distribución geométrica representa el número de fallas antes de obtener un éxito en una serie de ensayos de Bernoulli. Una variable aleatoria de Bernoulli $X$ con probabilidad de éxito $p$ tiene una función de probabilidad:
+
+$$
+f(x) = p ^ {x} (1 - p) ^ {1 - x} \qquad \qquad x = 0, 1
+$$
+para $0 < p < 1$.
+
+La distribución $X \sim {\rm Bernoulli}(p)$ es utilizada para indicar que la variable aleatoria $X$ tiene una distribución de Bernoulli con parámetro $p$,
+donde $0 < p < 1$.
+
+<span style="color:red">Nuestro problema es que estamos violando un supuesto fundamental del cálculo de la correlación de Pearson:
+La distribución nuestras variables no es normal sino que geométrica.</span>
+
+Supuestos de la correlación de Pearson:
+
+1) Los datos deben poseer una relación lineal (eso se puede determinar a través de una gráfica de dispersión).
+
+2) <span style="color:red">Las variables deberían poseer una distribución normal</span>. 
+
+3) Las observaciones utilizadas para el análisis deberían recolectarse de forma aleatoria de la población de referencia. Cuando esto no ocurre, el coeficiente de correlación podría estar sub o sobreestimado.
 
 
-### 1.1.7 Cálculo de correlaciones a nivel nacional rural
+#  **Coeficiente de correlación de rango de Kendall ($\tau$ de Kendall)**
+ 
+El coeficiente de correlación τ de Kendall es no paramétrico, es decir, se puede usar cuando se viola el supuesto de distribución normal de las variables a comparar. La correlación τ de Kendall es particularmente adecuada cuando tenemos un set de datos pequeño con muchos valores en el mismo rango o clase. Se puede usar por ejemplo con datos categóricos codificados binariamente (0,1). <span style="color:red">Estudios estadísticos han demostrado que el coeficiente de correlación τ de Kendall es un mejor estimador de la correlación en la población que el coeficiente de correlación no paramétrico de Spearman ρ, por lo que se recomienda usar τ para análisis de datos no paramétricos<span>^[https://www.ccg.unam.mx/~vinuesa/R4biosciences/docs/Tema8_correlacion.html#supuestos-hechos-por-el-estadistico-de-correlacion-de-pearson-r].
 
-```{r, warning = FALSE}
-tabla_con_clave_r <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
-b <- tabla_con_clave_r$COMUNA
-c <- tabla_con_clave_r$P01
+
+Similar al coeficiente de correlación de Pearson, la $\tau$ de Kendall mide el grado de una relación monótona entre variables y, como la $\rho$ de Spearman, calcula la dependencia entre variables clasificadas, lo que hace que sea factible para datos distribuidos no normales. La $\tau$ de Kendall se puede calcular tanto para datos continuos como ordinales. En términos generales, la $\tau$ de Kendall se distingue de la $\rho$ de Spearman por una penalización más fuerte de las dislocaciones no secuenciales (en el contexto de las variables clasificadas).
+
+El coeficiente $\tau$ de kendall está basada más en los intervalos jerarquizados de las observaciones que los propios datos, esto hace que la distribución de $\tau$ sea independiente de la que presentan las variables X e Y, siempre y cuando los datos representados por estas 2 variables sean (1) independientes y (2) continuas. Éste coeficiente es más preferido por algunos investigadores que el de Spearman, pero es más difícil de calcular, con la ventaja de que el $\tau$ tiende más rápido a la distribución normal que el de Spearman.
+
+Ecuación:
+
+
+
+$$\tau = \frac{S_a - S_b}{{n(n-1)/2}}  $$
+
+Donde:
+
+τ = Estadística de Kendall\
+n = # de casos en el ejemplo\
+Sa = Sumatoria de rangos más altos\
+Sb = Sumatoria de rangos más bajos\
+
+<br>
+
+### Ejemplo. 
+
+En una evaluación de los jugadores delanteros de fútbol en un país, hay 9 de ellos catalogados como más intensos para marcar goles. Para analizar esta intensidad durante un periodo de una temporada se registró sistemáticamente el grado de intensidad de cada uno de éstos delanteros tanto en juegos a nivel nacional (NP = puntajes nacional), como a nivel internacional (IP = puntajes en juegos internacionales). 
+
+Además, se registraron los rangos a nivel nacional (NR = rangos a nivel nacional) y en a nivel internacional (IR = rango a nivel internacional). Los datos se presentan en la Tabla. Los rangos se ordenan de máxima a mínima hacia abajo en cada columna de rango.
+
+
+| Jugador | NP | IP | NR | IR |
+|---------|----|----|----|----|
+|    1    | 84 | 60 |  1 | 4  |
+|    2    | 80 | 64 |  2 | 2  |
+|    3    | 78 | 71 |  3 | 1  |
+|    4    | 76 | 61 |  4 | 3  |
+|    5    | 70 | 58 |  5 | 5  |
+|    6    | 64 | 57 |  6 | 6  |
+|    7    | 62 | 54 |  7 | 8  |
+|    8    | 50 | 55 |  8 | 7  |
+|    9    | 47 | 52 |  9 | 9  |
+
+Procedimiento.
+
+Paso 1.
+
+Se considera el IR como referencia y comienza a contabilizar a partir del primer rango, es decir, el rango con el valor de 4 y cuenta el número de los rangos menores que 4 (hacia debajo de 4): en este caso los tres números de 2, 1, y 3, es decir tenemos 3 valores menores que el valor 4. 
+
+Paso 2.
+
+Luego cuentan los rangos mayores de 4 a partir e incluyendo el número 5, así tenemos los valores 5, 6, 8, 7, y 9, es decir, hay 5 rangos mayores que el valor 4. 
+
+Paso 3.
+
+Se continúa así contabilizar los rangos menores y mayores para los siguientes valores de la columna de IR, es decir, a partir del valor 2 en adelante. De esta manera se generan los valores de las 2 columnas de Sa (sumatoria de rangos más altos) y Sb (sumatoria de rangos más bajos).
+
+| Jugador | NP | IP | NR | IR | Sa=31 | Sb=5 |
+|---------|----|----|----|----|-------|------|
+|    1    | 84 | 60 | 1  | 4  |   5   |   3  |
+|    2    | 80 | 64 | 2  | 2  |   6   |   1  |
+|    3    | 78 | 71 | 3  | 1  |   6   |   0  |
+|    4    | 76 | 61 | 4  | 3  |   5   |   0  |
+|    5    | 70 | 58 | 5  | 5  |   4   |   0  |
+|    6    | 64 | 57 | 6  | 6  |   3   |   0  |
+|    7    | 62 | 54 | 7  | 8  |   1   |   1  |
+|    8    | 50 | 55 | 8  | 7  |   1   |   0  |
+|    9    | 47 | 52 | 9  | 9  |   0   |   0  |
+
+
+Ahora substituir en la ecuación de Kendall resulta:
+
+$$\tau = \frac{S_a - S_b}{{n(n-1)/2}}  = \frac{31 - 5}{{9(9-1)/2}}  = 0,72$$ 
+
+hay una asociación de 72%.
+
+
+#  Aplicación de Kendall a nuestros datos
+
+```{r,attr.source='.numberLines', warning=FALSE}
+df_2017_6666_subset <- df_2017_6666[,c(3,5,7,9,11,13,15,17,19,21,28)]
+chart.Correlation(df_2017_6666_subset, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+El coeficiente de correlación correcto entre ingresos_expandidos y casa es de 0.82.
+
+##  El coeficiente de determinación R^2
+
+El coeficiente de correlación elevado al cuadrado es el coeficiente de determinación, R2
+, que mide la cantidad de variación en una variable que es compartida por otra.
+
+ 
+
+# Nivel nacional RURAL (código 2)
+ 
+
+```{r,attr.source='.numberLines', warning=FALSE}
+tabla_con_clave <- readRDS("censos/censo_viviendas_con_clave_17.rds")
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
+b <- tabla_con_clave_u$COMUNA
+c <- tabla_con_clave_u$P01
 cross_tab =  xtabs( ~ unlist(b) + unlist(c))
 tabla <- as.data.frame(cross_tab)
 d <-tabla[!(tabla$Freq == 0),]
@@ -315,7 +413,7 @@ for(i in 2:10){
   d_i <- filter(d,d$unlist.c. == i)
   d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
 }
-
+ 
 # Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada **código**:
 codigos <- d_t$unlist.b.
 rango <- seq(1:nrow(d_t))
@@ -325,50 +423,167 @@ codigos <- as.data.frame(codigos)
 cadena <- as.data.frame(cadena)
 comuna_corr <- cbind(d_t,cadena)
 comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
-names(comuna_corr)[31] <- "código" 
-
-# Hacemos la unión con los ingresos promedio comunales expandidos:
-ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_rural_17.rds")
-df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
-
-# Renombre de columnas
-names(df_2017_2)[3] <- "Casa"
-names(df_2017_2)[6] <- "Departamento"
-names(df_2017_2)[9] <- "Vivienda_tradicional_ind "
-names(df_2017_2)[12] <- "Pieza"
-names(df_2017_2)[15] <- "Mediagua"
-names(df_2017_2)[18] <- "Móvil"
-names(df_2017_2)[21] <- "Otro_tipo"
-names(df_2017_2)[24] <- "Vivienda_colectiva"
+ 
+names(comuna_corr)[31] <- "código"
 ```
+ 
 
-
-#### 1.1.7.1  Pearson
-
-
-```{r, attr.source='.numberLines', warning=FALSE}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
-chart.Correlation(my_data, histogram=TRUE, method = c( "pearson"),pch=20)
-```
-
-#### 1.1.7.2 Spearman
-
-```{r, attr.source='.numberLines', warning=FALSE}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
-chart.Correlation(my_data, histogram=TRUE, method = c( "spearman"),pch=20)
-```
-
-#### 1.1.7.3 Kendall
 
 ```{r, attr.source='.numberLines'}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,37)]
-chart.Correlation(my_data, histogram=TRUE, method = c( "kendall"),pch=20)
+comuna_corr <- comuna_corr[,-c(3,6,9,12,15,18,21,24,27),drop=FALSE]
+names(comuna_corr )[2] <- "Casa"
+names(comuna_corr )[4] <- "Departamento en edificio"
+names(comuna_corr )[6] <- "Vivienda tradicional indígena"
+names(comuna_corr )[8] <- "Pieza en casa antigua o en conventillo"
+names(comuna_corr )[10] <- "Mediagua, mejora, rancho o choza"
+names(comuna_corr )[12] <- "(carpa, casa rodante o similar)"
+names(comuna_corr )[14] <- "Otro tipo de vivienda particular"
+names(comuna_corr )[16] <- "Vivienda colectiva"
+names(comuna_corr )[18] <- "Operativo personas en tránsito (no es vivienda)"
+names(comuna_corr )[20] <- "Operativo calle (no es vivienda)"
+names(comuna_corr )[21] <- "año"
+ 
+casen_2017 <- readRDS(file = "../casen_2017_c.rds")
+casen_2017_u <- filter(casen_2017, casen_2017$zona == "Rural")
+casen_2017_u <- casen_2017_u[!is.na(casen_2017_u$ytotcor),]
+Q <- quantile(casen_2017_u$ytotcor, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(casen_2017_u$ytotcor)
+casen_2017_sin_o <- subset(casen_2017_u, casen_2017_u$ytotcor > 
+                                 (Q[1] - 1.5*iqr) &
+                                 casen_2017_u$ytotcor < (Q[2]+1.5*iqr))
+casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character),
+                               stringsAsFactors=FALSE)
+b <-  as.numeric(casen_2017_sin_o$ytotcor)
+a <- casen_2017_sin_o$comuna
+promedios_grupales <-aggregate(b, by=list(a), FUN = mean , na.rm=TRUE )
+names(promedios_grupales)[1] <- "comuna"
+names(promedios_grupales)[2] <- "promedio_i"
+promedios_grupales$año <- "2017"
+codigos_comunales <- readRDS(file = "../codigos_comunales_2011-2017.rds")
+names(codigos_comunales)[1] <- "código"
+names(codigos_comunales)[2] <- "comuna"
+df_2017 = merge( x = promedios_grupales, y = codigos_comunales, 
+                 by = "comuna", 
+                 all.x = TRUE)
+
+saveRDS(df_2017,"Ingresos_expandidos_Rural_17.rds")
+ 
+#Hacemos la unión con los ingresos promedio comunales expandidos:
+ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_Rural_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+
+ 
+x <- import("../Microdato_Censo2017-Personas.csv")
+my_summary_data <- x %>%
+    group_by(x$COMUNA) %>%
+    summarise(Count = n()) 
+names(my_summary_data)[1] <- "comuna"     
+names(my_summary_data)[2] <- "personas"
+# recogemos el campo Comuna:
+codigos <- my_summary_data$comuna
+# construimos una secuencia llamada rango del 1 al total de filas del 
+# dataset:
+rango <- seq(1:nrow(my_summary_data))
+# Creamos un string que agrega un cero a todos los registros:
+cadena <- paste("0",codigos[rango], sep = "")
+# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser 
+# siempre 5 
+# agregandole un cero al inicio de los que tienen 4.
+# Para ello extraemos un substring de la cadena sobre todas las filas 
+#(rangos) 
+# comenzando desde el primero o el segundo y llegando siempre al 6.
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(my_summary_data,cadena)
+names(comuna_corr)[3] <- "código"
+saveRDS(comuna_corr,"cant_personas_17.rds")
+```
+ 
+```{r, attr.source='.numberLines'}
+df_2017_6666 = merge( x = df_2017_2, y = comuna_corr, by = "código", all.x = TRUE)
+df_2017_6666$Ingresos_expandidos <- df_2017_6666$promedio_i*df_2017_6666$personas
+df_2017_6666 <- filter(df_2017_6666, df_2017_6666$Ingresos_expandidos != 'is.na')
+ 
+```
+
+#  **Correlaciones**
+
+La distribución es asimétrica, poseyendo un sesgo positivo.
+
+##  Kendall
+
+```{r, attr.source='.numberLines'}
+df_2017_6666_subset <- df_2017_6666[,c(3,5,7,9,11,13,15,17,28)]
+chart.Correlation(df_2017_6666_subset, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+##  Pearson
+ 
+```{r, attr.source='.numberLines'}
+df_2017_6666_subset <- df_2017_6666[,c(3,5,7,9,11,13,15,17,28)]
+chart.Correlation(df_2017_6666_subset, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+##  Spearman
+
+```{r,attr.source='.numberLines', warning=FALSE}
+df_2017_6666_subset <- df_2017_6666[,c(3,5,7,9,11,13,15,17,28)]
+chart.Correlation(df_2017_6666_subset, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
 
 
+# Criterios para determinar normalidad.
+
+```{r, attr.source='.numberLines', message=FALSE}
+library(normtest) 
+library(nortest)
+library(moments)
+```
+
+Se intentará comprobar si el campo casa tiene una distribución normal.
+
+```{r, attr.source='.numberLines'}
+abc <- head(df_2017_6666,5) 
+kbl(abc) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
 
 
-Parece no ser relevante el análisis a nivel regional por la pequeña cantidad de comunas que hay en cada una que es menor aún considerando las que pertenecen a cada categoría de respuesta.
+Hipótesis
 
-<hr style="height:5px;border-width:5;color:Green;background-color:Green">
-<br>
+H0: La muestra proviene de una distribución normal.
+
+H1: La muestra no proviene de una distribución normal.
+
+Nivel de Significancia
+
+El nivel de significancia que se trabajará es de 0.05. $\alpha$ =0.05
+
+Criterio de Decisión:
+
+Si P < $\alpha$ Se rechaza Ho
+
+Si p >= $\alpha$ No se rechaza Ho
+
+Histograma
+
+```{r, attr.source='.numberLines'}
+hist(df_2017_6666[,3])
+```
+
+```{r, attr.source='.numberLines'}
+###Prueba de Anderson-Darling###
+ad.test(df_2017_6666[,3])
+```
+
+p-value < 2.2e-16 < 0.05 \Rightarrow  Se rechaza Ho = La muestra proviene de una distribución normal.
+
+
+Referencias:
+
+1 https://rpubs.com/MSiguenas/122473
+
+
