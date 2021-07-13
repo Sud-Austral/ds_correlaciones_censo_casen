@@ -153,7 +153,7 @@ Rural: "Tejas o tejuelas de arcilla, metálicas, de cemento, de madera, asfálti
 4 Capa de cemento sobre tierra\
 5 Tierra\
 
-[Correlaciones **P03C**](https://rpubs.com/dataintelligence/corr_cC_P03C_VR2)
+[Correlaciones **P03C**](https://rpubs.com/dataintelligence/corr_cc_P03C)
 
 
 ### 1.5.1  *Variable que más correlaciona con ingresos expandidos*: 
