@@ -5,14 +5,12 @@ author:
   affiliation: DataIntelligence
 subtitle: | 
 
-date: "Viernes 09-07-2021"
+date: "Martes 13-07-2021"
 
 abstract: |
   Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población también comunal** que llamaremos **ingresos expandidos** extraídos de la Casen 2017 y las frecuencias de respuesta por categoría a la pregunta **P04** del Censo de viviendas 2017, también extraídas a nivel comunal. Lo haremos a nivel nacional.
   
-  Haremos las correlaciones tanto a nivel Urbano como Rural.
-  
-  Importante es aplicar la librería **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
+  Se espera encontrar en área urbana una mayor correlación entre los ingresos y una cantidad baja de habitaciones disponibles para dormir.
    
 header-includes:
    - \usepackage[]{babel}
@@ -71,17 +69,20 @@ library("dplyr")
 
 # Nivel nacional URBANO (código 1)
 
-## Pregunta **P04**: Ocupación de la vivienda
+Cantidad de dormitorios: Todo espacio habitable de una vivienda que sea cerrado por paredes o tabiques y que tenga espacio suficiente para dar cabida a una cama y sólo se use para dormir.
+Esto se ve reflejado en aquellas viviendas particulares con moradores presentes que declararon en la pregunta 4 ¿Cuántas piezas de esta vivienda se usan exclusivamente como dormitorio? una categoría entre 0 y 6.
+
+## Pregunta **P04**: Número de piezas usadas exclusivamente como dormitorio
 
 Esta pregunta posee 7 categorias de respuesta:
    
-0 piezas
-1 pieza
-2 piezas
-3 piezas
-4 piezas
-5 piezas
-6 o más piezas
+0 piezas\
+1 pieza\
+2 piezas\
+3 piezas\
+4 piezas\
+5 piezas\
+6 o más piezas\
   
 Leemos las respuestas a la pregunta **P04** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:
 
@@ -123,10 +124,7 @@ names(comuna_corr)[ncol(comuna_corr)] <- "código"
 quitar <- seq(3,(ncol(comuna_corr)-1),3)
 
 comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
-```
 
-
-```{r, warning = FALSE}
 names(comuna_corr )[2] <- "0 piezas"
 names(comuna_corr )[4] <- "1 pieza"
 names(comuna_corr )[6] <- "2 piezas"
@@ -146,72 +144,109 @@ for (v in renombrar) {
 ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
 
 df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
-
-df_2017_2 <- filter(df_2017_2, df_2017_2$Ingresos_expandidos != 'is.na')
-```
-
-
-
-
-```{r, attr.source='.numberLines'}
-write_xlsx(df_2017_2 ,"P03B_urbano.xlsx")
-
-kbl(head(df_2017_2 ,50)) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-```
- 
-
- 
- 
-### Estadísticas a nivel urbano
-
-```{r}
-
-df_2017_exp_subset <- df_2017_2 [,-c(1,2,4,6,8,10,12,14,16,17,18,19,20),drop=FALSE] 
-df_2017_exp_subset <- df_2017_exp_subset[,-c(7),drop=FALSE] 
 ```
 
 
 ```{r}
-data_sum <- summary(df_2017_exp_subset)
+df_2017_2 <- df_2017_2[, -c(2,4,6,8,10,12,14,16)]
+kbl(head(df_2017_2,50)) %>% kable_styling(bootstrap_options = c("striped", "hover")) %>% kable_paper() %>% scroll_box(width = "100%", height = "300px")
+```
+
+#### Tabla a correlacionar:
+
+```{r}
+#union_final_urb_corr  <- union_final_urb[,-c(1)]
+write_xlsx(df_2017_2, "P04_urbano.xlsx")
+```
+
+#### Estadísticos básicos de nuestras frecuencias
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(df_2017_2)
+
 kbl(head(data_sum)) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
   scroll_box(width = "100%", height = "500px")
 ```
 
-## **Correlaciones**
-
-
-
-### Kendall
-
-```{r, warning = FALSE}
-chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "kendall"), pch=20)
+```{r}
+union_final_urb <- df_2017_2
 ```
 
-### Pearson
+#### Gráficas:
+
+```{r, warning=FALSE,message=FALSE}
+library(plotly)
+
+df_2017_fig <- df_2017_2[,-c((ncol(df_2017_2)-1))]
+
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=7000, height=400) 
+}
+for (g in 3:(ncol(df_2017_2)-1)) {
+grafica_fn(g)
+
+}
+
+fig <- fig %>% layout(autosize = T)
+
+fig 
+```
+
+# $\tau$ de Kendall
+
+```{r}
+df_2017_2f <- filter(df_2017_fig, df_2017_fig$ingresos_expandidos != 'is.na')
+III <- seq(2,(ncol(df_2017_2f)-1),1)
+my_data <- df_2017_2f[, c(III)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+tabla <- as.data.frame(tabla)
+tabla %>% rownames_to_column("Cantidad de piezas")%>%  
+  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
+```
+
+##  Kendall
+
+```{r}
+df_2017_fig <- df_2017_fig[,-c(1)]
+```
+
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+##  Pearson
  
-```{r, warning = FALSE}
-chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "pearson"), pch=20)
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
 ```
 
-### Spearman
+##  Spearman
 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "spearman"), pch=20)
+```{r,attr.source='.numberLines', warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
 
- 
+<br>
+<hr style="height:3px;border-width:1;color:Gray;background-color:Gray">
+<br>
 
 # Nivel nacional RURAL (código 2)
-
-##  Pregunta **P04**: Ocupación de la vivienda
-  
-Leemos las respuestas a la pregunta **P04** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:
-
 
 ```{r, warning = FALSE}
 tabla_con_clave <- readRDS("censos/censo_viviendas_con_clave_17.rds")
@@ -251,10 +286,7 @@ names(comuna_corr)[ncol(comuna_corr)] <- "código"
 quitar <- seq(3,(ncol(comuna_corr)-1),3)
 
 comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
-```
 
-
-```{r, warning = FALSE}
 names(comuna_corr )[2] <- "0 piezas"
 names(comuna_corr )[4] <- "1 pieza"
 names(comuna_corr )[6] <- "2 piezas"
@@ -274,75 +306,116 @@ for (v in renombrar) {
 ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_rural_17.rds")
 
 df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
-
-df_2017_2 <- filter(df_2017_2, df_2017_2$Ingresos_expandidos != 'is.na')
 ```
- 
 
-```{r, attr.source='.numberLines'}
-write_xlsx(df_2017_2 ,"P04_rural.xlsx")
-
-kbl(head(df_2017_2 ,50)) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-``` 
- 
-  
-### Estadísticas a nivel rural
 
 ```{r}
-
-df_2017_exp_subset <- df_2017_2 [,-c(1,2,4,6,8,10,12,14,16,17,18,19,20),drop=FALSE] 
-df_2017_exp_subset <- df_2017_exp_subset[,-c(7),drop=FALSE] 
+df_2017_2 <- df_2017_2[, -c(2,4,6,8,10,12,14,16)]
+kbl(head(df_2017_2,50)) %>% kable_styling(bootstrap_options = c("striped", "hover")) %>% kable_paper() %>% scroll_box(width = "100%", height = "300px")
 ```
- 
- 
- 
+
+#### Tabla a correlacionar:
+
 ```{r}
-data_sum <- summary(df_2017_exp_subset)
+#union_final_urb_corr  <- union_final_urb[,-c(1)]
+write_xlsx(df_2017_2, "P04_rural.xlsx")
+```
+
+#### Estadísticos básicos de nuestras frecuencias
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(df_2017_2)
+
 kbl(head(data_sum)) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
   scroll_box(width = "100%", height = "500px")
 ```
- 
- ## **Correlaciones**
 
-
-
-### Kendall
-
-```{r, warning = FALSE}
-chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "kendall"), pch=20)
+```{r}
+union_final_urb <- df_2017_2
 ```
 
-### Pearson
- 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "pearson"), pch=20)
+#### Gráficas:
+
+```{r, warning=FALSE,message=FALSE}
+library(plotly)
+
+df_2017_fig <- df_2017_2[,-c((ncol(df_2017_2)-1))]
+
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=7000, height=400) 
+}
+for (g in 3:(ncol(df_2017_2)-1)) {
+grafica_fn(g)
+
+}
+
+fig <- fig %>% layout(autosize = T)%>%
+  layout(xaxis = list(rangeslider = list()))
+fig 
 ```
 
-### Spearman
+# $\tau$ de Kendall
 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_exp_subset, histogram=TRUE, method = c( "spearman"), pch=20)
+```{r}
+df_2017_2f <- filter(df_2017_fig, df_2017_fig$ingresos_expandidos != 'is.na')
+III <- seq(2,(ncol(df_2017_2f)-1),1)
+my_data <- df_2017_2f[, c(III)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+tabla <- as.data.frame(tabla)
+tabla %>% rownames_to_column("Cantidad de piezas")%>%  
+  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
 ```
 
+##  Kendall
+
+```{r}
+df_2017_fig <- df_2017_fig[,-c(1)]
+```
+
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+##  Pearson
  
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+##  Spearman
+
+```{r,attr.source='.numberLines', warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

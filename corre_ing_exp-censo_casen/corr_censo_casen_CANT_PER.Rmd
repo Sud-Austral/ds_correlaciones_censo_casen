@@ -5,7 +5,7 @@ author:
   affiliation: DataIntelligence
 subtitle: | 
 
-date: "Viernes 09-07-2021"
+date: "Martes 13-07-2021"
 
 abstract: |
   Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población también comunal** que llamaremos **ingresos expandidos** extraídos de la Casen 2017 y las frecuencias de respuesta por categoría a la pregunta **CANT_PER** del Censo de viviendas 2017, también extraídas a nivel comunal. Lo haremos a nivel nacional.
@@ -68,7 +68,7 @@ library("dplyr")
 
 # Nivel nacional URBANO (código 1)
 
-## Pregunta **CANT_PER**: Ocupación de la vivienda
+## Pregunta **CANT_PER**: Cantidad de personas
 
 Esta pregunta posee un rango de categorías de respuestade 0-9999:
   
@@ -83,15 +83,11 @@ cross_tab =  xtabs( ~ unlist(b) + unlist(c))
 tabla <- as.data.frame(cross_tab)
 d <-tabla[!(tabla$Freq == 0),]
 d$anio <- "2017"
-```
 
+# Nos encontramos con una anomalía estadística. 
+# Tenemos una vivienda cuya cantidad de personas es de  # 5912, lo que es absurdo. Vamos a fijar un punto de  #corte arbitrario que nos permita trabajar con #coherencia.
+# A partir del número 30, las frecuencias tienden a 1.
 
-Nos encontramos con una anomalía estadística. Tenemos una vivienda cuya cantidad de personas es de 5912, lo que es absurdo. Vamos a fijar un punto de corte arbitrario que nos permita trabajar con coherencia.
-
-A partir del número 30, las frecuencias tienden a 1.
-
-
-```{r, warning = FALSE}
 d_t <- filter(d,d$unlist.c. == 0)
 for(i in 1:30){
   d_i <- filter(d,d$unlist.c. == i)
@@ -112,94 +108,139 @@ names(comuna_corr)[94] <- "código"
 # Hacemos la unión con los ingresos promedio comunales expandidos:
 ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
 df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
-una_secuencia <- seq(4, 99, 3 )
-df_2017_22 <- data.frame()
-for (i in una_secuencia){
-df_2017_22 <- df_2017_2[,-(una_secuencia),drop=FALSE]
+
+quitar <- seq(4,(ncol(df_2017_2)-1),3)
+comuna_corr <- df_2017_2[,-c(quitar),drop=FALSE]
+
+quitar_2 <- seq(2,(ncol(comuna_corr)-1),2)
+comuna_corr <- comuna_corr[,-c(quitar_2),drop=FALSE]
+
+secuencia_777 <- seq(2,32,1)
+
+for (i in secuencia_777){
+  j <- paste(i-2,'personas',sep = "_")
+  names(comuna_corr)[i] <- j
 }
-df_2017_222 <- df_2017_22
-una_secuencia_2 <- seq(3, 68, 2 )
-df_2017_222 = df_2017_222[una_secuencia_2]
-df_2017_222$ingresos_expandidos <- df_2017_222$promedio_i * df_2017_222$personas
-df_2017_222 = df_2017_222[-c(32:33)]
-for(i in 1:31){
-frecuencia <- paste(i-1,'pers',sep = "_")
-names(df_2017_222)[i] <- frecuencia
+
+comuna_corr[comuna_corr == -99] <- NA
+kbl(head(comuna_corr,50)) %>% kable_styling(bootstrap_options = c("striped", "hover")) %>% kable_paper() %>% scroll_box(width = "100%", height = "300px")
+```
+
+#### Tabla a correlacionar:
+
+```{r}
+#union_final_urb_corr  <- union_final_urb[,-c(1)]
+write_xlsx(comuna_corr, "CANT_PER_urbano.xlsx")
+```
+
+#### Estadísticos básicos de nuestras frecuencias
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(comuna_corr)
+
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
+```
+
+#### Gráficas:
+
+```{r}
+df_2017_exp_subset <- comuna_corr
+```
+
+
+```{r, warning=FALSE,message=FALSE}
+library(plotly)
+df_2017_fig <- df_2017_exp_subset
+df_2017_fig <- mutate_all(df_2017_fig, ~replace(., is.na(.), -99))
+
+```
+
+```{r, warning=FALSE,message=FALSE}
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=7000, height=400) 
 }
+for (g in 3:(ncol(df_2017_fig))) {
+grafica_fn(g)
+}
+fig <- fig %>% layout(autosize = T)
+fig 
 ```
 
-## **Correlaciones**
-
-### 1-10 personas
+# $\tau$ de Kendall
 
 ```{r}
-df_2017_22a <- df_2017_222[,c(1:10,32)]
+df_2017_2 <- df_2017_fig
+
+df_2017_2f <- filter(df_2017_2, df_2017_2$ingresos_expandidos != 'is.na')
+III <- seq(2,(ncol(df_2017_2))-1,1)
+my_data <- df_2017_2f[, c(III)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+tabla <- as.data.frame(tabla)
+
+tabla %>% rownames_to_column("Hogares")%>%  
+  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
 ```
 
-### El coeficiente de correlación de los rangos. $\tau$ de <span style="color:red">**Kendall**</span>
-
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22a, histogram=TRUE, method = c( "kendall"), pch=20)
-```
-
-### Pearson
- 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22a, histogram=TRUE, method = c( "pearson"), pch=20)
-```
-
-### Spearman
-
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22a, histogram=TRUE, method = c( "spearman"), pch=20)
-```
-
-### 11-20 personas
+##  Kendall
 
 ```{r}
-df_2017_22b <- df_2017_222[,c(11:20,32)]
+df_2017_2[df_2017_2 == -99] <- NA
 ```
 
-### **Kendall**
-
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22b, histogram=TRUE, method = c( "kendall"), pch=20)
-```
-
-### Pearson
- 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22b, histogram=TRUE, method = c( "pearson"), pch=20)
-```
-
-### Spearman
-
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22b, histogram=TRUE, method = c( "spearman"), pch=20)
-```
-
-### 21-30 personas
+### de 1 a 15 personas
 
 ```{r}
-df_2017_22c <- df_2017_222[,c(21:30,32)]
+df_2017_fig <- df_2017_2[,-c(1,16:30)]
 ```
 
-### **Kendall**
-
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22c, histogram=TRUE, method = c( "kendall"), pch=40)
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
 ```
 
-### Pearson
+##  Pearson
  
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22c, histogram=TRUE, method = c( "pearson"), pch=20)
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
 ```
 
-### Spearman
+##  Spearman
 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22c, histogram=TRUE, method = c( "spearman"), pch=20)
+```{r,attr.source='.numberLines', warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+### de 16 a 30 personas
+
+```{r}
+df_2017_fig <- df_2017_2[,-c(1,2:15)]
+```
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+##  Pearson
+ 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+##  Spearman
+
+```{r,attr.source='.numberLines', warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
 
 
@@ -208,9 +249,10 @@ chart.Correlation(df_2017_22c, histogram=TRUE, method = c( "spearman"), pch=20)
 <br>
 
 
-# Nivel nacional RURAL (código 1)
 
-## Pregunta **CANT_PER**: Ocupación de la vivienda
+# Nivel nacional RURAL (código 2)
+
+## Pregunta **CANT_PER**: Cantidad de personas
 
 Esta pregunta posee un rango de categorías de respuestade 0-9999:
   
@@ -225,15 +267,11 @@ cross_tab =  xtabs( ~ unlist(b) + unlist(c))
 tabla <- as.data.frame(cross_tab)
 d <-tabla[!(tabla$Freq == 0),]
 d$anio <- "2017"
-```
 
+# Nos encontramos con una anomalía estadística. 
+# Tenemos una vivienda cuya cantidad de personas es de  # 5912, lo que es absurdo. Vamos a fijar un punto de  #corte arbitrario que nos permita trabajar con #coherencia.
+# A partir del número 30, las frecuencias tienden a 1.
 
-Nos encontramos con una anomalía estadística. Tenemos una vivienda cuya cantidad de personas es de 5912, lo que es absurdo. Vamos a fijar un punto de corte arbitrario que nos permita trabajar con coherencia.
-
-A partir del número 30, las frecuencias tienden a 1.
-
-
-```{r, warning = FALSE}
 d_t <- filter(d,d$unlist.c. == 0)
 for(i in 1:30){
   d_i <- filter(d,d$unlist.c. == i)
@@ -254,71 +292,132 @@ names(comuna_corr)[94] <- "código"
 # Hacemos la unión con los ingresos promedio comunales expandidos:
 ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_rural_17.rds")
 df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
-una_secuencia <- seq(4, 99, 3 )
-df_2017_22 <- data.frame()
-for (i in una_secuencia){
-df_2017_22 <- df_2017_2[,-(una_secuencia),drop=FALSE]
+
+quitar <- seq(4,(ncol(df_2017_2)-1),3)
+comuna_corr <- df_2017_2[,-c(quitar),drop=FALSE]
+
+quitar_2 <- seq(2,(ncol(comuna_corr)-1),2)
+comuna_corr <- comuna_corr[,-c(quitar_2),drop=FALSE]
+
+secuencia_777 <- seq(2,32,1)
+
+for (i in secuencia_777){
+  j <- paste(i-2,'personas',sep = "_")
+  names(comuna_corr)[i] <- j
 }
-df_2017_222 <- df_2017_22
-una_secuencia_2 <- seq(3, 68, 2 )
-df_2017_222 = df_2017_222[una_secuencia_2]
-df_2017_222$ingresos_expandidos <- df_2017_222$promedio_i * df_2017_222$personas
-df_2017_222 = df_2017_222[-c(32:33)]
-for(i in 1:31){
-frecuencia <- paste(i-1,'pers',sep = "_")
-names(df_2017_222)[i] <- frecuencia
-}
+
+comuna_corr[comuna_corr == -99] <- NA
+kbl(head(comuna_corr,50)) %>% kable_styling(bootstrap_options = c("striped", "hover")) %>% kable_paper() %>% scroll_box(width = "100%", height = "300px")
 ```
 
-## **Correlaciones**
-
-### 1-10 personas
+#### Tabla a correlacionar:
 
 ```{r}
-df_2017_22a <- df_2017_222[,c(1:10,32)]
+#union_final_urb_corr  <- union_final_urb[,-c(1)]
+write_xlsx(comuna_corr, "CANT_PER_rural.xlsx")
 ```
 
-### **Kendall**
+#### Estadísticos básicos de nuestras frecuencias
 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22a, histogram=TRUE, method = c( "kendall"), pch=20)
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(comuna_corr)
+
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
 ```
 
-### Pearson
- 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22a, histogram=TRUE, method = c( "pearson"), pch=20)
-```
-
-### Spearman
-
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22a, histogram=TRUE, method = c( "spearman"), pch=20)
-```
-
-### 11-20 personas
+#### Gráficas:
 
 ```{r}
-df_2017_22b <- df_2017_222[,c(11:20,32)]
+df_2017_exp_subset <- comuna_corr
 ```
 
-#### <span style="color: #900C3F ">**Kendall**</span>
 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22b, histogram=TRUE, method = c( "kendall"), pch=20)
+```{r, warning=FALSE,message=FALSE}
+library(plotly)
+df_2017_fig <- df_2017_exp_subset
+df_2017_fig <- mutate_all(df_2017_fig, ~replace(., is.na(.), -99))
+
 ```
 
-### Pearson
+```{r, warning=FALSE,message=FALSE}
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=7000, height=400) 
+}
+for (g in 3:(ncol(df_2017_fig))) {
+grafica_fn(g)
+}
+fig <- fig %>% layout(autosize = T)
+fig 
+```
+
+# $\tau$ de Kendall
+
+```{r}
+df_2017_fig[df_2017_fig == -99] <- NA
+
+```
+
+
+
+```{r}
+df_2017_2 <- df_2017_fig[,-c(1,13:32)]
+
+df_2017_2f <- filter(df_2017_2, df_2017_2$ingresos_expandidos != 'is.na')
+III <- seq(2,(ncol(df_2017_2))-1,1)
+my_data <- df_2017_2f[, c(III)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+tabla <- as.data.frame(tabla)
+```
+
+
+```{r}
+tabla %>% rownames_to_column("Personas")%>%  
+  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
+```
+
+##  Kendall
+
+```{r}
+df_2017_2[df_2017_2 == -99] <- NA
+```
+
+### de 1 a 10 personas
+
+```{r}
+df_2017_fig <- df_2017_2[,-c(1,15:32)]
+```
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+##  Pearson
  
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22b, histogram=TRUE, method = c( "pearson"), pch=20)
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
 ```
 
-### Spearman
+##  Spearman
 
-```{r, warning = FALSE}
-chart.Correlation(df_2017_22b, histogram=TRUE, method = c( "spearman"), pch=20)
+```{r,attr.source='.numberLines', warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
+
+
+
+
 
 
 

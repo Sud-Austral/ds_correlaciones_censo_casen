@@ -5,7 +5,7 @@ author:
   affiliation: DataIntelligence
 subtitle: | 
 
-date: "Sabado 10-07-2021"
+date: "Martes 13-07-2021"
 
 abstract: |
   Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población también comunal** que llamaremos **ingresos expandidos** extraídos de la Casen 2017 y las frecuencias de respuesta por categoría a la pregunta **TIPO_HOGAR** del Censo de viviendas 2017, también extraídas a nivel comunal. Lo haremos a nivel nacional.
@@ -87,10 +87,7 @@ Leemos las respuestas a la pregunta **TIPO_HOGAR** del censo de viviendas 2017 y
 
 ```{r, warning = FALSE, attr.source='.numberLines'}
 tabla_con_clave <- readRDS("censos/censo_hogares_con_clave_17")
-```
 
-
-```{r, warning = FALSE, attr.source='.numberLines'}
 tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
 b <- tabla_con_clave_u$COMUNA
 c <- tabla_con_clave_u$TIPO_HOGAR
@@ -116,17 +113,10 @@ cadena <- as.data.frame(cadena)
 comuna_corr <- cbind(d_t,cadena)
 comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
 names(comuna_corr)[ncol(comuna_corr)] <- "código"
-```
 
-
-
-
-```{r, warning = FALSE, attr.source='.numberLines'}
 quitar <- seq(3,(ncol(comuna_corr)-1),3)
 comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
-```
 
-```{r, warning = FALSE, attr.source='.numberLines'}
 names(comuna_corr )[2] <- "Hogar unipersonal"
 names(comuna_corr )[4] <- "Hogar nuclear monoparental"
 names(comuna_corr )[6] <- "Hogar nuclear biparental sin hijos "
@@ -134,84 +124,125 @@ names(comuna_corr )[8] <- "Hogar nuclear biparental con hijos"
 names(comuna_corr )[10] <- "Hogar compuesto"
 names(comuna_corr )[12] <- "Hogar extenso"
 names(comuna_corr )[14] <- "Hogar sin núcleo"
-```
 
-
-
-
-
-
-
-```{r, warning = FALSE, attr.source='.numberLines'}
 quitar <- seq(1,(ncol(comuna_corr)-1),2)
 comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
 
-```
-
-
-## Generación de ingresos promedios a nivel urbano y su unión con la tabla de contingencia
-
-```{r, warning = FALSE, attr.source='.numberLines'}
 ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
 df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
-
+df_2017_2 <- df_2017_2[,-c(9)]
+df_2017_3 <- df_2017_2
 ```
 
-<br>
-
-```{r, warning = FALSE, attr.source='.numberLines', message=FALSE}
-library(plotly)
-fig <- plot_ly(df_2017_2, x = ~`código`, y = ~`Hogar unipersonal`
-, name = 'Hogar unipersonal', type = 'scatter', mode = 'lines',
-                 width=7000, height=400) 
-fig <- fig %>% add_trace(y = ~`Hogar nuclear monoparental`
-, name = 'Hogar nuclear monoparental', mode = 'lines+markers',
-                 width=7000, height=400) 
-fig <- fig %>% layout(autosize = F, width = 800, height = 500)
-fig 
-```
-
-<br>
-
-<br>
-<br>
-<br>
-
-### Estadísticas a nivel urbano
 
 ```{r, warning = FALSE, attr.source='.numberLines'}
-df_2017_2_sub <- df_2017_2[,-c(1,9,10,11,12,13)]
+comuna_corr <- df_2017_2
+```
 
-data_sum <- summary(df_2017_2_sub )
+
+#### Tabla a correlacionar:
+
+```{r}
+#union_final_urb_corr  <- union_final_urb[,-c(1)]
+write_xlsx(comuna_corr, "TIPO_HOGAR_urbano.xlsx")
+```
+
+
+#### Estadísticos básicos de nuestras frecuencias
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(comuna_corr)
 
 kbl(head(data_sum)) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
   scroll_box(width = "100%", height = "500px")
 ```
+
+#### Gráficas:
+
+```{r}
+df_2017_exp_subset <- comuna_corr
+```
+
+
+```{r, warning=FALSE,message=FALSE}
+library(plotly)
+df_2017_fig <- df_2017_exp_subset
+df_2017_fig <- mutate_all(df_2017_fig, ~replace(., is.na(.), -99))
+
+```
+
+```{r, warning=FALSE,message=FALSE}
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=7000, height=400) 
+}
+for (g in 3:(ncol(df_2017_fig))) {
+grafica_fn(g)
+}
+fig <- fig %>% layout(autosize = T)
+fig 
+```
+
+
+# $\tau$ de Kendall
+
+```{r}
+df_2017_2 <- df_2017_3
+
+df_2017_2f <- filter(df_2017_2, df_2017_2$ingresos_expandidos != 'is.na')
+III <- seq(2,(ncol(df_2017_2))-1,1)
+my_data <- df_2017_2f[, c(III)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+tabla <- as.data.frame(tabla)
+tabla
+```
+
+
+```{r}
+tabla %>% rownames_to_column("Hogares")%>%  
+  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
+```
+
+##  Kendall
+
+```{r}
+df_2017_2[df_2017_2 == -99] <- NA
+df_2017_2 <- df_2017_2[,-c(1)]
+df_2017_fig <- df_2017_2
+```
+
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+##  Pearson
  
-
-## **Correlaciones**
-
-### Kendall
-
-```{r, warning = FALSE, attr.source='.numberLines'}
-chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "kendall"), pch=2)
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
 ```
 
-### Pearson
- 
-```{r, warning = FALSE, attr.source='.numberLines'}
+##  Spearman
 
-chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "pearson"), pch=20)
+```{r,attr.source='.numberLines', warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
 
-### Spearman
 
-```{r, warning = FALSE, attr.source='.numberLines'}
+<br>
+<hr style="height:1px;border-width:1;color:Gray;background-color:Gray">
+<br>
 
-chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "spearman"), pch=20)
-```
 
 
 # Nivel nacional RURAL (código 2)
@@ -233,10 +264,7 @@ Leemos las respuestas a la pregunta **TIPO_HOGAR** del censo de viviendas 2017 y
 
 ```{r, warning = FALSE, attr.source='.numberLines'}
 tabla_con_clave <- readRDS("censos/censo_hogares_con_clave_17")
-```
 
-
-```{r, warning = FALSE, attr.source='.numberLines'}
 tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
 b <- tabla_con_clave_u$COMUNA
 c <- tabla_con_clave_u$TIPO_HOGAR
@@ -262,14 +290,10 @@ cadena <- as.data.frame(cadena)
 comuna_corr <- cbind(d_t,cadena)
 comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
 names(comuna_corr)[ncol(comuna_corr)] <- "código"
-```
 
-```{r, warning = FALSE, attr.source='.numberLines'}
 quitar <- seq(3,(ncol(comuna_corr)-1),3)
 comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
-```
 
-```{r, warning = FALSE, attr.source='.numberLines'}
 names(comuna_corr )[2] <- "Hogar unipersonal"
 names(comuna_corr )[4] <- "Hogar nuclear monoparental"
 names(comuna_corr )[6] <- "Hogar nuclear biparental sin hijos "
@@ -277,77 +301,128 @@ names(comuna_corr )[8] <- "Hogar nuclear biparental con hijos"
 names(comuna_corr )[10] <- "Hogar compuesto"
 names(comuna_corr )[12] <- "Hogar extenso"
 names(comuna_corr )[14] <- "Hogar sin núcleo"
-```
 
-```{r, warning = FALSE, attr.source='.numberLines'}
 quitar <- seq(1,(ncol(comuna_corr)-1),2)
 comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
 
-```
-
-## Integración de ingresos promedios a nivel urbano y su unión con la tabla de contingencia
-
-```{r, warning = FALSE, attr.source='.numberLines'}
-ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
+ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_rural_17.rds")
 df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
-
+df_2017_2 <- df_2017_2[,-c(9)]
+df_2017_3 <- df_2017_2
 ```
 
-<br>
-
-```{r, warning = FALSE, attr.source='.numberLines', message=FALSE}
-library(plotly)
-fig <- plot_ly(df_2017_2, x = ~`código`, y = ~`Hogar unipersonal`
-, name = 'Hogar unipersonal', type = 'scatter', mode = 'lines',
-                 width=7000, height=400) 
-fig <- fig %>% add_trace(y = ~`Hogar nuclear monoparental`
-, name = 'Hogar nuclear monoparental', mode = 'lines+markers',
-                 width=7000, height=400) 
-fig <- fig %>% layout(autosize = F, width = 800, height = 500)
-fig 
-```
-
-<br>
-
-<br>
-<br>
-<br>
-
-### Estadísticas a nivel urbano
 
 ```{r, warning = FALSE, attr.source='.numberLines'}
-df_2017_2_sub <- df_2017_2[,-c(1,9,10,11,12,13)]
+comuna_corr <- df_2017_2
+```
 
-data_sum <- summary(df_2017_2_sub )
+
+#### Tabla a correlacionar:
+
+```{r}
+#union_final_urb_corr  <- union_final_urb[,-c(1)]
+write_xlsx(comuna_corr, "TIPO_HOGAR_rural.xlsx")
+```
+
+
+#### Estadísticos básicos de nuestras frecuencias
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(comuna_corr)
 
 kbl(head(data_sum)) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
   scroll_box(width = "100%", height = "500px")
 ```
+
+#### Gráficas:
+
+```{r}
+df_2017_exp_subset <- comuna_corr
+```
+
+
+```{r, warning=FALSE,message=FALSE}
+library(plotly)
+df_2017_fig <- df_2017_exp_subset
+df_2017_fig <- mutate_all(df_2017_fig, ~replace(., is.na(.), -99))
+
+```
+
+```{r, warning=FALSE,message=FALSE}
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=7000, height=400) 
+}
+for (g in 3:(ncol(df_2017_fig))) {
+grafica_fn(g)
+}
+fig <- fig %>% layout(autosize = T)
+fig 
+```
+
+
+# $\tau$ de Kendall
+
+```{r}
+df_2017_2 <- df_2017_3
+
+df_2017_2f <- filter(df_2017_2, df_2017_2$ingresos_expandidos != 'is.na')
+III <- seq(2,(ncol(df_2017_2))-1,1)
+my_data <- df_2017_2f[, c(III)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+tabla <- as.data.frame(tabla)
+
+tabla %>% rownames_to_column("Hogares")%>%  
+  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
+```
+
+##  Kendall
+
+```{r}
+df_2017_2[df_2017_2 == -99] <- NA
+df_2017_2 <- df_2017_2[,-c(1)]
+df_2017_fig <- df_2017_2
+```
+
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+##  Pearson
  
-
-## **Correlaciones**
-
-### Kendall
-
-```{r, warning = FALSE, attr.source='.numberLines'}
-chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "kendall"), pch=20)
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
 ```
 
-### Pearson
- 
-```{r, warning = FALSE, attr.source='.numberLines'}
+##  Spearman
 
-chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "pearson"), pch=20)
+```{r,attr.source='.numberLines', warning=FALSE}
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
 
-### Spearman
 
-```{r, warning = FALSE, attr.source='.numberLines'}
 
-chart.Correlation(df_2017_2_sub, histogram=TRUE, method = c( "spearman"), pch=20)
-```
+
+
+
+
+
+
+
+
+
+
 
 
 

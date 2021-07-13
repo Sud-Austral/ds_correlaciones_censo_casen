@@ -187,8 +187,6 @@ library(plotly)
 df_2017_fig <- union_final_urb 
 ```
 
-
-
 ```{r, warning=FALSE,message=FALSE}
 fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
 , name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
