@@ -1,0 +1,827 @@
+---
+title: Expansión de la CASEN sobre el CENSO compendio 2017
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+abstract: |
+  Exponemos las correlaciones descubiertas. 
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true    
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
+date: `r format(Sys.time(), "%d-%m-%Y")`
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+
+```
+
+
+
+
+# CASEN 2017 y CENSO Vivienda 2017
+
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P01**: [Tipo de vivienda](https://rpubs.com/dataintelligence/corr_ce_ca_P01)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P01_URBANO.rds")
+tabla %>%
+  rownames_to_column("Tipo de vivienda") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F)%>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P01_RURAL.rds")
+tabla %>%
+  rownames_to_column("Tipo de vivienda") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption="RURAL") %>% 
+    kable_paper(full_width = F) %>% 
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+  
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P02**: [Ocupación de la vivienda](https://rpubs.com/dataintelligence/corr_ce_ca_P02)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P02_URBANO.rds")
+tabla %>%
+  rownames_to_column("Ocupación de la vivienda") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P02_RURAL.rds")
+tabla %>%
+  rownames_to_column("Ocupación de la vivienda") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+   
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P03A**: [Material de los muros exteriores](https://rpubs.com/dataintelligence/corr_ce_ca_P03A)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P03A_URBANO.rds")
+tabla %>%
+  rownames_to_column("Material de los muros exteriores") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P03A_RURAL.rds")
+tabla %>%
+  rownames_to_column("Material de los muros exteriores") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+   
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P03B**: [Material en la cubierta del techo](https://rpubs.com/dataintelligence/corr_ce_ca_P03B)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P03B_URBANO.rds")
+tabla %>%
+  rownames_to_column("Material en la cubierta del techo") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P03B_RURAL.rds")
+tabla %>%
+  rownames_to_column("Material en la cubierta del techo") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P03C**: [Material en la cubierta del techo](https://rpubs.com/dataintelligence/corr_ce_ca_P03C)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P03C_URBANO.rds")
+tabla %>%
+  rownames_to_column("Material de construcción del piso") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P03C_RURAL.rds")
+tabla %>%
+  rownames_to_column("Material de construcción del piso") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P04**: [Número de piezas usadas exclusivamente como dormitorio](https://rpubs.com/dataintelligence/corr_ce_ca_P04)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P04_URBANO.rds")
+tabla %>%
+  rownames_to_column("Número de piezas usadas exclusivamente como dormitorio") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P04_RURAL.rds")
+tabla %>%
+  rownames_to_column("Número de piezas usadas exclusivamente como dormitorio") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P05**: [Origen del agua](https://rpubs.com/dataintelligence/corr_ce_ca_P05)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P05_URBANO.rds")
+tabla %>%
+  rownames_to_column("Origen del agua") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P05_RURAL.rds")
+tabla %>%
+  rownames_to_column("Origen del agua") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+
+# CASEN 2017 y CENSO Hogares 2017
+
+## **CANT_HOG**: [Cantidad de hogares](https://rpubs.com/dataintelligence/corr_ce_ca_CANT_HOG)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_CANT_HOG_URBANO.rds")
+tabla %>%
+  rownames_to_column("Cantidad de hogares") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_CANT_HOG_RURAL.rds")
+tabla %>%
+  rownames_to_column("Cantidad de hogares") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **CANT_PER**: [Cantidad de personas](https://rpubs.com/dataintelligence/corr_ce_ca_CANT_PER)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_CANT_PER_URBANO.rds")
+tabla %>%
+  rownames_to_column("Cantidad de personas") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_CANT_PER_RURAL.rds")
+tabla %>%
+  rownames_to_column("Cantidad de personas") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+
+
+
+
+
+
+# CASEN 2017 y CENSO Personas 2017
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P07**: [Relación de parentesco](https://rpubs.com/dataintelligence/corr_ce_ca_P07)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P07_URB.rds")
+tabla %>%
+  rownames_to_column("Relación de parentesco") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P07_RU.rds")
+tabla %>%
+  rownames_to_column("Relación de parentesco") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P08**: [Sexo](https://rpubs.com/dataintelligence/corr_ce_ca_P08)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P08_URB.rds")
+tabla %>%
+  rownames_to_column("Sexo") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P08_RU.rds")
+tabla %>%
+  rownames_to_column("Sexo") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+   
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P13**: [Asiste actualmente a la educación formal](https://rpubs.com/dataintelligence/corr_ce_ca_P13)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P13_URB.rds")
+tabla %>%
+  rownames_to_column("Asiste actualmente a la educación formal") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P13_RU.rds")
+tabla %>%
+  rownames_to_column("Asiste actualmente a la educación formal") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P16**: [Se considera perteneciente a un pueblo indígena u originario](https://rpubs.com/dataintelligence/corr_ce_ca_P16)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P16_URB.rds")
+tabla %>%
+  rownames_to_column("Se considera perteneciente a un pueblo indígena u originario") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P16_RU.rds")
+tabla %>%
+  rownames_to_column("Se considera perteneciente a un pueblo indígena u originario") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P16A**: [Pueblo indígena u originario listado](https://rpubs.com/dataintelligence/corr_ce_ca_P16A)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P16A_URB.rds")
+tabla %>%
+  rownames_to_column("Pueblo indígena u originario listado") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P16A_RU.rds")
+tabla %>%
+  rownames_to_column("Pueblo indígena u originario listado") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P16A_OTRO**: [Pueblo indígena u originario (Otro)](https://rpubs.com/dataintelligence/corr_ce_ca_P16A_OTRO)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P16A_OTRO_URB.rds")
+tabla %>%
+  rownames_to_column("Pueblo indígena u originario (Otro)") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P16A_OTRO_RU.rds")
+tabla %>%
+  rownames_to_column("Pueblo indígena u originario (Otro)") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P17**: [Trabajó durante la semana pasada](https://rpubs.com/dataintelligence/corr_ce_ca_P17)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P17_URB.rds")
+tabla %>%
+  rownames_to_column("Trabajó durante la semana pasada") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P17_RU.rds")
+tabla %>%
+  rownames_to_column("Trabajó durante la semana pasada") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P19**: [Total hijos/as nacidos vivos](https://rpubs.com/dataintelligence/corr_ce_ca_P19)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P19_URB.rds")
+tabla %>%
+  rownames_to_column("Total hijos/as nacidos vivos") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P19_RU.rds")
+tabla %>%
+  rownames_to_column("Total hijos/as nacidos vivos") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P20**: [Total hijos/as actualmente vivos](https://rpubs.com/dataintelligence/corr_ce_ca_P20)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P20_URB.rds")
+tabla %>%
+  rownames_to_column("Total hijos/as actualmente vivos") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P20_RU.rds")
+tabla %>%
+  rownames_to_column("Total hijos/as actualmente vivos") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **ESCOLARIDAD**: [Años de escolaridad](https://rpubs.com/dataintelligence/corr_ce_ca_ESCOLARIDAD)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_ESCOLARIDAD_URB.rds")
+tabla %>%
+  rownames_to_column("Años de escolaridad") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_ESCOLARIDAD_RU.rds")
+tabla %>%
+  rownames_to_column("Años de escolaridad") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P16A_GRUPO**: [Pueblo indígena u originario (grupo)](https://rpubs.com/dataintelligence/corr_ce_ca_P16A_GRUPO)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P16_GRUPO_URB.rds")
+tabla %>%
+  rownames_to_column("Pueblo indígena u originario (grupo)") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P16_GRUPO_RU.rds")
+tabla %>%
+  rownames_to_column("Pueblo indígena u originario (grupo)") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+<br>
+<br>
+
+
