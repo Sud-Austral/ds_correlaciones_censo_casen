@@ -1,28 +1,39 @@
 ---
-title: Correlaciones entre variables del Censo de Viviendas, Hogares y Personas e ingresos promedios comunales de la CASEN 2017.
+title: Correlaciones entre variables del CENSO de Viviendas, Hogares y Personas e Ingresos promedios comunales de la CASEN 2017.
 author:
 - name: VE-CC-AJ
   affiliation: DataIntelligence
 subtitle: | 
 
-date: "Jueves 01-06-2021"
+date: "Lunes 12-07-2021"
 
 abstract: |
-  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población comunal** que llamaremos **ingresos expandidos** extraído de la Casen 2017 y las frecuencias de categorías de respuesta para todas las variables del Censo de viviendas, hogares y personas al 2017, también extraídas a nivel comunal.
+  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población también comunal** que llamaremos **ingresos expandidos** extraídos de la Casen 2017 y las frecuencias de respuesta por categoría a la pregunta **P09** del Censo de viviendas 2017, también extraídas a nivel comunal. Lo haremos a nivel nacional.
   
-  Haremos las correlaciones tanto a nivel Urbano como rural.
+  Haremos las correlaciones tanto a nivel Urbano como Rural.
   
-  Importante es aplicar la libreria **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
+  Importante es aplicar la librería **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
+    
+    Identificamos una violación a un supuesto a la correlación de Pearson; demostramos que lo correcto es aplicar la $\tau$ de Kendall.  
     
 header-includes:
    - \usepackage[]{babel}
 
 output:
-  html_document:
+  rmdformats::html_clean:
+    highlight: kate
     toc: true
-    toc_float: true
-    theme: flatly
+    use_bookdown: true    
 ---
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
 
 ```{r, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -55,40 +66,39 @@ library("dplyr")
 
 ```
 
+<br> 
 
-## 1 Pregunta **P09**: Edad nivel URBANO
+# Nivel nacional URBANO (código 1)
 
-Area: urbano = 1 rural = 2 
+## Pregunta **P09**: Relación de parentesco
+
+## Las categorías de respuesta:
 
 1 Edad 0…99\
-2 100 100 años y más
+2 100 100 años y más\
 
-### 1.1 Cálculo de frecuencias
+##  Generación de tabla de contingencia para la variable P09
+ 
 
-Leemos las respuestas a la pregunta P09 del censo de **personas** 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
-
-```{r, warning = FALSE}
-tabla_con_clave <- readRDS("../censo_personas_con_clave_17")
-tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
-```
-
-
-```{r, warning = FALSE}
-b <- tabla_con_clave$COMUNA
-c <- tabla_con_clave$P09
+```{r,attr.source='.numberLines', warning=FALSE}
+tabla_con_clave <- readRDS("censos/censo_personas_con_clave_17")
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
+b <- tabla_con_clave_u$COMUNA
+c <- tabla_con_clave_u$P09
 cross_tab =  xtabs( ~ unlist(b) + unlist(c))
 tabla <- as.data.frame(cross_tab)
 d <-tabla[!(tabla$Freq == 0),]
 d$anio <- "2017"
 
-d_unique <- unique(d$unlist.c.)
-
 d_t <- filter(d,d$unlist.c. == 0)
-for(i in 1:101){
+for(i in 1:100){
   d_i <- filter(d,d$unlist.c. == i)
   d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
 }
+```
 
+
+```{r,attr.source='.numberLines', warning=FALSE}
 codigos <- d_t$unlist.b.
 rango <- seq(1:nrow(d_t))
 cadena <- paste("0",codigos[rango], sep = "")
@@ -96,146 +106,181 @@ cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
 codigos <- as.data.frame(codigos)
 cadena <- as.data.frame(cadena)
 comuna_corr <- cbind(d_t,cadena)
-comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+names(comuna_corr)[ncol(comuna_corr)] <- "código"
+
 ```
 
-```{r}
-names(comuna_corr)[307] <- "código" 
-tablamadre <- head(comuna_corr,50)
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(3,(ncol(comuna_corr)-1),3)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+III <- seq(2,204,2)
+ 
+for (i in 1:101) {
+      names(comuna_corr)[III[i]] <- i-1
+}
+ 
+```
+ 
 
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(1,(ncol(comuna_corr)-1),2)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
 ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
-
 df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
 ```
 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+union_final_urb <- df_2017_2[,-c(1,(ncol(df_2017_2)-1))]
+write_xlsx(union_final_urb, "P09_urbano.xlsx")
+```
 
 
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(union_final_urb)
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
+```
 
 
-```{r}
-III <- seq(3,303,3)
-for (i in 1:101) {
-      names(df_2017_2)[III[i]] <- i-1
-      ## para verificar
-  #cadena <- paste0("names(df_2017_2)[",III[i],"] <-", i-1)
- # print(cadena)
+Graficas:
+
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+library(plotly)
+
+df_2017_fig <- df_2017_2[,-c((ncol(df_2017_2)-1))]
+
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=7000, height=400) 
 }
+for (g in 3:(ncol(df_2017_2)-1)) {
+grafica_fn(g)
+
+}
+
+fig <- fig %>% layout(autosize = T )
+fig 
 ```
 
 
-### 2.2.5 **Correlaciones**
 
-de 1 a 10 años
+#  **Correlaciones**
 
-```{r}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
+La distribución es asimétrica, poseyendo un sesgo positivo.
+
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+df_2017_2f <- filter(union_final_urb, union_final_urb$ingresos_expandidos != 'is.na')
+III <- seq(1,(ncol(df_2017_2f)-1),1)
+my_data <- df_2017_2f[, c(III)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+tabla <- as.data.frame(tabla)
+tabla <- tabla %>% drop_na()
+colnames(tabla) <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_P09_URB.rds")  
+tabla %>%
+  rownames_to_column("Edad") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
+```
+ 
+
+### Kendall
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+i <- 1
+f <- 10
+for (cc in 1:10) {
+  III <- seq(i,f)
+print(paste0(i-1,"-",f-1))
+df_2017_2_sub_subset <- union_final_urb[,c(III,ncol(union_final_urb))]
+chart.Correlation(df_2017_2_sub_subset, histogram=TRUE, method = c( "kendall"), pch=20)
+
+i <- i+10
+f <- f+10
+}
+print("100")
+df_2017_2_sub_subset <- union_final_urb[,c(101,102)]
+chart.Correlation(df_2017_2_sub_subset, histogram=TRUE, method = c( "kendall"), pch=20)
 ```
 
-de 11 a 20 años
+### Pearson
 
-```{r}
-my_data <- df_2017_2[, c(33,36,39,42,45,48,51,54,57,60,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
+```{r, warning = FALSE, attr.source='.numberLines'}
+i <- 1
+f <- 10
+for (cc in 1:10) {
+  III <- seq(i,f)
+print(paste0(i-1,"-",f-1))
+df_2017_2_sub_subset <- union_final_urb[,c(III,ncol(union_final_urb))]
+chart.Correlation(df_2017_2_sub_subset, histogram=TRUE, method = c( "pearson"), pch=20)
+
+i <- i+10
+f <- f+10
+}
+print("100")
+df_2017_2_sub_subset <- union_final_urb[,c(101,102)]
+chart.Correlation(df_2017_2_sub_subset, histogram=TRUE, method = c( "pearson"), pch=20)
+
 ```
 
-de 21 a 30 años
+### Spearman
 
-```{r}
-my_data <- df_2017_2[, c(63,66,69,72,75,78,81,84,87,90,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
+```{r, warning = FALSE, attr.source='.numberLines'}
+i <- 1
+f <- 10
+for (cc in 1:10) {
+  III <- seq(i,f)
+print(paste0(i-1,"-",f-1))
+df_2017_2_sub_subset <- union_final_urb[,c(III,ncol(union_final_urb))]
+chart.Correlation(df_2017_2_sub_subset, histogram=TRUE, method = c( "spearman"), pch=20)
 
-de 31 a 40 años
+i <- i+10
+f <- f+10
+}
+print("100")
+df_2017_2_sub_subset <- union_final_urb[,c(101,102)]
+chart.Correlation(df_2017_2_sub_subset, histogram=TRUE, method = c( "spearman"), pch=20)
 
-```{r}
-my_data <- df_2017_2[, c(93,96,99,102,105,108,111,114,117,120,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
-
-de 41 a 50 años
-
-```{r}
-
-my_data <- df_2017_2[, c(123,126,129,132,135,138,141,144,147,150,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
-
-de 51 a 60 años
-
-```{r}
-my_data <- df_2017_2[, c(153,156,159,162,165,168,171,174,177,180,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
-
-de 61 a 70 años
-
-```{r}
-my_data <- df_2017_2[, c(183,186,189,192,195,198,201,204,207,210,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
-
-de 71 a 80 años
-
-```{r}
-my_data <- df_2017_2[, c(213,216,219,222,225,228,231,234,237,240,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
-
-de 81 a 90 años
-
-```{r}
-my_data <- df_2017_2[, c(243,246,249,252,255,258,261,264,267,270,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
-
-de 91 a 100 años
-
-```{r}
-my_data <- df_2017_2[, c(270,273,276,279,282,285,288,291,294,297,300,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
-
-
-<hr style="height:1px;border-width:1;color:Green;background-color:Green">
-<br>
-
-<hr style="height:1px;border-width:1;color:Green;background-color:Green">
-<br>
-
-## 1 Pregunta **P09**: Edad nivel RURAL
-
-Area: urbano = 1 rural = 2 
-
-1 Edad 0…99\
-2 100 100 años y más
-
-### 1.1 Cálculo de frecuencias
-
-Leemos las respuestas a la pregunta P09 del censo de **personas** 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
-
-```{r, warning = FALSE}
-tabla_con_clave <- readRDS("../censo_personas_con_clave_17")
-tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
 ```
 
 
-```{r, warning = FALSE}
-b <- tabla_con_clave$COMUNA
-c <- tabla_con_clave$P09
+# Nivel nacional RURAL (código 2)
+
+
+```{r,attr.source='.numberLines', warning=FALSE}
+tabla_con_clave <- readRDS("censos/censo_personas_con_clave_17")
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
+b <- tabla_con_clave_u$COMUNA
+c <- tabla_con_clave_u$P09
 cross_tab =  xtabs( ~ unlist(b) + unlist(c))
 tabla <- as.data.frame(cross_tab)
 d <-tabla[!(tabla$Freq == 0),]
+ 
 d$anio <- "2017"
 
-d_unique <- unique(d$unlist.c.)
-
 d_t <- filter(d,d$unlist.c. == 0)
-for(i in 1:101){
+for(i in 1:100){
   d_i <- filter(d,d$unlist.c. == i)
   d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
 }
 
+```
+
+
+```{r,attr.source='.numberLines', warning=FALSE}
 codigos <- d_t$unlist.b.
 rango <- seq(1:nrow(d_t))
 cadena <- paste("0",codigos[rango], sep = "")
@@ -243,115 +288,154 @@ cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
 codigos <- as.data.frame(codigos)
 cadena <- as.data.frame(cadena)
 comuna_corr <- cbind(d_t,cadena)
-comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+names(comuna_corr)[ncol(comuna_corr)] <- "código"
+
 ```
 
-```{r}
-names(comuna_corr)[307] <- "código" 
-tablamadre <- head(comuna_corr,50)
 
-ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_rural_17.rds")
-
-df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
-
-tablamadre <- head(df_2017_2,50)
-```
-
-```{r}
-III <- seq(3,303,3)
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(3,(ncol(comuna_corr)-1),3)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+III <- seq(2,204,2)
+ 
 for (i in 1:101) {
-      names(df_2017_2)[III[i]] <- i-1
-      ## para verificar
-  #cadena <- paste0("names(df_2017_2)[",III[i],"] <-", i-1)
- # print(cadena)
+      names(comuna_corr)[III[i]] <- i-1
 }
+ 
+```
+ 
+ 
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(1,(ncol(comuna_corr)-1),2)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_rural_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
 ```
 
-### 2.2.5 **Correlaciones**
-
-de 1 a 10 años
-
-```{r}
-my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+union_final_urb <- df_2017_2[,-c(1,(ncol(df_2017_2)-1))]
+write_xlsx(union_final_urb, "P09_rural.xlsx")
 ```
 
-de 11 a 20 años
-
-```{r}
-my_data <- df_2017_2[, c(33,36,39,42,45,48,51,54,57,60,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(union_final_urb)
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
 ```
 
-de 21 a 30 años
 
-```{r}
-my_data <- df_2017_2[, c(63,66,69,72,75,78,81,84,87,90,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
+Graficas:
 
-de 31 a 40 años
 
-```{r}
-my_data <- df_2017_2[, c(93,96,99,102,105,108,111,114,117,120,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+library(plotly)
 
-de 41 a 50 años
+df_2017_fig <- df_2017_2[,-c((ncol(df_2017_2)-1))]
 
-```{r}
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
 
-my_data <- df_2017_2[, c(123,126,129,132,135,138,141,144,147,150,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=7000, height=400) 
+}
+for (g in 3:(ncol(df_2017_2)-1)) {
+grafica_fn(g)
 
-de 51 a 60 años
+}
 
-```{r}
-my_data <- df_2017_2[, c(153,156,159,162,165,168,171,174,177,180,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
-
-de 61 a 70 años
-
-```{r}
-my_data <- df_2017_2[, c(183,186,189,192,195,198,201,204,207,210,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
-
-de 71 a 80 años
-
-```{r}
-my_data <- df_2017_2[, c(213,216,219,222,225,228,231,234,237,240,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
-
-de 81 a 90 años
-
-```{r}
-my_data <- df_2017_2[, c(243,246,249,252,255,258,261,264,267,270,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
-```
-
-de 91 a 100 años
-
-```{r}
-my_data <- df_2017_2[, c(270,273,276,279,282,285,288,291,294,297,300,313)]
-chart.Correlation(my_data, histogram=TRUE, pch=20)
+fig <- fig %>% layout(autosize = T )
+fig 
 ```
 
 
 
+#  **Correlaciones**
+
+La distribución es asimétrica, poseyendo un sesgo positivo.
 
 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+df_2017_2f <- filter(union_final_urb, union_final_urb$ingresos_expandidos != 'is.na')
+III <- seq(1,(ncol(df_2017_2f)-1),1)
+my_data <- df_2017_2f[, c(III)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+tabla <- as.data.frame(tabla)
+tabla <- tabla %>% drop_na()
+colnames(tabla) <- "Correlación" 
+saveRDS(tabla,"tablas_de_corr/C_P09_RU.rds") 
+tabla %>%
+  rownames_to_column("Edad") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
+```
 
+### Kendall
 
+```{r, warning = FALSE, attr.source='.numberLines'}
+i <- 1
+f <- 10
+for (cc in 1:10) {
+  III <- seq(i,f)
+print(paste0(i-1,"-",f-1))
+df_2017_2_sub_subset <- union_final_urb[,c(III,ncol(union_final_urb))]
+chart.Correlation(df_2017_2_sub_subset, histogram=TRUE, method = c( "kendall"), pch=20)
 
+i <- i+10
+f <- f+10
+}
+print("100")
+df_2017_2_sub_subset <- union_final_urb[,c(101,102)]
+chart.Correlation(df_2017_2_sub_subset, histogram=TRUE, method = c( "kendall"), pch=20)
+```
 
+### Pearson
 
+```{r, warning = FALSE, attr.source='.numberLines'}
+i <- 1
+f <- 10
+for (cc in 1:10) {
+  III <- seq(i,f)
+print(paste0(i-1,"-",f-1))
+df_2017_2_sub_subset <- union_final_urb[,c(III,ncol(union_final_urb))]
+chart.Correlation(df_2017_2_sub_subset, histogram=TRUE, method = c( "pearson"), pch=20)
 
+i <- i+10
+f <- f+10
+}
+print("100")
+df_2017_2_sub_subset <- union_final_urb[,c(101,102)]
+chart.Correlation(df_2017_2_sub_subset, histogram=TRUE, method = c( "kendall"), pch=20)
 
+```
 
+### Spearman
 
+```{r, warning = FALSE, attr.source='.numberLines'}
+i <- 1
+f <- 10
+for (cc in 1:10) {
+  III <- seq(i,f)
+print(paste0(i-1,"-",f-1))
+df_2017_2_sub_subset <- union_final_urb[,c(III,ncol(union_final_urb))]
+chart.Correlation(df_2017_2_sub_subset, histogram=TRUE, method = c( "spearman"), pch=20)
+
+i <- i+10
+f <- f+10
+}
+print("100")
+df_2017_2_sub_subset <- union_final_urb[,c(101,102)]
+chart.Correlation(df_2017_2_sub_subset, histogram=TRUE, method = c( "kendall"), pch=20)
+
+```
 
 

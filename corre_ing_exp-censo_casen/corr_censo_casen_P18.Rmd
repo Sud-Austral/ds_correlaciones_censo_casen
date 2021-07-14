@@ -107,7 +107,7 @@ urbano = 1 rural = 2
 Leemos las respuestas a la pregunta P17 del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
 
 ```{r, warning = FALSE}
-tabla_con_clave <- readRDS("../censo_personas_con_clave_17")
+tabla_con_clave <- readRDS("censos/censo_personas_con_clave_17")
 tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
 
 b <- tabla_con_clave$COMUNA
