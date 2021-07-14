@@ -178,15 +178,21 @@ fig
 
 ```{r}
 df_2017_2 <- df_2017_fig
-
 df_2017_2f <- filter(df_2017_2, df_2017_2$ingresos_expandidos != 'is.na')
 III <- seq(2,(ncol(df_2017_2))-1,1)
 my_data <- df_2017_2f[, c(III)]
 tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
 tabla <- as.data.frame(tabla)
+```
 
-tabla %>% rownames_to_column("Hogares")%>%  
-  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+```{r}
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_CANT_PER_URBANO.rds")
+```
+
+```{r}
+tabla %>% rownames_to_column("Cantidad de personas")%>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
   kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
     kable_paper(full_width = F) %>%
     column_spec(1, color = "black")%>%
@@ -361,26 +367,35 @@ fig
 # $\tau$ de Kendall
 
 ```{r}
-df_2017_fig[df_2017_fig == -99] <- NA
+df_2017_2 <- df_2017_fig
+df_2017_2f <- filter(df_2017_2, df_2017_2$ingresos_expandidos != 'is.na')
+df_2017_2f[df_2017_2f == -99] <- NA
+
+### este dataframe se utilizara para el despliegue de los graficos:
+df_2017_2fff <- df_2017_2f[,-c(1,24:32)]
 
 ```
 
 
+```{r}
+III <- seq(2,(ncol(df_2017_2))-10,1)
+my_data <- df_2017_2f[, c(III)]
+```
+
 
 ```{r}
-df_2017_2 <- df_2017_fig[,-c(1,13:32)]
-
-df_2017_2f <- filter(df_2017_2, df_2017_2$ingresos_expandidos != 'is.na')
-III <- seq(2,(ncol(df_2017_2))-1,1)
-my_data <- df_2017_2f[, c(III)]
 tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
 tabla <- as.data.frame(tabla)
 ```
 
+```{r}
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_CANT_PER_RURAL.rds")
+```
 
 ```{r}
-tabla %>% rownames_to_column("Personas")%>%  
-  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+tabla %>% rownames_to_column("Cantidad de personas")%>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
   kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
     kable_paper(full_width = F) %>%
     column_spec(1, color = "black")%>%
@@ -389,30 +404,32 @@ tabla %>% rownames_to_column("Personas")%>%
 
 ##  Kendall
 
-```{r}
-df_2017_2[df_2017_2 == -99] <- NA
-```
 
-### de 1 a 10 personas
+
+### de 1 a 12 personas
 
 ```{r}
-df_2017_fig <- df_2017_2[,-c(1,15:32)]
+df_2017_2ffff <- df_2017_2fff[,-c(14:22)]
+
 ```
+
+
+
 
 ```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
-chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
+chart.Correlation(df_2017_2ffff, histogram=TRUE, method = c( "kendall"), pch=20)
 ```
 
 ##  Pearson
  
 ```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
-chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
+chart.Correlation(df_2017_2ffff, histogram=TRUE, method = c( "pearson"), pch=20)
 ```
 
 ##  Spearman
 
 ```{r,attr.source='.numberLines', warning=FALSE}
-chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
+chart.Correlation(df_2017_2ffff, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
 
 

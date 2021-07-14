@@ -70,7 +70,7 @@ library("dplyr")
 
 # Nivel nacional URBANO (código 1)
 
-## Pregunta **TIPO_HOGAR**: 
+## Pregunta **TIPO_HOGAR**: Tipo de hogar
 
 Esta pregunta posee 7 categorias de respuesta:
    
@@ -202,16 +202,22 @@ tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), u
 tabla <- as.data.frame(tabla)
 tabla
 ```
-
+```{r}
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_TIPO_HOGAR_URBANO.rds")
+```
 
 ```{r}
-tabla %>% rownames_to_column("Hogares")%>%  
-  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+tabla %>% rownames_to_column("Tipo de hogar")%>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
   kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
     kable_paper(full_width = F) %>%
     column_spec(1, color = "black")%>%
     column_spec(2, color = "white")
 ```
+
+
+
 
 ##  Kendall
 
@@ -377,9 +383,16 @@ III <- seq(2,(ncol(df_2017_2))-1,1)
 my_data <- df_2017_2f[, c(III)]
 tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
 tabla <- as.data.frame(tabla)
+tabla
+```
+```{r}
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_TIPO_HOGAR_RURAL.rds")
+```
 
-tabla %>% rownames_to_column("Hogares")%>%  
-  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+```{r}
+tabla %>% rownames_to_column("Tipo de hogar")%>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
   kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
     kable_paper(full_width = F) %>%
     column_spec(1, color = "black")%>%

@@ -202,8 +202,7 @@ for (g in 3:(ncol(union_final_urb))) {
 grafica_fn(g)
 }
 
-fig <- fig %>% layout(autosize = T)%>%
-  layout(xaxis = list(rangeslider = list()))
+fig <- fig %>% layout(autosize = T)
 fig 
 ```
 
@@ -217,7 +216,49 @@ df_2017_2f <- filter(df_2017_fig, df_2017_fig$ingresos_expandidos != 'is.na')
 III <- seq(2,(ncol(df_2017_2f)-1),1)
 my_data <- df_2017_2f[, c(III)]
 tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
-data.frame(tabla)
+tabla <- as.data.frame(tabla)
+```
+
+```{r}
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_P02_URBANO.rds")
+```
+
+```{r}
+tabla %>% rownames_to_column("Ocupación de la vivienda")%>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
+```
+
+
+
+##  Kendall
+
+```{r}
+df_2017_fig <- df_2017_fig[,-c(1)]
+```
+
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+##  Pearson
+ 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+##  Spearman
+
+```{r,attr.source='.numberLines', warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
 
 
@@ -359,8 +400,7 @@ for (g in 3:(ncol(union_final_urb))) {
 grafica_fn(g)
 }
 
-fig <- fig %>% layout(autosize = T)%>%
-  layout(xaxis = list(rangeslider = list()))
+fig <- fig %>% layout(autosize = T)
 fig 
 ```
 
@@ -372,7 +412,21 @@ df_2017_2f <- filter(df_2017_fig, df_2017_fig$ingresos_expandidos != 'is.na')
 III <- seq(2,(ncol(df_2017_2f)-1),1)
 my_data <- df_2017_2f[, c(III)]
 tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
-data.frame(tabla)
+tabla <- as.data.frame(tabla)
+```
+
+```{r}
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_P02_RURAL.rds")
+```
+
+```{r}
+tabla %>% rownames_to_column("Ocupación de la vivienda")%>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
 ```
 
 

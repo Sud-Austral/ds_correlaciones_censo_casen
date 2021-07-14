@@ -233,30 +233,20 @@ fig
 # $\tau$ de Kendall
 
 ```{r}
-
 df_2017_4 <- df_2017_3[,-c(1,4,5)]
-
-```
-
-
-```{r}
 df_2017_2 <- df_2017_4
 df_2017_2f <- filter(df_2017_2, df_2017_2$ingresos_expandidos != 'is.na')
 
-```
-
-
-```{r}
 my_data <- df_2017_2f[,-c(3)]
 tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
 tabla <- as.data.frame(tabla)
+saveRDS(tabla,"C_TIPO_OPERATIVO_URB.rds")
 
-```
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_TIPO_OPERATIVO_URBANO.rds")
 
-
-```{r}
-tabla %>% rownames_to_column("Tipo Operativo")%>%  
-  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+tabla %>% rownames_to_column("Tipo de operativo")%>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
   kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
     kable_paper(full_width = F) %>%
     column_spec(1, color = "black")%>%
@@ -432,30 +422,38 @@ fig
 # $\tau$ de Kendall
 
 ```{r}
+union_final_urb <- df_2017_3
+```
 
-df_2017_4 <- df_2017_3[,-c(1,4,5)]
+
+
+```{r}
+df_2017_2f <- filter(union_final_urb, union_final_urb$ingresos_expandidos != 'is.na')
 
 ```
 
 
 ```{r}
-df_2017_2 <- df_2017_4
-df_2017_2f <- filter(df_2017_2, df_2017_2$ingresos_expandidos != 'is.na')
+my_data <- df_2017_2f[, -c(1,4,5,6)]
 
 ```
 
 
 ```{r}
-my_data <- df_2017_2f[,-c(3)]
 tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+tabla 
+```
+
+
+```{r}
+
 tabla <- as.data.frame(tabla)
 
-```
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_P01_RURAL.rds")
 
-
-```{r}
-tabla %>% rownames_to_column("Tipo Operativo")%>%  
-  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+tabla %>% rownames_to_column("Tipo de vivienda")%>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
   kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
     kable_paper(full_width = F) %>%
     column_spec(1, color = "black")%>%
@@ -465,8 +463,8 @@ tabla %>% rownames_to_column("Tipo Operativo")%>%
 ##  Kendall
 
 ```{r}
-df_2017_2[df_2017_2 == -99] <- NA
-df_2017_fig <- df_2017_2
+df_2017_2f <- df_2017_2f[,-c(1,4,5)]
+df_2017_fig <- df_2017_2f
 ```
 
 

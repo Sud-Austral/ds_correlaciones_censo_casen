@@ -194,8 +194,17 @@ III <- seq(2,(ncol(df_2017_2))-1,1)
 my_data <- df_2017_2f[, c(III)]
 tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
 tabla <- as.data.frame(tabla)
+tabla
+```
+
+```{r}
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_P05_URBANO.rds")
+```
+
+```{r}
 tabla %>% rownames_to_column("Origen del agua")%>%  
-  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
   kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
     kable_paper(full_width = F) %>%
     column_spec(1, color = "black")%>%
@@ -361,8 +370,17 @@ III <- seq(2,(ncol(df_2017_2))-1,1)
 my_data <- df_2017_2f[, c(III)]
 tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
 tabla <- as.data.frame(tabla)
+tabla
+```
+
+```{r}
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_P05_RURAL.rds")
+```
+
+```{r}
 tabla %>% rownames_to_column("Origen del agua")%>%  
-  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
   kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
     kable_paper(full_width = F) %>%
     column_spec(1, color = "black")%>%

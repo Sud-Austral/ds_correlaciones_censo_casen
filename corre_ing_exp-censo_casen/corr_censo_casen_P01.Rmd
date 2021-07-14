@@ -366,8 +366,7 @@ for (g in 3:(ncol(union_final_urb))) {
 grafica_fn(g)
 }
 
-fig <- fig %>% layout(autosize = T)%>%
-  layout(xaxis = list(rangeslider = list()))
+fig <- fig %>% layout(autosize = T)
 fig 
 ```
 
@@ -376,18 +375,43 @@ union_final_urb <- df_2017_fig
 
 ```
 
-
-
-
-
 # $\tau$
 
 ```{r}
 df_2017_2f <- filter(union_final_urb, union_final_urb$ingresos_expandidos != 'is.na')
-my_data <- df_2017_2f[, -c(1)]
-tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
-data.frame(tabla)
+
 ```
+
+```{r}
+my_data <- df_2017_2f[, -c(1,12)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+
+tabla <- tabla[-c(9,10), ]
+tabla <- as.data.frame(tabla)
+
+```
+
+```{r}
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_P01_URBANO.rds")
+```
+
+```{r}
+tabla %>% rownames_to_column("Tipo de vivienda")%>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
+```
+
+
+
+
+
+
+
+
 
 
 ```{r}
@@ -414,13 +438,6 @@ chart.Correlation(union_final_urb_corr, histogram=TRUE, method = c( "pearson"), 
 
 chart.Correlation(union_final_urb_corr, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
-
-
-
-
-
-
-
 
 # Nivel nacional RURAL (código 2)
 
@@ -555,6 +572,7 @@ kbl(head(data_sum)) %>%
 
 
 ```{r, warning=FALSE,message=FALSE}
+library(plotly)
 df_2017_fig <- union_final_rur 
 
 ```
@@ -571,12 +589,11 @@ grafica_fn <- function(g){
                  width=5000, height=400) 
 }
 
-for (g in 3:(ncol(union_final_rur))) {
+for (g in 3:(ncol(union_final_urb))) {
 grafica_fn(g)
 }
 
-fig <- fig %>% layout(autosize = T)%>%
-  layout(xaxis = list(rangeslider = list()))
+fig <- fig %>% layout(autosize = T)
 fig 
 ```
 
@@ -593,10 +610,24 @@ union_final_urb <- df_2017_fig
 
 ```{r}
 df_2017_2f <- filter(union_final_urb, union_final_urb$ingresos_expandidos != 'is.na')
-my_data <- df_2017_2f[, -c(1)]
+
+my_data <- df_2017_2f[, -c(1,12)]
 tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
-data.frame(tabla)
+
+tabla <- tabla[-c(9,10), ]
+tabla <- as.data.frame(tabla)
+
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_P01_RURAL.rds")
+
+tabla %>% rownames_to_column("Tipo de vivienda")%>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
 ```
+
 
 
 
@@ -806,7 +837,7 @@ abc <- abc$Casa
 kbl(abc) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
+  scroll_box(width = "20%", height = "300px")
 ```
 
 

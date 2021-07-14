@@ -189,9 +189,16 @@ III <- seq(2,(ncol(df_2017_2))-17,1)
 my_data <- df_2017_2f[, c(III)]
 tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
 tabla <- as.data.frame(tabla)
+```
 
+```{r}
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_CANT_HOG_URBANO.rds")
+```
+
+```{r}
 tabla %>% rownames_to_column("Hogares")%>%  
-  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
   kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
     kable_paper(full_width = F) %>%
     column_spec(1, color = "black")%>%
@@ -343,19 +350,35 @@ fig
 
 # $\tau$ de Kendall
 
-```{r, warning=FALSE}
-library(naniar)
+
+
+```{r}
 df_2017_2 <- df_2017_fig
 df_2017_2f <- filter(df_2017_2, df_2017_2$ingresos_expandidos != 'is.na')
 df_2017_2f[df_2017_2f == -99] <- NA
-III <- seq(2,(ncol(df_2017_2f)-1),1)
+```
+
+
+```{r}
+III <- seq(2,(ncol(df_2017_2f))-9,1)
+III
+```
+
+
+```{r}
 my_data <- df_2017_2f[, c(III)]
 tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
 tabla <- as.data.frame(tabla)
-tabla <- na.omit(tabla) 
-tabla <- mutate_all(tabla, ~replace(., is.na(.), -99))
+```
+
+```{r}
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_CANT_HOG_RURAL.rds")
+```
+
+```{r}
 tabla %>% rownames_to_column("Hogares")%>%  
-  mutate(V1 = cell_spec(V1, background=ifelse(V1 == max(V1), "#fc0303", "#5cb81f"))) %>% 
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
   kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
     kable_paper(full_width = F) %>%
     column_spec(1, color = "black")%>%
