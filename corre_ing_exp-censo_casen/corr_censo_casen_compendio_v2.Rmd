@@ -581,10 +581,77 @@ tabla %>%
 # CASEN 2017 y CENSO Hogares 2017
 
 
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **TIPO_HOGAR**: [Tipo de hogar](https://rpubs.com/dataintelligence/corr_ca_ce_TIPO_HOGAR)
+ 
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_TIPO_HOGAR_URBANO.rds")
+tabla %>%
+  rownames_to_column("Tipo de hogar") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_TIPO_HOGAR_RURAL.rds")
+tabla %>%
+  rownames_to_column("Tipo de hogar") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
 
 
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
-
+## **TIPO_OPERATIVO**: [Tipo de operativo
+](https://rpubs.com/dataintelligence/corr_ca_ce_TIPO_OPERATIVO)
+ 
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_TIPO_OPERATIVO_URBANO.rds")
+tabla %>%
+  rownames_to_column("Tipo de hogar") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_TIPO_OPERATIVO_RURAL.rds")
+tabla %>%
+  rownames_to_column("Tipo de hogar") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
 
 
 
