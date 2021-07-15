@@ -248,15 +248,63 @@ Correlación
 <tbody>
 <tr>
 <td style="text-align:left;color: black !important;">
-Hogar en vivienda particular
+Casa
 </td>
 <td style="text-align:left;color: white !important;">
-<span style="     border-radius: 4px; padding-right: 4px; padding-left: 4px; background-color: #fc0303 !important;">0.323973174745707</span>
+<span style="     border-radius: 4px; padding-right: 4px; padding-left: 4px; background-color: #5cb81f !important;">0.309755970729579</span>
 </td>
 </tr>
 <tr>
 <td style="text-align:left;color: black !important;">
-Vivienda colectiva (no es hogar)
+Departamento en edificio
+</td>
+<td style="text-align:left;color: white !important;">
+<span style="     border-radius: 4px; padding-right: 4px; padding-left: 4px; background-color: #5cb81f !important;">0.141280669930716</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;color: black !important;">
+Vivienda tradicional indígena
+</td>
+<td style="text-align:left;color: white !important;">
+<span style="     border-radius: 4px; padding-right: 4px; padding-left: 4px; background-color: #5cb81f !important;">0.0460731626812946</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;color: black !important;">
+Pieza en casa antigua o en conventillo
+</td>
+<td style="text-align:left;color: white !important;">
+<span style="     border-radius: 4px; padding-right: 4px; padding-left: 4px; background-color: #5cb81f !important;">0.213231863982696</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;color: black !important;">
+Mediagua, mejora, rancho o choza
+</td>
+<td style="text-align:left;color: white !important;">
+<span style="     border-radius: 4px; padding-right: 4px; padding-left: 4px; background-color: #5cb81f !important;">0.166435982845717</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;color: black !important;">
+(carpa, casa rodante o similar)
+</td>
+<td style="text-align:left;color: white !important;">
+<span style="     border-radius: 4px; padding-right: 4px; padding-left: 4px; background-color: #5cb81f !important;">0.255100602777132</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;color: black !important;">
+Otro tipo de vivienda particular
+</td>
+<td style="text-align:left;color: white !important;">
+<span style="     border-radius: 4px; padding-right: 4px; padding-left: 4px; background-color: #fc0303 !important;">0.324202088758213</span>
+</td>
+</tr>
+<tr>
+<td style="text-align:left;color: black !important;">
+Vivienda colectiva
 </td>
 <td style="text-align:left;color: white !important;">
 <span style="     border-radius: 4px; padding-right: 4px; padding-left: 4px; background-color: #5cb81f !important;">0.0934850007284526</span>
@@ -266,6 +314,19 @@ Vivienda colectiva (no es hogar)
 </table>
 </div>
 </div>
+</div>
+<p><br>
+Hemos correlacionado una variable llamada multipob, que multiplica el ingreso promedio mensual comunal (extraído de la Casen 2017) por la cantidad de habitantes de la comuna en cuestión, con la frecuencia de cada una de las categorías de respuesta de cada pregunta del Censo 2017. La primera variable la podemos interpretar como un <strong>pseudo-PIB-salarial</strong> comunal -la potencia económica salarial comunal-, la segunda una frecuencia simple de respuesta.</p>
+<p><strong>Interpretación a nivel urbano</strong>:</p>
+<p>El primer criterio de exclusión será la cantidad de respuestas obtenidas del Censo.Se excluyen:</p>
+<p>Vivienda tradicional indígena 56<br />
+(carpa, casa rodante o similar) 38<br />
+Vivienda colectiva 365<br />
+Operativo personas en tránsito (no es vivienda) 1<br />
+Operativo calle (no es vivienda) 1<br />
+</p>
+<p>La variable que mejor se ajusta a cambios en la potencia económica salarial comunal es la variable casa. Es decir, más personas declaran vivir en casas a medida que la comuna de la persona posea mayor potencia económica salarial.</p>
+Se supondría que la segunda que mejor correlacione fuera “Departamento en edificio”, pero es “Pieza en casa antigua o en conventillo”, lo que revela un déficit habitacional o incapacidad de las personas a acceder a vivir en casas o departamentos.
 </div>
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 </div>
@@ -685,8 +746,8 @@ Sin cubierta sólida de techo
 </div>
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 </div>
-<div id="p03c-material-en-la-cubierta-del-techo" class="section level2" number="1.5">
-<h2><span class="header-section-number">1.5</span> <strong>P03C</strong>: <a href="https://rpubs.com/dataintelligence/corr_ce_ca_P03C">Material en la cubierta del techo</a></h2>
+<div id="p03c-material-de-construcción-del-piso" class="section level2" number="1.5">
+<h2><span class="header-section-number">1.5</span> <strong>P03C</strong>: <a href="https://rpubs.com/dataintelligence/corr_ce_ca_P03C">Material de construcción del piso</a></h2>
 <div class="row">
 <div class="col-md-6">
 <div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:300px; ">
@@ -4405,7 +4466,7 @@ Otro
        <li><a href="#p02-ocupación-de-la-vivienda"><span class="toc-section-number">1.2</span> <strong>P02</strong>: <span>Ocupación de la vivienda</span></a></li>
        <li><a href="#p03a-material-de-los-muros-exteriores"><span class="toc-section-number">1.3</span> <strong>P03A</strong>: <span>Material de los muros exteriores</span></a></li>
        <li><a href="#p03b-material-en-la-cubierta-del-techo"><span class="toc-section-number">1.4</span> <strong>P03B</strong>: <span>Material en la cubierta del techo</span></a></li>
-       <li><a href="#p03c-material-en-la-cubierta-del-techo"><span class="toc-section-number">1.5</span> <strong>P03C</strong>: <span>Material en la cubierta del techo</span></a></li>
+       <li><a href="#p03c-material-de-construcción-del-piso"><span class="toc-section-number">1.5</span> <strong>P03C</strong>: <span>Material de construcción del piso</span></a></li>
        <li><a href="#p04-número-de-piezas-usadas-exclusivamente-como-dormitorio"><span class="toc-section-number">1.6</span> <strong>P04</strong>: <span>Número de piezas usadas exclusivamente como dormitorio</span></a></li>
        <li><a href="#p05-origen-del-agua"><span class="toc-section-number">1.7</span> <strong>P05</strong>: <span>Origen del agua</span></a></li>
        </ul></li>

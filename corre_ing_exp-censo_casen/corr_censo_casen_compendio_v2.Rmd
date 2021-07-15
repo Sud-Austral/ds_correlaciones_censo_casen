@@ -99,7 +99,28 @@ tabla %>%
     column_spec(2, color = "white")%>%
   scroll_box(height = "300px")
 ```
+
 </div>
+</div>
+
+<br>
+Hemos correlacionado una variable llamada multipob, que multiplica el ingreso promedio mensual comunal (extraído de la Casen 2017) por la cantidad de habitantes de la comuna en cuestión, con la frecuencia de cada una de las categorías de respuesta de cada pregunta del Censo 2017. La primera variable la podemos interpretar como un **pseudo-PIB-salarial** comunal -la potencia económica salarial comunal-, la segunda una frecuencia simple de respuesta.
+
+
+
+**Interpretación a nivel urbano**: 
+
+El primer criterio de exclusión será la cantidad de respuestas obtenidas del Censo.Se excluyen:
+
+Vivienda tradicional indígena 56\
+(carpa, casa rodante o similar) 38\
+Vivienda colectiva 365\
+Operativo personas en tránsito (no es vivienda) 1\
+Operativo calle (no es vivienda) 1\
+
+La variable que mejor se ajusta a cambios en la potencia económica salarial comunal es la variable casa. Es decir, más personas declaran vivir en casas a medida que la comuna de la persona posea mayor potencia económica salarial.
+
+Se supondría que la segunda que mejor correlacione fuera "Departamento en edificio", pero es "Pieza en casa antigua o en conventillo", lo que revela un déficit habitacional o incapacidad de las personas a acceder a vivir en casas o departamentos.
 </div>
 
   
@@ -216,7 +237,7 @@ tabla %>%
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
-## **P03C**: [Material en la cubierta del techo](https://rpubs.com/dataintelligence/corr_ce_ca_P03C)
+## **P03C**: [Material de construcción del piso](https://rpubs.com/dataintelligence/corr_ce_ca_P03C)
  
 
 <div class = "row">

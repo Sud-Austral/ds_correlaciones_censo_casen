@@ -63,7 +63,10 @@ library(kableExtra)
 library(PerformanceAnalytics)
 library("rio")
 library("dplyr")
-
+library(plotly)
+library(normtest) 
+library(nortest)
+library(moments)
 ```
 
 <br>
@@ -73,8 +76,8 @@ library("dplyr")
 En los siguientes rpubs sólo llamaremos al rds ya construído llamado "Ingresos_expandidos_urbano_17.rds": 
 
 ```{r, attr.source='.numberLines'}
-x <- import("../Microdato_Censo2017-Personas.csv")
-casen_2017 <- readRDS(file = "../casen_2017_c.rds")
+x <- import("../../../archivos_grandes/Microdato_Censo2017-Personas.csv")
+casen_2017 <- readRDS(file = "../../../archivos_grandes/casen_2017_c.rds")
 casen_2017_u <- filter(casen_2017, casen_2017$zona == "Urbano")
 casen_2017_u <- casen_2017_u[!is.na(casen_2017_u$ytotcor),]
 Q <- quantile(casen_2017_u$ytotcor, probs=c(.25, .75), na.rm = FALSE)
@@ -90,7 +93,7 @@ promedios_grupales <-aggregate(b, by=list(a), FUN = mean , na.rm=TRUE )
 names(promedios_grupales)[1] <- "comuna"
 names(promedios_grupales)[2] <- "promedio_i"
 promedios_grupales$año <- "2017"
-codigos_comunales <- readRDS(file = "../codigos_comunales_2011-2017.rds")
+codigos_comunales <- readRDS(file = "../../../archivos_grandes/codigos_comunales_2011-2017.rds")
 names(codigos_comunales)[1] <- "código"
 names(codigos_comunales)[2] <- "comuna"
 df_2017 = merge( promedios_grupales, codigos_comunales, 
@@ -150,8 +153,8 @@ saveRDS(df_2017_2_urbano, "Ingresos_expandidos_urbano_17.rds")
 En los siguientes rpubs sólo llamaremos al rds ya construído llamado "Ingresos_expandidos_rural_17.rds": 
 
 ```{r, attr.source='.numberLines'}
-x <- import("../Microdato_Censo2017-Personas.csv")
-casen_2017 <- readRDS(file = "../casen_2017_c.rds")
+x <- import("../../../archivos_grandes/Microdato_Censo2017-Personas.csv")
+casen_2017 <- readRDS(file = "../../../archivos_grandes/casen_2017_c.rds")
 casen_2017_u <- filter(casen_2017, casen_2017$zona == "Rural")
 casen_2017_u <- casen_2017_u[!is.na(casen_2017_u$ytotcor),]
 Q <- quantile(casen_2017_u$ytotcor, probs=c(.25, .75), na.rm = FALSE)
@@ -167,7 +170,7 @@ promedios_grupales <-aggregate(b, by=list(a), FUN = mean , na.rm=TRUE )
 names(promedios_grupales)[1] <- "comuna"
 names(promedios_grupales)[2] <- "promedio_i"
 promedios_grupales$año <- "2017"
-codigos_comunales <- readRDS(file = "../codigos_comunales_2011-2017.rds")
+codigos_comunales <- readRDS(file = "../../../archivos_grandes/codigos_comunales_2011-2017.rds")
 names(codigos_comunales)[1] <- "código"
 names(codigos_comunales)[2] <- "comuna"
 df_2017 = merge( promedios_grupales, codigos_comunales, 
@@ -347,7 +350,7 @@ kbl(head(data_sum)) %>%
 #### Gráficas:
 
 ```{r, warning=FALSE,message=FALSE}
-library(plotly)
+
 df_2017_fig <- union_final_urb 
 ```
 
@@ -822,11 +825,7 @@ El coeficiente de correlación elevado al cuadrado es el coeficiente de determin
 
 # Criterios para determinar normalidad.
 
-```{r, attr.source='.numberLines', message=FALSE}
-library(normtest) 
-library(nortest)
-library(moments)
-```
+
 
 Se intentará comprobar si el campo casa tiene una distribución normal.
 
