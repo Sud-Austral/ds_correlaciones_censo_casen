@@ -589,10 +589,7 @@ chart.Correlation(df_2017_2_sub_subset, histogram=TRUE, method = c( "spearman"),
 
 
 
-```{r}
-library("gpuR")
 
-```
 
 
 

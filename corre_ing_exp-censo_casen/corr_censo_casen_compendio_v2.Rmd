@@ -817,14 +817,14 @@ Persona en operativo calle: NA
 
 ### *Interpretación a nivel urbano*: 
 
-En la pregunta Relación de parentesco, la categoría que mejor se ajusta a cambios en la potencia económica salarial comunal es la variable **hijo**. Es decir, más personas declaran ser hijos del jefe/a de hogar a medida que la comuna de la persona posea mayor potencia económica salarial. 
+En la pregunta "Relación de parentesco", la categoría que mejor se ajusta a cambios en la potencia económica salarial comunal es la variable **hijo**. Es decir, más personas declaran ser hijos del jefe/a de hogar a medida que la comuna de la persona posea mayor potencia económica salarial. 
 
 
 ### *Interpretación a nivel rural*:  
 
-En la pregunta Relación de parentesco, la categoría que mejor se ajusta a cambios en la potencia económica salarial comunal es la variable **Suegro/a**. Es decir, más personas declaran ser hijos del jefe/a de hogar a medida que la comuna de la persona posea mayor potencia económica salarial. 
+En la pregunta "Relación de parentesco", la categoría que mejor se ajusta a cambios en la potencia económica salarial comunal es la variable **Suegro/a**. Es decir, más personas declaran ser suegros del jefe/a de hogar a medida que la comuna de la persona posea mayor potencia económica salarial. 
 
-Se explica pues a nivel rural, y por razones no estrictamente ecómicas sino tanmbién culturales, los padres de los jefes/as de hogar suelen vivir en el mismo hogar.
+Se explica pues a nivel rural, y por razones no estrictamente económicas sino tanmbién culturales, los padres de los jefes/as de hogar suelen vivir en el mismo hogar que los hijos.
 
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
@@ -875,7 +875,7 @@ No existe diferencia por sexo a cambios en la potencia económica salarial comun
 
 ### *Interpretación a nivel rural*:  
 
-
+Existe una sutil mayor correlación de la frecuencia de hombres a cambios en la potencia salarial comunal. En el sector rural por motivos culturales los hombres participan en una leve mayor proporción de la fuerza de trabajo.
 
    
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
@@ -928,8 +928,11 @@ No existen variables cuyo tamaño amerite excluir.
 
 ### *Interpretación a nivel urbano*: 
 
+No existe ningún tipo de diferencia significativa en la correlación entre las tres categorías de respuesta a nivel urbano y la potencia económica salarial comunal.<span style="color:red">Ésta homogeneidad puede significar un error conceptual al momento de plantear el modelo de correlación. La teoría nos dice que a mayor poder salarial comunal menor debiese ser la población estudiante en relación a la trabajadora.</span>
 
 ### *Interpretación a nivel rural*:  
+
+Podemos decir acá que comunas con mayor Poder Económico Salarial Comunal  (**PESC**) pueden permitirse la posibilidad de que sus hijos integren el sistema de educación formal.
    
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -988,18 +991,7 @@ tabla %>%
 </div>
 </div>
 
-<br>
-   
-### *Variables a excluir*: 
 
-*Nivel Urbano*:
-
-*Nivel Rural*:
-
-### *Interpretación a nivel urbano*: 
-
-
-### *Interpretación a nivel rural*:  
 
 <br>
 
@@ -1040,12 +1032,21 @@ tabla %>%
 
 *Nivel Urbano*:
 
+Doctorado(no) :610
+
 *Nivel Rural*:
+
+Doctorado(no): 22\
+Magíster(no): 57
 
 ### *Interpretación a nivel urbano*: 
 
+La variable que mejor se ajusta a cambios en la potencia económica salarial comunal en la pregunta "Nivel del curso más alto aprobado y si completó el nivel especificado" es la variable **Kinder** tanto para los que lo completaron como para los que no. Más personas declaran haber estudiado en kinder a medida que la comuna de la persona posea mayor potencia económica salarial. Pero falta una aspecto en el análisis: la segunda variable que más alto correlaciona con el **PESC** tanto para los que completaron como no el nivel fue Científico-humanista. Ésto indica los esfuerzos gubernamentales sobre y el interes de las personas en el ámbito urbano de que sus hijos pasen por el kinder.
 
-### *Interpretación a nivel rural*:  
+
+### *Interpretación a nivel rural*:    
+
+Acá la sensibilidad de la correlación con el **PESC** es más alta en la variable Profesional, tanto para los que la completaron como para los que no. Implica ésto condiciones más difíciles de subsistencia en el área rural que hacen necesario una mayor educación que permita a las comuna acumular mayor **PESC**.
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -1087,11 +1088,11 @@ tabla %>%
    
 ### *Variables a excluir*: 
 
+No existen variables cuyo tamaño amerite excluir.
 
-### *Interpretación a nivel urbano*: 
+### *Interpretación a nivel urbano y rural*: 
 
-
-### *Interpretación a nivel rural*:  
+La variable que mejor se ajusta a cambios en la potencia económica salarial comunal es la variable "No se considera perteneciente a un pueblo indígena u originario". Más personas declaran no considerarse parte de pueblos originarios" a medida que la comuna de la persona posea mayor potencia económica salarial. Lo anterior indica mayor precarización de la vida de los pueblos originarios. 
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -1133,12 +1134,24 @@ tabla %>%
    
 ### *Variables a excluir*: 
 
+*Nivel Urbano*:
+
+Kawésqar: 627\
+Yagán o Yamana: 184
+
+*Nivel Rural*:
+
+Kawésqar : 43\
+Yagán o Yamana : 8
 
 ### *Interpretación a nivel urbano*: 
+
+Es ambigüa la respuesta "Otro". son personas que prefieren no declarar su etnia muy probablemente por razones de discriminación, que sin embargo son las más sensibles a los cambios en el **PESC**.
 
 
 ### *Interpretación a nivel rural*:  
 
+La Etnia Rapa Nui es entre todas las demás la que posee la mejor situación económica. 
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -1180,12 +1193,33 @@ tabla %>%
    
 ### *Variables a excluir*: 
 
+*Nivel Urbano*:
 
-### *Interpretación a nivel urbano*: 
+Lafquenche: 17\
+Picunche: 22\
+Chonos: 26\
+Ona: 82\
+Tehuelches: 16\
+Otros pueblos presentes en el territorio nacional: 7 
+
+*Nivel Rural*:
+
+Lafquenche: 18\
+Picunche: 2\
+Changos: NA\
+Chonos: 3\
+Ona: 2\
+Tehuelches: 4\
+Pueblos de América Latina: 7\
+Pueblos del resto del mundo: 5\
+Afrodescendiente: 2\
+Otros pueblos presentes en el territorio nacional: 1
 
 
-### *Interpretación a nivel rural*:  
 
+### *Interpretación a nivel urbano y rural*: 
+
+La categoría "Pueblo no declarado" correlaciona mejor con los cambios en el **PESC**, pero es difícil saber el por qué. 
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -1227,11 +1261,17 @@ tabla %>%
    
 ### *Variables a excluir*: 
 
+*Nivel Urbano*:
 
-### *Interpretación a nivel urbano*: 
+No existen variables cuyo tamaño amerite excluir.
 
+*Nivel Rural*:
 
-### *Interpretación a nivel rural*:  
+No existen variables cuyo tamaño amerite excluir.
+
+### *Interpretación a nivel urbano y rural*: 
+
+La interpretación obvia es que variaciones en la **PESC** están muy directamente correlacionadas con el hecho de estar trabajando por dinero o especies.
 
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
@@ -1274,13 +1314,26 @@ tabla %>%
    
 ### *Variables a excluir*: 
 
+*Nivel Urbano*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+*Nivel Rural*:
+
+Suministro de agua: 151\
+Actividades artísticas: 156\
+Otras actividades: 144\
+Actividades de organizaciones: 6
 
 ### *Interpretación a nivel urbano*: 
 
+Es coherente por el tipo de desarrollo económico del país desde el reemplazo de la política de sustitución de importaciones que el comercio sea la actividad que más sea sensible a los cambios en la **PESC**.
 
 ### *Interpretación a nivel rural*:  
 
+Actividades profesionales	0.485.
 
+No tiene mucho sentido interpretar ésta correlacion con "Actividades porfesionales" sin asociarlas con todas las otras variables que puntúan sobre 0,4 y que son: Comercio, Transporte, Información, Actividades financieras, Actividades de servicios, salud humana, Actividades artísticas y Otras actividades
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -1322,11 +1375,20 @@ tabla %>%
    
 ### *Variables a excluir*: 
 
+*Nivel Urbano*:
 
-### *Interpretación a nivel urbano*: 
+10_hijos/as: respondieron 202 casos en una comuna como máximo. De ahí en adelante se excluyen.
+
+*Nivel Rural*:
+
+10_hijos/as: respondieron 83 casos en una comuna como máximo. De ahí en adelante se excluyen.
 
 
-### *Interpretación a nivel rural*:  
+
+
+### *Interpretación a nivel urbano y rural *: 
+
+Movimientos en la **PESC** correlacionan positivamente mientras menos hijos tengan las personas.
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -1368,11 +1430,24 @@ tabla %>%
    
 ### *Variables a excluir*: 
 
+*Nivel Urbano*:
+
+12_hijos/as: 37 máximo de casos\
+a mayor hijos menor es la frecuencia por lo que se excluyen a partir de ese número de corte.
+
+*Nivel Rural*:
+
+12_hijos/as: 23 máximo de casos\
+a mayor hijos menor es la frecuencia por lo que se excluyen a partir de ése número de corte.
+
+
 
 ### *Interpretación a nivel urbano*: 
 
 
 ### *Interpretación a nivel rural*:  
+
+La mayor correlación se da con 2_hijos/as:	0.395
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -1414,11 +1489,27 @@ tabla %>%
    
 ### *Variables a excluir*: 
 
+*Nivel Urbano*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+*Nivel Rural*:
+
+No existen variables cuyo tamaño amerite excluir.
+
 
 ### *Interpretación a nivel urbano*: 
 
+Hay que hacer el mismo análisis que se hizo en el punto 3.5 P15 y P15A: Nivel del curso más alto aprobado y si completó el nivel especificado. 
 
-### *Interpretación a nivel rural*:  
+LA segunda correlación más alta es 12_Años	0.852, sin embargo nos da 0_años: 0,854.
+
+Correlaciones tan cercanas entre s[i confunden por lo que hay que aplicar un criterio de decisión, el cual más apropiado parece ser los 12 añosÑ 0.852.
+
+### *Interpretación a nivel rural*:
+
+
+Resulta coherente la correlación a los 14 años.
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -1457,6 +1548,21 @@ tabla %>%
 </div>
 
 <br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+*Nivel Rural*:
+
+Kawésqar: 43
+Yagán o Yamana: 8
+
+### *Interpretación a nivel urbano y rural*: 
+
+Ocurre los mismo que con el punto 3.8 P16A_OTRO: Pueblo indígena u originario (Otro). Resulta muy difícil comprender porque cambios en el **PESC** correlaciona más perfectamente con "Pueblo no declarado", es ésta caso "Otro".
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -1479,11 +1585,42 @@ Correlación: 0.49237</span>
 
 1. La variable **multipob** nos entrega una cantidad que no parece apropiada para poder determinar en forma diferenciada dos comunas. Dos comunas con características muy distintas pueden poseer el mismo valor **multipob**, por lo que se sugiere utilizar en vez de la multiplicación  de ingresos medios comunales mensuales por población comunal, su división.
 
+```{r, echo=FALSE,message=FALSE,warning=FALSE}
+library(plotly)
+library(ggplot2)
+data <- data.frame(
+ 
+               # grafica horizontal
+               x_start = c(0, 0,0,2), 
+               x_end = c(1, 4, 2,2), 
+               #grafica vertical
+               y_start = c(4, 0,0,2),  
+               y_end = c(1, 1,2,2),  
+               
+               info = c("ricos", "pobres" ))
+
+p <- ggplot(data ,aes(xmin=x_start, xmax=x_end, ymin=y_start, ymax=y_end, fill=info)) + geom_rect()+ labs ( title= "Ingresos versus hbtes", 
+          subtitle="Diferentes realidades poseen un mismo multipob", 
+          x="hbtes", 
+          y="Ingresos", 
+          caption= "EJEMPLO"
+          )
+p
+```
+
+
+
+
+
 2. Las frecuencias que utilizamos en el cálculo de las correlaciones son absolutas, lo que no permite determinar una comparación fidedigna entre ellas. Se propone utilizar las frecuencias de respuesta por cada 100.000 habitantes en la respectiva comuna.
+
+3. No fue necesario excluir las correlaciones cuyas ambas variables consideraran la variable población.
 
 <br>
 <br>
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+
 
 
 
