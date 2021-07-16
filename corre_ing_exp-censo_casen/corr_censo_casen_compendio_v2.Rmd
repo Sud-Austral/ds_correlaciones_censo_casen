@@ -105,7 +105,7 @@ tabla %>%
 
 <br>
 
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 El primer criterio de exclusión será la cantidad de respuestas obtenidas del Censo muy menores.Se excluyen:
 
@@ -115,13 +115,13 @@ Vivienda colectiva 365\
 Operativo personas en tránsito (no es vivienda) 1\
 Operativo calle (no es vivienda) 1\
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 La variable que mejor se ajusta a cambios en la potencia económica salarial comunal es la variable casa. Es decir, más personas declaran vivir en casas a medida que la comuna de la persona posea mayor potencia económica salarial. La frecuencia está corregida en cuanto la variable **multipob** incluye la cantidad de habitantes comunal.
 
 Se supondría que la segunda variable que mejor correlacione fuera "Departamento en edificio", pero es "Pieza en casa antigua o en conventillo", lo que revela un déficit habitacional o la incapacidad de las personas para acceder a vivir en casas o departamentos.
 
-### **Interpretación a nivel rural**: 
+### *Interpretación a nivel rural*: 
 
 El primer criterio de exclusión será la cantidad de respuestas obtenidas del Censo.Se excluyen:
 
@@ -176,17 +176,20 @@ tabla %>%
 
 <br>
 
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 No existen variables tan poco frecuentes como para excluir.
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 Correlacionan casi homogéneamente las casas con  moradores presentes, ausentes y casas en venta, siendo más fuerte la correlación con los primeros. Se entiende lo anterior por el predominio de la población en zonas urbanas.
 
 Más personas declaran estar presentes en sus viviendas a medida que su comuna posea mayor potencia económica salarial. Se puede interpretar que a menor **PESC**, más personas están fuera de sus hogares trabajando, generando recursos para la subsistencia.
 
 Las viviendas de vacaciones correlacionan mucho más en el ambiente urbano, pues personas que pueden proveerse de una las eligen en comunas con mayor **PESC**.
+   
+   
+### *Interpretación a nivel rural*:     
    
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -226,14 +229,14 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
-No existen variables cuyo tamaño amerite excluirlas.
+No existen variables cuyo tamaño amerite excluir.
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 
-### **Interpretación a nivel rural**:    
+### *Interpretación a nivel rural*:    
    
    
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
@@ -274,7 +277,7 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 *Nivel Urbano*:
 
@@ -290,10 +293,10 @@ Paja, coirón, totora o caña : 176
 
 Sin cubierta sólida de techo: 39
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 
-### **Interpretación a nivel rural**:  
+### *Interpretación a nivel rural*:  
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -333,20 +336,20 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 *Nivel Urbano*:
 
-No existen variables cuyo tamaño amerite excluirlas.
+No existen variables cuyo tamaño amerite excluir.
 
 *Nivel Rural*:
 
-No existen variables cuyo tamaño amerite excluirlas.
+No existen variables cuyo tamaño amerite excluir.
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 
-### **Interpretación a nivel rural**:  
+### *Interpretación a nivel rural*:  
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -386,7 +389,7 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 *Nivel Urbano*:
 
@@ -396,10 +399,10 @@ tabla %>%
 
 6 o más piezas: NA 
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 
-### **Interpretación a nivel rural**:  
+### *Interpretación a nivel rural*:  
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -439,20 +442,20 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 *Nivel Urbano*:
 
-No existen variables cuyo tamaño amerite excluirlas.
+No existen variables cuyo tamaño amerite excluir.
 
 *Nivel Rural*:
 
 No existen variables cuyo tamaño amerite excluirlas.
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 
-### **Interpretación a nivel rural**:  
+### *Interpretación a nivel rural*:  
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -495,7 +498,7 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 *Nivel Urbano*:
 
@@ -519,12 +522,12 @@ A partir de los 9 hogares por vivienda la cifra comienza a bajar drásticamente 
 
 A partir del 4 hogar por vivienda sólo existen 1 o NA.
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 Más personas declaran vivir en un sólo hogar a medida que la comuna de la persona posea mayor potencia económica salarial.
 
 
-### **Interpretación a nivel rural**:  
+### *Interpretación a nivel rural*:  
 
 Debemos considerar sólo hasta el 3 hogar. La variable que más correlaciona son dos hogares y tiene relación con el mayor nivel de pobreza que se presenta en las zonas rurales que obligan a dos hogares a vivir dentro de una misma vivienda.
 
@@ -532,7 +535,7 @@ Que significa el hogar 0?
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
-## **CANT_PER**: [Cantidad de personas](https://rpubs.com/dataintelligence/corr_ce_ca_CANT_PER)
+## **CANT_PER**: [Cantidad de personas](https://rpubs.com/dataintelligence/corr_ca_ce_CANT_PER)
  
 
 <div class = "row">
@@ -570,13 +573,37 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+Se excluyen:
+
+13_personas: 156\
+14_personas: 106\
+15_personas: 66
+
+en el grupo de 16_personas a las 30 personas existen 55 **casos** o menos.  
+
+*Nivel Rural*:
+
+Se excluyen:
+
+9_personas: 51\
+10_personas: 27\
+11_personas: 12
+
+en el grupo de 12_personas a las 30 personas existen 7 **casos** o menos. Se excluyen.
 
 
-### **Interpretación a nivel urbano**: 
 
+### *Interpretación a nivel urbano*: 
 
-### **Interpretación a nivel rural**:  
+La variable que mejor se ajusta a cambios en la potencia económica salarial comunal es 4 personas por vivienda.
+
+Más personas declaran que viven 4 personas en sus viviendas a medida que la comuna de la persona posea mayor potencia económica salarial.
+
+### *Interpretación a nivel rural*:  
 
 # CASEN 2017 y CENSO Hogares 2017
 
@@ -617,6 +644,31 @@ tabla %>%
 </div>
 
 
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+*Nivel Rural*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+**Hogar**:  corresponde  a  una  o  más  personas  que, unidas  o  no  por  un  vínculo  de  parentesco, alojaron  la noche del 18 al 19 de abril de 2017 en una misma vivienda o parte de ella y se benefician de un mismo presupuesto para alimentación.
+
+
+
+### *Interpretación a nivel urbano*: 
+
+**Hogar nuclear biparental con hijos**: son los hogares cuyos únicos integrantes son la jefatura 
+de hogar; un cónyuge, conviviente de hecho o conviviente por unión civil, y sus hijos o hijas, 
+ya sean de ambos, solo del jefe o jefa o solo del cónyuge, conviviente o pareja.
+
+### *Interpretación a nivel rural*: 
+
+**Hogar compuesto**: hogar que cuenta con un núcleo 
+(hogar  nuclear)  y  además  incluye  no  parientes  de la jefatura del hogar. Puede o no ser integrado por otros parientes de la jefatura del hogar.
+
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
 ## **TIPO_OPERATIVO**: [Tipo de operativo
@@ -653,12 +705,60 @@ tabla %>%
 </div>
 </div>
 
+<br>
 
+POBLACIÓN TOTAL POR TIPO DE OPERATIVO
 
+En este tabulado se presenta la cantidad de personas efectivamente censadas de acuerdo al tipo de 
+operativo en que fueron censadas. Es decir, se muestra la cantidad de población censada en viviendas 
+particulares ocupadas con moradores presentes, en viviendas colectivas, en operativo especial de 
+tránsito y en operativo especial calle.
+ 
+Población efectivamente censada: Corresponde al total de personas que fueron censadas en 
+los distintos operativos de empadronamiento, es decir, viviendas particulares ocupadas con 
+moradores presentes, viviendas colectivas, operativo especial tránsito y operativo especial 
+calle.
 
+Personas en viviendas particulares ocupadas con moradores presentes: Corresponde a 
+aquellas personas que fueron censadas en viviendas dentro de una propiedad, destinada 
+total o parcialmente a la habitación permanente o temporal de personas. Para ser 
+considerada vivienda particular, debe necesariamente disponer de acceso independiente 
+para sus moradores. El concepto de propiedad no hace alusión a la propiedad legal, sino que 
+se refiere a un espacio geográfico con límites reconocibles, en el que se ubica una o más 
+viviendas particulares.
 
+Personas en otros operativos: Hace alusión a aquellas personas que fueron censadas a través 
+de alguno de los operativos adicionales al de viviendas particulares. Estos son: operativo de 
+viviendas colectivas, operativo especial tránsito y operativo especial calle.
+El objetivo de estos operativos fue censar a las personas que pasaron el momento censal 
+(00:00 horas del 19 de abril de 2017) en territorio nacional, pero que no alojaron esa noche 
+en una vivienda particular.
 
+### *Variables a excluir*: 
 
+*Nivel Urbano*:
+
+Hogar en vivienda particular: 173881 casos.\
+Vivienda colectiva (no es hogar): 365 casos.\
+Operativo personas en tránsito (no es hogar): 1 caso.\
+Operativo calle (no es hogar): 1 caso.
+
+*Nivel Rural*:
+
+Hogar en vivienda particular: 16405 casos.\
+Vivienda colectiva (no es hogar): 84 casos.\
+Operativo personas en tránsito (no es hogar): 1 caso.\
+Operativo calle (no es hogar): NA.
+
+Se propone no considerar ésta pregunta como relevante, pues prácticamente toda la poblacin censada tanto a nivel urbano como rural lo fué en "Hogar en vivienda particular".
+
+### *Interpretación a nivel urbano*: 
+
+Se propone no considerar.
+
+### *Interpretación a nivel rural*: 
+
+Se propone no considerar.
 
 # CASEN 2017 y CENSO Personas 2017
 
@@ -700,13 +800,32 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+Cuál es su relación de parentezco con el jefe o jefa de hogar?
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+Abuelo/a30: 388 casos.\
+Persona en operativo calle: 730 casos.
+
+*Nivel Rural*:
+
+Conviviente por unión civil: 141\
+Abuelo/a30: 26\
+Persona en operativo calle: NA
+
+### *Interpretación a nivel urbano*: 
+
+En la pregunta Relación de parentesco, la categoría que mejor se ajusta a cambios en la potencia económica salarial comunal es la variable **hijo**. Es decir, más personas declaran ser hijos del jefe/a de hogar a medida que la comuna de la persona posea mayor potencia económica salarial. 
 
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel rural*:  
 
+En la pregunta Relación de parentesco, la categoría que mejor se ajusta a cambios en la potencia económica salarial comunal es la variable **Suegro/a**. Es decir, más personas declaran ser hijos del jefe/a de hogar a medida que la comuna de la persona posea mayor potencia económica salarial. 
 
-### **Interpretación a nivel rural**:  
+Se explica pues a nivel rural, y por razones no estrictamente ecómicas sino tanmbién culturales, los padres de los jefes/as de hogar suelen vivir en el mismo hogar.
+
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -746,13 +865,18 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
+
+No aplica.
+
+### *Interpretación a nivel urbano*: 
+
+No existe diferencia por sexo a cambios en la potencia económica salarial comunal.
+
+### *Interpretación a nivel rural*:  
 
 
-### **Interpretación a nivel urbano**: 
 
-
-### **Interpretación a nivel rural**:     
    
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -792,13 +916,20 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+*Nivel Rural*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+### *Interpretación a nivel urbano*: 
 
 
-### **Interpretación a nivel urbano**: 
-
-
-### **Interpretación a nivel rural**:  
+### *Interpretación a nivel rural*:  
    
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -857,6 +988,21 @@ tabla %>%
 </div>
 </div>
 
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+*Nivel Rural*:
+
+### *Interpretación a nivel urbano*: 
+
+
+### *Interpretación a nivel rural*:  
+
+<br>
+
 <div class = "row">
 <div class = "col-md-6"> 
 ```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
@@ -887,6 +1033,19 @@ tabla %>%
 ```
 </div>
 </div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+*Nivel Rural*:
+
+### *Interpretación a nivel urbano*: 
+
+
+### *Interpretación a nivel rural*:  
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -926,13 +1085,13 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 
-### **Interpretación a nivel rural**:  
+### *Interpretación a nivel rural*:  
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -972,13 +1131,13 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 
-### **Interpretación a nivel rural**:  
+### *Interpretación a nivel rural*:  
 
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
@@ -1019,13 +1178,13 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 
-### **Interpretación a nivel rural**:  
+### *Interpretación a nivel rural*:  
 
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
@@ -1066,13 +1225,13 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 
-### **Interpretación a nivel rural**:  
+### *Interpretación a nivel rural*:  
 
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
@@ -1113,13 +1272,13 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 
-### **Interpretación a nivel rural**:  
+### *Interpretación a nivel rural*:  
 
 
 
@@ -1161,13 +1320,13 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 
-### **Interpretación a nivel rural**:  
+### *Interpretación a nivel rural*:  
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -1207,13 +1366,13 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 
-### **Interpretación a nivel rural**:  
+### *Interpretación a nivel rural*:  
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -1253,13 +1412,13 @@ tabla %>%
 
 <br>
    
-### **Variables a excluir**: 
+### *Variables a excluir*: 
 
 
-### **Interpretación a nivel urbano**: 
+### *Interpretación a nivel urbano*: 
 
 
-### **Interpretación a nivel rural**:  
+### *Interpretación a nivel rural*:  
 
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
 
@@ -1303,12 +1462,25 @@ tabla %>%
 
 ## Conclusiones:
 
-La variable a utilizar a nivel urbano será:
+La variable a utilizar a nivel urbano será: 
+
+<span style="color:red">**P17** Trabajó por un pago o especie:\
+Correlación: 0.8717</span>
 
 La variable a utilizar a nivel rural será:
 
+<span style="color:red">**ESCOLARIDAD**\
+Correlación: 0.49237</span>
+
 <br>
 <br>
+
+## Propuestas de mejora:
+
+1. La variable **multipob** nos entrega una cantidad que no parece apropiada para poder determinar en forma diferenciada dos comunas. Dos comunas con características muy distintas pueden poseer el mismo valor **multipob**, por lo que se sugiere utilizar en vez de la multiplicación  de ingresos medios comunales mensuales por población comunal, su división.
+
+2. Las frecuencias que utilizamos en el cálculo de las correlaciones son absolutas, lo que no permite determinar una comparación fidedigna entre ellas. Se propone utilizar las frecuencias de respuesta por cada 100.000 habitantes en la respectiva comuna.
+
 <br>
 <br>
 <hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
