@@ -5,10 +5,6 @@ author:
   affiliation: DataIntelligence
 subtitle: | 
   De ingresos sobre una categoría de respuesta correlacionadas con $\tau$ 
-
-  
-
-
     
 header-includes:
    - \usepackage[]{babel}
@@ -184,69 +180,101 @@ $$ \hat Y = e^{13.194444+1.033460 \cdot ln{X}} $$
 $$ \hat Y = e^{13.244337+1.039956 \cdot ln{X}} $$
 <br>
 
-# Digresión
+# Union total de las tablas urbanas
 
 ```{r}
-# r_1 <- readRDS("casen_censo_region_01.rds")
-# r_1
-```
-
-
-```{r}
-# r_1$region <- "Region_01"
-# r_1
+archivos_unidos <- dir("urbano/")
+receptaculo <- data.frame()
+archivos_df <- as.data.frame(archivos_unidos)
+nrow(archivos_df)
 ```
 
 ```{r}
-# casen_censo_region_01.rds
-# casen_censo_region_16.rds
-```
-
-```{r}
-# archivos_unidos <- dir("casen_censo_2017")
-# archivos_df <- as.data.frame(archivos_unidos)
-# iguales <- filter(archivos_df, grepl("casen_censo", archivos_unidos))
-# iguales
-# nrow(iguales)
+archivos_df[1]
 ```
 
 
 ```{r}
 
-# receptaculo <- data.frame()
-# 
-# for (n in 1:nrow(iguales)) {
+for (n in 1:nrow(archivos_df)) {
   
-#   nombres <- paste("casen_censo_2017/",iguales[n,1], sep = "")
-#   cargado <- readRDS(nombres)
-#   
-#   # colnames(cargado) <- cargado[1,]
-#   # cargado <- cargado[-1,]
-#   # identificar <- iguales[n,1]
-#   
-#   
-#   identificar <- str_replace(iguales[n,1], ".rds","")
-#   cargado$identificador <- identificar
-#   
-#   receptaculo <- rbind(receptaculo,cargado)
-#   
-# #print(receptaculo)
-# }
-# write_xlsx(receptaculo,"censo_casen_2017.xlsx")
-#write_csv2(receptaculo,"censo_casen_2017.csv")
+  nombres <- paste("urbano/", archivos_df[n,], sep = "")
+  cargado <- readRDS(nombres)
+
+
+  identificar <- archivos_df[n,1]
+  identificar <- str_replace(archivos_df[n,1], "_P17_u.rds","")
+  cargado$identificador <- identificar
+  receptaculo <- rbind(receptaculo,cargado)
+
+  print(cargado)
+}
+
+#write_xlsx(receptaculo,"censo_casen_urb_2017.xlsx")
+#write_csv2(receptaculo,"censo_casen_urb_2017.csv")
 ```
+
+
+
 ```{r}
-
-# receptaculo <- data.frame()
-# for (n in 1:nrow(iguales)) {
-#   
-#   nombres <- paste("casen_censo_2017/",iguales[n,1], sep = "")
-#   cargado <- readRDS(nombres)
-#   print(colnames(cargado))
-# }
-# receptaculo
-
+ cargado[1]
 ```
+
+
+
+# Gráfica de la recta de regresión versus los valores verdaderos.
+
+
+```{r}
+library(plotly)
+
+dataset_filtrado <- filter(
+  
+dataset_filtrado <- filter(cargado[,c(3,14)])
+dataset_filtrado 
+```
+
+
+```{r}
+frecuencia <- dataset_filtrado$Freq.x
+
+est_ing <- dataset_filtrado$ing_medio_zona
+
+data <- data.frame(est_ing, frecuencia)
+
+data
+saveRDS(data,"data_urbana.rds")
+```
+
+
+```{r}
+fig <- plot_ly(data, x = ~frecuencia, y = ~est_ing, name = 'High 2014', mode = 'points',
+        line = list(color = 'rgb(205, 12, 24)', width = 0.1))
+fig
+```
+
+
+```{r}
+fig <- fig %>% add_trace(y = ~frecuencia, name = 'Frecuencia', line = list(color = 'rgb(22, 96, 167)', width = 4)) 
+
+
+
+
+fig
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

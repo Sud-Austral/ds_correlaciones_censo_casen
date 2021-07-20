@@ -92,7 +92,7 @@ Leemos la tabla Censo 2017 de personas que ya tiene integrada la clave zonal:
 
 ```{r}
 tabla_con_clave <- 
-readRDS("../../../ds_correlaciones_censo_casen/corre_ing_exp-censo_casen/censos/censo_personas_con_clave_17")
+readRDS("../../../ds_correlaciones_censo_casen/corre_ing_exp-censo_casen/censos_con_clave/censo_personas_con_clave_17")
 r3_100 <- tabla_con_clave[c(1:100),]
 kbl(r3_100) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
@@ -108,7 +108,7 @@ regiones <- unique(tabla_con_clave$REGION)
 regiones
 ```
 
-Hagamos un subset con la region = 1, y área URBANA = 1.
+Hagamos un subset con la region = 5, y área URBANA = 1.
 
 ```{r}
 tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 5) 
@@ -557,7 +557,7 @@ kbl(r3_100) %>%
 Guardamos:
 
 ```{r}
-saveRDS(h_y_m_comuna_corr, "URBANO/region_05_P17_u.rds")
+saveRDS(comunas_censo_casen, "URBANO/region_05_P17_u.rds")
 ```
  
 

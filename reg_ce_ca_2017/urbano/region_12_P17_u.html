@@ -226,7 +226,7 @@
 <h3><span class="header-section-number">2.1.1</span> Lectura y filtrado de la tabla censal de personas</h3>
 <p>Leemos la tabla Censo 2017 de personas que ya tiene integrada la clave zonal:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>tabla_con_clave <span class="ot">&lt;-</span> </span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">readRDS</span>(<span class="st">&quot;../../../ds_correlaciones_censo_casen/corre_ing_exp-censo_casen/censos/censo_personas_con_clave_17&quot;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">readRDS</span>(<span class="st">&quot;../../../ds_correlaciones_censo_casen/corre_ing_exp-censo_casen/censos_con_clave/censo_personas_con_clave_17&quot;</span>)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>r3_100 <span class="ot">&lt;-</span> tabla_con_clave[<span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>),]</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">kbl</span>(r3_100) <span class="sc">%&gt;%</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>(<span class="at">bootstrap_options =</span> <span class="fu">c</span>(<span class="st">&quot;striped&quot;</span>, <span class="st">&quot;hover&quot;</span>)) <span class="sc">%&gt;%</span></span>
@@ -20580,7 +20580,7 @@ NA
 </div>
 <p><br>
 Guardamos:</p>
-<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(h_y_m_comuna_corr, <span class="st">&quot;URBANO/region_12_P17_u.rds&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(comunas_censo_casen, <span class="st">&quot;URBANO/region_12_P17_u.rds&quot;</span>)</span></code></pre></div>
 </div>
 <div id="referencias" class="section level1" number="8">
 <h1><span class="header-section-number">8</span> Referencias</h1>

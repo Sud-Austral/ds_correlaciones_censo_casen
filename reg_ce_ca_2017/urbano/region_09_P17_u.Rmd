@@ -92,7 +92,7 @@ Leemos la tabla Censo 2017 de personas que ya tiene integrada la clave zonal:
 
 ```{r}
 tabla_con_clave <- 
-readRDS("../../../ds_correlaciones_censo_casen/corre_ing_exp-censo_casen/censos/censo_personas_con_clave_17")
+readRDS("../../../ds_correlaciones_censo_casen/corre_ing_exp-censo_casen/censos_con_clave/censo_personas_con_clave_17")
 r3_100 <- tabla_con_clave[c(1:100),]
 kbl(r3_100) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
@@ -554,7 +554,7 @@ kbl(r3_100) %>%
 Guardamos:
 
 ```{r}
-saveRDS(h_y_m_comuna_corr, "URBANO/region_09_P17_u.rds")
+saveRDS(comunas_censo_casen, "URBANO/region_09_P17_u.rds")
 ```
  
 

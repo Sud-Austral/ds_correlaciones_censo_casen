@@ -1,0 +1,533 @@
+---
+title: Expansión de la CASEN sobre el CENSO compendio 2017
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+date: "Lunes 12-07-2021"
+
+abstract: |
+  Exponemos las correlaciones descubiertas. 
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true    
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
+date: `r format(Sys.time(), "%d-%m-%Y")`
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+
+```
+ 
+
+# Censo Personas 2017
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+ 
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 01](https://rpubs.com/dataintelligence/region_01_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.7229
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y = {\ 2621.971}^2 + 2  \ 2621.971  \ 1492.728 \sqrt{X}+  \ 1492.728^2 X  $$
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 02](https://rpubs.com/dataintelligence/region_02_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.6452
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y =  -85596834 +  59936823  \sqrt {X}  $$
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 03](https://rpubs.com/dataintelligence/region_03_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.5608
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y = e^{16.08802 +0.8943158  \cdot ln{X}} $$ 
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 04](https://rpubs.com/dataintelligence/region_04_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.6716
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y = {\ 1644.978}^2 + 2  \ 1644.978  \ 2326.317  \sqrt{X}+  \ 2326.317^2 X  $$
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 05](https://rpubs.com/dataintelligence/region_05_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.7669 
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y = {\ 1212.349}^2 + 2  \ 1212.349  \ 2452.443 \sqrt{X}+  \ 2452.443^2 X  $$
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 06](https://rpubs.com/dataintelligence/region_06_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.7519  
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y = {\ 1489.315}^2 + 2  \ 1489.315  \ 2679.367 \sqrt{X}+  \ 2679.367^2 X  $$
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 07](https://rpubs.com/dataintelligence/region_07_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.724  
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y = \ 9781981 + \ 9728826  X^2  $$
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 08](https://rpubs.com/dataintelligence/region_08_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.7352  
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y = {\ 1489.315}^2 + 2  \ 1489.315  \ 2679.367 \sqrt{X}+  \ 2679.367^2 X  $$
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 09](https://rpubs.com/dataintelligence/region_09_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.547  
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y = \ 17399422 + \ 5259096  X^2  $$
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 10](https://rpubs.com/dataintelligence/region_10_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.6611  
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y = \17572146 + \4831427  X^2  $$
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 11](https://rpubs.com/dataintelligence/region_11_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.6576  
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y = \-29404628  + \33840753   \sqrt {X}  $$
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 12](https://rpubs.com/dataintelligence/region_12_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.8083  
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y =  -39111592 +  39931927  \sqrt {X}  $$
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 13](https://rpubs.com/dataintelligence/region_13_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.8572  
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y = {\ 1794.834}^2 + 2  \ 1794.834  \ 2221.198 \sqrt{X}+  \ 2221.198^2 X  $$
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 14](https://rpubs.com/dataintelligence/region_14_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.5935  
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y = \14572183 + \6731212  X^2  $$
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 15](https://rpubs.com/dataintelligence/region_15_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.7814  
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y = e^{16.34088 +0.7457676  \cdot ln{X}} $$ 
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+<div class = "row">
+<div class = "col-md-4"> 
+ 
+# Análisis de regresión
+
+##  [región 16](https://rpubs.com/dataintelligence/region_16_ESCOLARIDAD_r)
+ 
+</div>
+<div class = "col-md-4">
+
+# Coeficiente de determinación
+
+0.7354  
+
+</div>
+
+<div class = "col-md-4">
+
+# Ecuación de regresión
+
+$$ \hat Y = \11027064 + \6574039  X^2  $$
+
+</div>
+</div>
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+
+
+ 
+
+
+<br>
+<br>
+<br>
+<br>
+<br>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
