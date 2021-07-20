@@ -2,6 +2,7 @@
 
 ![title](lm.png)
 
-1. En corre_ing_exp-censo_casen/ están las correlaciones.
-2. En reg_ce_ca_2017/urbano están las regresiones lineales a nivel urbano.
-3. Compendio de regresiones aquí: reg_ce_ca_2017/urbano/reg_lin_censo_casen_compendio.Rmd 
+1. Correlaciones: corre_ing_exp-censo_casen/ 
+2. Regresiones lineales a nivel urbano: reg_ce_ca_2017/urbano
+3. Compendio de regresiones urbanas: reg_ce_ca_2017/urbano/reg_lin_censo_casen_compendio.Rmd 
+4. Compendio de correlaciones: corre_ing_exp-censo_casen/corr_censo_casen_compendio.html
