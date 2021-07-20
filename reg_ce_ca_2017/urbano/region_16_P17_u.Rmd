@@ -1,5 +1,5 @@
 ---
-title:  Expansión de la CASEN sobre el CENSO (Región 15)
+title:  Expansión de la CASEN sobre el CENSO (Región 16)
 author:
 - name: VE-CC-AJ
   affiliation: DataIntelligence
@@ -65,7 +65,7 @@ library(moments)
 
   Expandiremos los ingresos promedios (multiplicación del ingreso promedio y los habitantes) obtenidos de la CASEN 2017 sobre la categoría de respuesta: "Trabajó por un pago o especie" del campo P17 del CENSO de viviendas -del 2017-, que fue la categoría de respuesta que más alto correlacionó con los ingresos expandidos, ambos a nivel comunal.
   
-  Haremos el análisis sobre la región 15.
+  Haremos el análisis sobre la región 16.
   
   Ensayaremos diferentes modelos dentro del análisis de regresión cuya variable independiente será: "frecuencia de población que posee la variable Censal respecto a la zona" y la dependiente: "ingreso expandido por zona por proporción zonal a nivel comunal (**multipob**)"
   
@@ -106,10 +106,10 @@ regiones <- unique(tabla_con_clave$REGION)
 regiones
 ```
 
-Hagamos un subset con la region = 15, y área URBANA = 1.
+Hagamos un subset con la region = 16, y área URBANA = 1.
 
 ```{r}
-tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 15) 
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 16) 
 tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA== 1) 
 ```
 
@@ -344,7 +344,7 @@ ggplot(comunas_censo_casen, aes(x = Freq.x , y = multipob)) +
 ```
 
 
-Si bien obtenemos nuestro modelo lineal da cuenta del 0.934 de la variabilidad de los datos de respuesta en torno a su media, el intercepto no es estadísticamente significativo. Modelos alternativos pueden ofrecernos una explicación de la variable dependiente aún mayor.
+Si bien obtenemos nuestro modelo lineal da cuenta del 0.9779 de la variabilidad de los datos de respuesta en torno a su media, el intercepto no es estadísticamente significativo. Modelos alternativos pueden ofrecernos una explicación de la variable dependiente aún mayor.
 
 #  Modelos alternativos
 
@@ -448,7 +448,7 @@ kbl(modelos_bind) %>%
 
 # Elección del modelo.
 
-Elegimos el modelo **raíz-raíz** (5) pues tiene el más alto $R^2 (0.946)$
+Elegimos el modelo **raíz-raíz** (5) pues tiene segundo $R^2 (0.946)$ más alto.
 
 ```{r}
 
@@ -468,13 +468,6 @@ summary(linearMod)
 ```
 
 <span style="color:red">Error: el intercepto no resulta estadísticamente significante, busquemos el tercero.</span>
- 
-
-
-
-
-
-
 
 ##  Modelo log-log (**log-log**)
 
@@ -530,7 +523,7 @@ $$ \hat Y = e^{\beta_0+\beta_1  ln{X}} $$
 
 ### Modelo real:
 
-$$  \hat Y = e^{13.02772+1.07196\cdot ln{X}}  $$
+$$  \hat Y = e^{13.539744+0.984671\cdot ln{X}}  $$
 
 
 <br>
@@ -577,7 +570,7 @@ kbl(r3_100) %>%
 Guardamos:
 
 ```{r}
-saveRDS(h_y_m_comuna_corr, "URBANO/region_15_P17_u.rds")
+saveRDS(h_y_m_comuna_corr, "URBANO/region_16_P17_u.rds")
 ```
  
 
