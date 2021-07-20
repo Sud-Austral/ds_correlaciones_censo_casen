@@ -1,0 +1,625 @@
+---
+title:  Expansión de la CASEN sobre el CENSO (Región 04)
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+  P17 ¿Trabajó por un pago o especie?: Correlación: 0.8717
+  
+ 
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true    
+---
+
+date: `r format(Sys.time(), "%d-%m-%Y")`
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+library(plotly)
+library(normtest) 
+library(nortest)
+library(moments)
+```
+
+# Resumen 
+
+  Expandiremos los ingresos promedios (multiplicación del ingreso promedio y los habitantes) obtenidos de la CASEN 2017 sobre la categoría de respuesta: "Trabajó por un pago o especie" del campo P17 del CENSO de viviendas -del 2017-, que fue la categoría de respuesta que más alto correlacionó con los ingresos expandidos, ambos a nivel comunal.
+  
+  Haremos el análisis sobre la región 04.
+  
+  Ensayaremos diferentes modelos dentro del análisis de regresión cuya variable independiente será: "frecuencia de población que posee la variable Censal respecto a la zona" y la dependiente: "ingreso expandido por zona por proporción zonal a nivel comunal (**multipob**)"
+  
+  Lo anterior para elegir el que posea el mayor coeficiente de determinación y así contruir una tabla de valores predichos.
+
+
+
+# Generación de ingresos expandidos a nivel Urbano
+
+En adelante sólo llamaremos al rds ya construído llamado "Ingresos_expandidos_urbano_17.rds" 
+
+<br>
+
+##  Variable CENSO
+
+Necesitamos calcular las frecuencias a nivel censal de las respuestas correspondientes a la categoría: "Trabajó por un pago o especie" del campo **P17** del Censo de personas. Recordemos que ésta fué la más alta correlación en relación a los ingresos expandidos [(ver punto 2 Correlaciones aquí)](https://rpubs.com/dataintelligence/corr_ce_ca_P17).
+
+
+### Lectura y filtrado de la tabla censal de personas
+
+Leemos la tabla Censo 2017 de personas que ya tiene integrada la clave zonal:
+
+```{r}
+tabla_con_clave <- 
+readRDS("../../../ds_correlaciones_censo_casen/corre_ing_exp-censo_casen/censos/censo_personas_con_clave_17")
+r3_100 <- tabla_con_clave[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+
+Despleguemos los códigos de regiones de nuestra tabla:
+
+```{r}
+regiones <- unique(tabla_con_clave$REGION)
+regiones
+```
+
+Hagamos un subset con la region = 1, y área URBANA = 1.
+
+```{r}
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 4) 
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA== 1) 
+```
+
+
+
+### Cálculo de frecuencias
+
+Obtenemos las frecuencias a la pregunta P17 por zona:
+
+```{r}
+tabla_con_clave_f <- tabla_con_clave[,-c(1,2,4:31,33:48),drop=FALSE]
+```
+
+Renombramos y filtramos por la categoria `Trabajo por un sueldo` == 1: 
+
+```{r}
+names(tabla_con_clave_f)[2] <- "Trabajo por un sueldo"
+```
+
+
+```{r}
+tabla_con_clave_ff <- filter(tabla_con_clave_f, tabla_con_clave_f$`Trabajo por un sueldo` == 1)
+```
+
+
+```{r}
+# Determinamos las frecuencias por zona:
+b <- tabla_con_clave_ff$clave
+c <- tabla_con_clave_ff$`Trabajo por un sueldo`
+d <- tabla_con_clave_ff$COMUNA
+cross_tab =  xtabs( ~ unlist(b) + unlist(c)+ unlist(d))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+names(d)[1] <- "zona" 
+d$anio <- "2017"
+
+head(d,5)
+```
+
+
+
+
+<!-- ### 1.4 Calculamos la proporción de las frecuencias en cada comuna a nivel zonal -->
+
+<!-- ```{r} -->
+<!-- codigos_com <- unique(d$unlist.d.) -->
+<!-- frec_man_com_parcial_total <- data.frame() -->
+<!-- for(i in codigos_com){ -->
+<!--   # debemos dividir por 100 para obtener las proporciones y no los porcentajes: -->
+<!--   frec_man_com_parcial <- filter(d, d$unlist.d. == i) -->
+<!--   frec_man_com_parcial$p <- frec_man_com_parcial$Freq*100/sum(frec_man_com_parcial$Freq)/100 -->
+<!--   frec_man_com_parcial_total <- rbind(frec_man_com_parcial_total,frec_man_com_parcial) -->
+<!-- } -->
+<!-- ``` -->
+
+
+
+<!-- ### 1.5 Observemos los primeros 100 registros -->
+
+<!-- ```{r} -->
+<!-- r3_100 <- frec_man_com_parcial_total[c(1:100),] -->
+
+<!-- kbl(r3_100) %>% -->
+<!--   kable_styling(bootstrap_options = c("striped", "hover")) %>% -->
+<!--   kable_paper() %>% -->
+<!--   scroll_box(width = "100%", height = "300px") -->
+<!-- ``` -->
+
+
+
+<!-- ### 1.6 Verificación del cálculo correcto de proporciones -->
+
+<!-- Verifiquemos que la suma de las proporciones sea 1 para la comuna 15101: -->
+
+<!-- ```{r} -->
+<!-- r3_100_f <- filter(frec_man_com_parcial_total, frec_man_com_parcial_total$unlist.d. == 1107) -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- sum(r3_100_f$p) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- nrow(frec_man_com_parcial_total) -->
+<!-- ``` -->
+
+Agregamos un cero a los códigos comunales de cuatro dígitos:
+
+```{r}
+codigos <- d$unlist.d.
+rango <- seq(1:nrow(d))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d,cadena)
+comuna_corr <- comuna_corr[,-c(2,3),drop=FALSE]
+names(comuna_corr)[4] <- "código" 
+
+```
+
+### Tabla de frecuencias:
+
+```{r}
+head(comuna_corr,5)
+```
+```{r}
+nrow(comuna_corr)
+```
+
+
+
+
+y obtenemos la tabla de frecuencias de respuesta a la categoría = 1 de la pregunta P17 a nivel zonal.
+
+<br>
+
+
+##  Variable CASEN
+
+### Tabla de ingresos expandidos
+
+Hemos calculado ya éste valor como conclusión del punto 1.1 de [aquí](https://rpubs.com/dataintelligence/corr_casen_censo_002)
+
+
+```{r}
+h_y_m_2017_censo <- readRDS("../../../ds_correlaciones_censo_casen/corre_ing_exp-censo_casen/ingresos_expandidos_urbano_17.rds")
+head(h_y_m_2017_censo,5)
+```
+
+```{r}
+nrow(h_y_m_2017_censo)
+```
+
+
+Unión Censo-Casen:
+
+```{r}
+comunas_censo_casen = merge( x = comuna_corr, y = h_y_m_2017_censo, by = "código", all.x = TRUE)
+comunas_censo_casen <- comunas_censo_casen[,-c(4)]
+head(comunas_censo_casen,5)
+```
+
+```{r}
+nrow(comunas_censo_casen)
+```
+
+
+
+##  Unión de la proporción zonal por comuna con la tabla censo-casen:
+
+
+Para calcular la variable multipob, debemos calcular:
+
+$$ multipob = promedio\_i \cdot personas \cdot p\_poblacional	$$
+
+Del censo obtenemos la cantidad de población a nivel de zona y estimamos su proporción a nivel comunal. Ya hemos calculado ésta proporción  [aquí](https://rpubs.com/dataintelligence/tabla_de_proporciones).
+
+
+
+###  Ingreso promedio expandido por zona (**multi_pob**)
+
+En éste momento vamos a construir nuestra variable dependiente de regresión aplicando la siguiente fórmula:
+
+Para calcular la variable multipob, debemos:
+
+$$ multipob = promedio\_i \cdot personas \cdot p\_poblacional	$$
+
+Unimos:
+
+```{r}
+tabla_de_prop_pob <- readRDS("../../../../archivos_grandes/tabla_de_prop_pob.rds")
+names(tabla_de_prop_pob)[1]  <- "zona"
+
+```
+
+```{r}
+comunas_censo_casen = merge( x = comunas_censo_casen, y = tabla_de_prop_pob, by = "zona", all.x = TRUE)
+head(comunas_censo_casen,5)
+```
+
+Creamos:
+
+```{r}
+comunas_censo_casen$multipob <- comunas_censo_casen$ingresos_expandidos*comunas_censo_casen$p
+```
+
+```{r}
+head(comunas_censo_casen,5)
+```
+
+
+
+#  Análisis de regresión
+
+Aplicaremos un análisis de regresión donde:
+
+$$ Y(dependiente) = ingreso \ expandido \ por \ zona \ (multi\_pob)$$
+
+$$ X(independiente) = frecuencia \ de \ población \ que \ posee \ la \ variable \ Censal \ respecto \ a \ la \ zona \ (Freq.x)  $$
+<br>
+
+##  Diagrama de dispersión loess
+
+```{r}
+scatter.smooth(x=comunas_censo_casen$Freq.x, y=comunas_censo_casen$multipob, main="multi_pob ~ Freq.x",
+     xlab = "Freq.x",
+     ylab = "multi_pob",
+           col = 2) 
+```
+
+##  Outliers 
+
+Hemos demostrado en el punto 5.7.2 de [aquí](https://rpubs.com/dataintelligence/expansion_viviendas_001) que la exclusión de ouliers no genera ninguna mejora en el modelo de regresión.
+
+##  Modelo lineal 
+
+Aplicaremos un análisis de regresión lineal del ingreso expandido por zona sobre las frecuencias de respuestas zonales.
+
+```{r}
+linearMod <- lm( multipob~(Freq.x) , data=comunas_censo_casen)
+summary(linearMod) 
+```
+
+##  Gráfica de la recta de regresión lineal
+
+```{r, warning = FALSE, message = FALSE}
+ggplot(comunas_censo_casen, aes(x = Freq.x , y = multipob)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+```
+
+
+Si bien obtenemos nuestro modelo lineal da cuenta del 0.9754 de la variabilidad de los datos de respuesta en torno a su media, modelos alternativos pueden ofrecernos una explicación de la variable dependiente aún mayor.
+
+#  Modelos alternativos
+
+```{r}
+### 8.1 Modelo cuadrático
+
+linearMod <- lm( multipob~(Freq.x^2) , data=comunas_censo_casen)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "cuadrático"
+sintaxis <- "linearMod <- lm( multi_pob~(Freq.x^2) , data=h_y_m_comuna_corr_01)"
+
+modelos1 <- cbind(modelo,dato,sintaxis)
+
+
+modelos1 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.2 Modelo cúbico
+ 
+linearMod <- lm( multipob~(Freq.x^3) , data=comunas_censo_casen)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "cúbico"
+sintaxis <- "linearMod <- lm( multi_pob~(Freq.x^3) , data=h_y_m_comuna_corr_01)"
+
+modelos2 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.3 Modelo logarítmico
+ 
+linearMod <- lm( multipob~log(Freq.x) , data=comunas_censo_casen)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "logarítmico"
+sintaxis <- "linearMod <- lm( multi_pob~log(Freq.x) , data=h_y_m_comuna_corr_01)"
+
+modelos3 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.5 Modelo con raíz cuadrada 
+ 
+linearMod <- lm( multipob~sqrt(Freq.x) , data=comunas_censo_casen)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz cuadrada"
+sintaxis <- "linearMod <- lm( multi_pob~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)"
+
+modelos5 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.6 Modelo raíz-raíz
+ 
+linearMod <- lm( sqrt(multipob)~sqrt(Freq.x) , data=comunas_censo_casen)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz-raíz"
+sintaxis <- "linearMod <- lm( sqrt(multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)"
+
+modelos6 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.7 Modelo log-raíz
+ 
+linearMod <- lm( log(multipob)~sqrt(Freq.x) , data=comunas_censo_casen)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "log-raíz"
+sintaxis <- "linearMod <- lm( log(multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)"
+
+modelos7 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.8 Modelo raíz-log
+ 
+linearMod <- lm( sqrt(multipob)~log(Freq.x) , data=comunas_censo_casen)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz-log"
+sintaxis <- "linearMod <- lm( sqrt(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)"
+
+modelos8 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.9 Modelo log-log
+ 
+linearMod <- lm( log(multipob)~log(Freq.x) , data=comunas_censo_casen)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "log-log"
+sintaxis <- "linearMod <- lm( log(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)"
+
+modelos9 <- cbind(modelo,dato,sintaxis)
+ 
+modelos_bind <- rbind(modelos1, modelos2,modelos3,modelos5,modelos6,modelos7,modelos8,modelos9)
+modelos_bind <- as.data.frame(modelos_bind)
+
+modelos_bind <<- modelos_bind[order(modelos_bind$dato, decreasing = T ),]
+h_y_m_comuna_corr_01 <<- comunas_censo_casen
+
+kbl(modelos_bind) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+<br>
+
+# Elección del modelo.
+
+Elegimos el modelo raiz-raiz (5) pues tiene el más alto $R^2$
+
+```{r}
+
+h_y_m_comuna_corr <- h_y_m_comuna_corr_01
+metodo <- 8
+switch (metodo,
+        case = linearMod <- lm( multipob~(Freq.x^2) , data=h_y_m_comuna_corr),
+        case = linearMod <- lm( multipob~(Freq.x^3) , data=h_y_m_comuna_corr),
+        case = linearMod <- lm( multipob~log(Freq.x) , data=h_y_m_comuna_corr),
+        case = linearMod <- lm( multipob~sqrt(Freq.x) , data=h_y_m_comuna_corr),
+        case = linearMod <- lm( sqrt(multipob)~sqrt(Freq.x) , data=h_y_m_comuna_corr),
+        case = linearMod <- lm( log(multipob)~sqrt(Freq.x) , data=h_y_m_comuna_corr),
+        case = linearMod <- lm( sqrt(multipob)~log(Freq.x) , data=h_y_m_comuna_corr),
+        case = linearMod <- lm( log(multipob)~log(Freq.x) , data=h_y_m_comuna_corr)
+)
+summary(linearMod)
+```
+
+
+ 
+
+##  Modelo raiz-raiz (**raiz-raiz**)
+
+Es éste el modelo que nos entrega el mayor coeficiente de determinación de todos (0.982).
+
+
+###  Diagrama de dispersión sobre **raiz-raiz**
+
+Desplegamos una curva suavizada por loess en el diagrama de dispersión.
+
+```{r}
+scatter.smooth(x=sqrt(comunas_censo_casen$Freq.x), y=sqrt(comunas_censo_casen$multipob), lpars = list(col = "red", lwd = 2, lty = 1), main="multi_pob ~ Freq.x")
+```
+
+
+
+```{r, warning = FALSE, message = FALSE}
+ggplot(comunas_censo_casen, aes(x = sqrt(Freq.x) , y = sqrt(multipob))) + geom_point() + stat_smooth(method = "lm", col = "red")
+```
+
+
+
+
+###  Análisis de residuos
+
+```{r}
+par(mfrow = c (2,2))
+plot(linearMod)
+```
+
+###  Modelo raiz-raiz
+
+$$ \hat Y = {\beta_0}^2 + 2  \beta_0  \beta_1 \sqrt{X}+  \beta_1^2 X  $$
+### Modelo real:
+
+$$  \hat Y = {-478.798 }^2 + 2 *( -478.798)   855.474 \sqrt{X}+  855.4741^2 X   $$
+
+
+<br>
+```{r}
+linearMod <- lm( sqrt(multipob)~sqrt(Freq.x) , data=comunas_censo_casen)
+aa <- linearMod$coefficients[1]
+bb <- linearMod$coefficients[2]
+
+```
+
+
+
+<br>
+
+# Aplicación la regresión a los valores de la variable a nivel de zona
+
+Esta nueva variable se llamará: est_ing
+
+```{r}
+comunas_censo_casen$est_ing <- aa^2 +2*aa*bb*sqrt(comunas_censo_casen$Freq.x)+ bb^2*comunas_censo_casen$Freq.x
+
+
+```
+
+
+<br>
+
+# División del valor estimado entre la población total de la zona para obtener el ingreso medio por zona
+
+<br>
+
+$$ Ingreso \_ Medio\_zona = est\_ing / (personas * p\_poblacional) $$  
+
+<br>
+
+```{r}
+comunas_censo_casen$ing_medio_zona <- comunas_censo_casen$est_ing /(comunas_censo_casen$personas  * comunas_censo_casen$p)
+
+r3_100 <- comunas_censo_casen[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+<br>
+Guardamos:
+
+```{r}
+saveRDS(h_y_m_comuna_corr, "URBANO/region_04_P17_u.rds")
+```
+ 
+
+
+<br>
+
+# Referencias
+
+https://rpubs.com/osoramirez/316691
+
+https://dataintelligencechile.shinyapps.io/casenfinal
+
+Manual_de_usuario_Censo_2017_16R.pdf\
+
+http://www.censo2017.cl/microdatos/
+
+Censo de Población y Vivienda\
+
+https://www.ine.cl/estadisticas/sociales/censos-de-poblacion-y-vivienda/poblacion-y-vivienda
+
+
+http://r-statistics.co/Linear-Regression.html
+
+# Anexo:
+
+
+## Modelos alternativos
+
+### Modelo cuadrático
+
+$$ \hat Y = \beta_0 + \beta_1  X^2  $$
+
+### Modelo cúbico
+
+$$ \hat Y = \beta_0 + \beta_1  X^3  $$
+
+### Modelo logarítmico
+
+$$ \hat Y = \beta_0 + \beta_1 ln X  $$
+
+### Modelo exponencial
+
+$$ \hat Y = \beta_0 + \beta_1  e^X  $$
+
+No es aplicable sin una transformación pues los valores elevados a $e$ de Freq.x tienden a infinito. 
+
+### Modelo con raíz cuadrada 
+
+$$ \hat Y = \beta_0 + \beta_1  \sqrt {X}  $$
+
+### raiz raiz
+
+$$ \hat Y = {\beta_0}^2 + 2  \beta_0  \beta_1 \sqrt{X}+  \beta_1^2 X  $$
+
+### Modelo log-raíz
+
+$$ \hat Y = e^{\beta_0 + \beta_1 \sqrt{X}} $$
+
+### Modelo raíz-log
+
+$$ \hat Y = {\beta_0}^2 + 2  \beta_0  \beta_1 \ln{X}+  \beta_1^2 ln^2X  $$
+
+### Modelo log-log
+
+$$ \hat Y = e^{\beta_0+\beta_1  ln{X}} $$

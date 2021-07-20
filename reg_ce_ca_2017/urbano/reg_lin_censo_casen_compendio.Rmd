@@ -1,0 +1,255 @@
+---
+title: Expansión de la CASEN sobre el CENSO compendio 2017
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+  De ingresos sobre una categoría de respuesta correlacionadas con $\tau$ 
+
+  
+
+
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true    
+---
+
+date: `r format(Sys.time(), "%d-%m-%Y")`
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library(ggplot2)
+```
+
+# Introducción
+
+  Expandiremos los ingresos promedios comunales (obtenidos de la multiplicación del ingreso promedio y los habitantes) obtenidos de la CASEN sobre la categoría de respuesta: "¿Trabajó por un pago o especie?" de la pregunta P17 del CENSO de personas que recordemos, fue la que mejor correlacionó (0.8717 de $\tau$) con los ingresos expandidos, ambos a nivel comunal.
+  
+  Ensayaremos diferentes modelos dentro del análisis de regresión cuya variable independiente será: "frecuencia de población que posee la variable Censal respecto a la zona" y la dependiente: "ingreso expandido por zona"
+  
+  Lo anterior para elegir el que posea el mayor coeficiente de determinación a nivel regional y así construir una tabla de valores predichos.
+
+
+#  Región 01
+
+## Análisis de regresión
+
+[región 01](https://rpubs.com/dataintelligence/region_01_P17_u)
+
+## Coeficiente de determinación
+
+0.98
+
+## Ecuación de regresión
+
+$$  \hat Y = e^{13.13441+1.06604 \cdot ln{X}}  $$
+
+<br>
+
+#  Región 02
+
+## Análisis de regresión
+
+[región 02](https://rpubs.com/dataintelligence/region_02_P17_u)
+
+## Coeficiente de determinación
+
+0.963
+
+## Ecuación de regresión
+$$  \hat Y = e^{13.11756+1.08183 \cdot ln{X}}  $$
+<br>
+
+#  Región 03
+
+## Análisis de regresión
+
+[región 03](https://rpubs.com/dataintelligence/region_03_P17_u)
+
+## Coeficiente de determinación
+
+0.974
+
+## Ecuación de regresión
+$$  \hat Y = e^{13.33031+1.04410 \cdot ln{X}}  $$
+<br>
+
+#  Región 04
+
+## Análisis de regresión
+
+[región 04](https://rpubs.com/dataintelligence/region_04_P17_u)
+
+## Coeficiente de determinación
+
+0.98
+
+### Ecuación de regresión
+
+$$  \hat Y = {-478.798 }^2 + 2 *( -478.798)   855.474 \sqrt{X}+  855.4741^2 X   $$
+<br>
+
+#  Región 05
+
+## Análisis de regresión
+
+[región 05](https://rpubs.com/dataintelligence/region_05_P17_u)
+
+## Coeficiente de determinación
+
+0.984
+
+### Ecuación de regresión
+$$ \hat Y = e^{(13.344140+1.029538 \cdot lnX)}$$
+<br>
+
+#  Región 06
+
+## Análisis de regresión
+
+[región 06](https://rpubs.com/dataintelligence/exp_viv_region_06)
+
+## Coeficiente de determinación
+
+0.991
+
+### Ecuación de regresión
+$$ \hat Y = e^{13.270613+1.031145 \cdot ln{X}} $$
+<br>
+
+# Región 07
+
+## Análisis de regresión
+
+[región 07](https://rpubs.com/dataintelligence/region_07_P17_u)
+
+## Coeficiente de determinación
+
+0.991
+
+### Ecuación de regresión
+$$ \hat Y = e^{13.194444+1.033460 \cdot ln{X}} $$
+<br>
+
+#  Región 08
+
+## Análisis de regresión 
+
+[región 08](https://rpubs.com/dataintelligence/region_08_P17_u)
+
+## Coeficiente de determinación
+
+0.8127
+
+### Ecuación de regresión
+$$ \hat Y = e^{13.244337+1.039956 \cdot ln{X}} $$
+<br>
+
+# Digresión
+
+```{r}
+# r_1 <- readRDS("casen_censo_region_01.rds")
+# r_1
+```
+
+
+```{r}
+# r_1$region <- "Region_01"
+# r_1
+```
+
+```{r}
+# casen_censo_region_01.rds
+# casen_censo_region_16.rds
+```
+
+```{r}
+# archivos_unidos <- dir("casen_censo_2017")
+# archivos_df <- as.data.frame(archivos_unidos)
+# iguales <- filter(archivos_df, grepl("casen_censo", archivos_unidos))
+# iguales
+# nrow(iguales)
+```
+
+
+```{r}
+
+# receptaculo <- data.frame()
+# 
+# for (n in 1:nrow(iguales)) {
+  
+#   nombres <- paste("casen_censo_2017/",iguales[n,1], sep = "")
+#   cargado <- readRDS(nombres)
+#   
+#   # colnames(cargado) <- cargado[1,]
+#   # cargado <- cargado[-1,]
+#   # identificar <- iguales[n,1]
+#   
+#   
+#   identificar <- str_replace(iguales[n,1], ".rds","")
+#   cargado$identificador <- identificar
+#   
+#   receptaculo <- rbind(receptaculo,cargado)
+#   
+# #print(receptaculo)
+# }
+# write_xlsx(receptaculo,"censo_casen_2017.xlsx")
+#write_csv2(receptaculo,"censo_casen_2017.csv")
+```
+```{r}
+
+# receptaculo <- data.frame()
+# for (n in 1:nrow(iguales)) {
+#   
+#   nombres <- paste("casen_censo_2017/",iguales[n,1], sep = "")
+#   cargado <- readRDS(nombres)
+#   print(colnames(cargado))
+# }
+# receptaculo
+
+```
+
+
+
+
+
+

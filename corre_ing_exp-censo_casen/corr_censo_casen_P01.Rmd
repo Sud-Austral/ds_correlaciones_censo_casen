@@ -100,6 +100,10 @@ df_2017 = merge( promedios_grupales, codigos_comunales,
                  by = "comuna", 
                  all.x = TRUE)
 
+```
+
+
+```{r, attr.source='.numberLines'}
 #saveRDS(df_2017,"Ingresos_expandidos_Urbano_17.rds")
 
 my_summary_data <- x %>%
@@ -137,14 +141,15 @@ df_2017_2$ingresos_expandidos <- df_2017_2$personas*df_2017_2$promedio_i
 
 df_2017_2  <- na.omit(df_2017_2)
 
-df_2017_2_urbano <- df_2017_2[, -c(2,3,4)]
+```
 
-kbl(df_2017_2_urbano) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
 
-saveRDS(df_2017_2_urbano, "Ingresos_expandidos_urbano_17.rds")
+```{r, attr.source='.numberLines'}
+
+
+saveRDS(df_2017_2, "Ingresos_expandidos_urbano_17.rds")
+
+
 
 ```
 
@@ -213,14 +218,11 @@ df_2017_2 = merge(  comuna_corr, df_2017, by = "código", all.x = TRUE)
 df_2017_2$ingresos_expandidos <- df_2017_2$personas*df_2017_2$promedio_i
 df_2017_2  <- na.omit(df_2017_2)
 
-df_2017_2_rural <- df_2017_2[, -c(2,3,4)]
+#df_2017_2_rural <- df_2017_2[, -c(2,3,4)]
 
-kbl(df_2017_2_rural) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
 
-saveRDS(df_2017_2_rural, "Ingresos_expandidos_rural_17.rds")
+
+saveRDS(df_2017_2, "Ingresos_expandidos_rural_17.rds")
 
 ```
 
