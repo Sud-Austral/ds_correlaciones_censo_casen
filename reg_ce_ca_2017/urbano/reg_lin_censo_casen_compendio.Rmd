@@ -164,6 +164,8 @@ $$ \hat Y = e^{13.270613+1.031145 \cdot ln{X}} $$
 
 ### Ecuación de regresión
 $$ \hat Y = e^{13.194444+1.033460 \cdot ln{X}} $$
+------------------
+
 <br>
 
 #  Región 08
@@ -178,6 +180,152 @@ $$ \hat Y = e^{13.194444+1.033460 \cdot ln{X}} $$
 
 ### Ecuación de regresión
 $$ \hat Y = e^{13.244337+1.039956 \cdot ln{X}} $$
+
+------------------
+
+<br>
+
+#  Región 09
+
+## Análisis de regresión 
+
+[región 09](https://rpubs.com/dataintelligence/region_09_P17_u)
+
+## Coeficiente de determinación
+
+0.989
+
+### Ecuación de regresión
+$$  \hat Y = e^{13.32733+1.01354 \cdot ln{X}}  $$
+
+------------------
+
+<br>
+
+#  Región 10
+
+## Análisis de regresión 
+
+[región 10](https://rpubs.com/dataintelligence/region_10_P17_u)
+
+## Coeficiente de determinación
+
+0.989
+
+### Ecuación de regresión
+$$  \hat Y = e^{13.121051+1.039975 \cdot ln{X}}  $$
+
+------------------
+
+<br>
+
+#  Región 11
+
+## Análisis de regresión 
+
+[región 11](https://rpubs.com/dataintelligence/region_11_P17_u)
+
+## Coeficiente de determinación
+
+0.991
+
+### Ecuación de regresión
+$$  \hat Y = e^{13.09285+1.04935 \cdot ln{X}}  $$
+
+------------------
+
+<br>
+
+#  Región 12
+
+## Análisis de regresión 
+
+[región 12](https://rpubs.com/dataintelligence/region_12_P17_u)
+
+## Coeficiente de determinación
+
+0.991
+
+### Ecuación de regresión
+$$  \hat Y = e^{13.35730+1.03457\cdot ln{X}}  $$
+
+------------------
+
+<br>
+
+#  Región 13
+
+## Análisis de regresión 
+
+[región 13](https://rpubs.com/dataintelligence/region_13_P17_u)
+
+## Coeficiente de determinación
+
+0.991
+
+### Ecuación de regresión
+$$  \hat Y = e^{13.312262+1.028448\cdot ln{X}}  $$
+
+------------------
+
+<br>
+
+#  Región 14
+
+## Análisis de regresión 
+
+[región 14](https://rpubs.com/dataintelligence/region_14_P17_u)
+
+## Coeficiente de determinación
+
+0.986
+
+### Ecuación de regresión
+$$  \hat Y = e^{13.41438+1.00595\cdot ln{X}}  $$
+
+------------------
+
+<br>
+
+#  Región 15
+
+## Análisis de regresión 
+
+[región 15](https://rpubs.com/dataintelligence/region_15_P17_u)
+
+## Coeficiente de determinación
+
+0.943
+
+### Ecuación de regresión
+$$  \hat Y = e^{13.02772+1.07196\cdot ln{X}}  $$
+
+------------------
+
+<br>
+
+#  Región 16
+
+## Análisis de regresión 
+
+[región 16](https://rpubs.com/dataintelligence/region_16_P17_u)
+
+## Coeficiente de determinación
+
+0.943
+
+### Ecuación de regresión
+$$  \hat Y = e^{13.539744+0.984671\cdot ln{X}}  $$
+
+------------------
+
+
+
+
+
+
+
+
 <br>
 
 # Union total de las tablas urbanas
@@ -195,77 +343,44 @@ archivos_df[1]
 
 
 ```{r}
-
 for (n in 1:nrow(archivos_df)) {
-  
   nombres <- paste("urbano/", archivos_df[n,], sep = "")
   cargado <- readRDS(nombres)
-
-
   identificar <- archivos_df[n,1]
   identificar <- str_replace(archivos_df[n,1], "_P17_u.rds","")
   cargado$identificador <- identificar
   receptaculo <- rbind(receptaculo,cargado)
-
-  print(cargado)
+  #print(cargado)
 }
-
-#write_xlsx(receptaculo,"censo_casen_urb_2017.xlsx")
-#write_csv2(receptaculo,"censo_casen_urb_2017.csv")
+write_xlsx(receptaculo,"censo_casen_urb_2017.xlsx")
+write_csv2(receptaculo,"censo_casen_urb_2017.csv")
 ```
 
 
+# Gráfica de la recta de regresión versus los valores verdaderos para la región 01:
 
 ```{r}
- cargado[1]
+receptaculo_1 <- filter(receptaculo, receptaculo$identificador == "region_01")
+# receptaculo_1 <- receptaculo
+```
+
+```{r}
+est_ing <-  receptaculo_1$est_ing
+frecuencia <- receptaculo_1$Freq.x
+multipob <- receptaculo_1$multipob
+data <- data.frame(est_ing, multipob, frecuencia)
+head(data,5)
+#saveRDS(data,"data_urbana.rds")
 ```
 
 
-
-# Gráfica de la recta de regresión versus los valores verdaderos.
-
-
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library(plotly)
-
-dataset_filtrado <- filter(
-  
-dataset_filtrado <- filter(cargado[,c(3,14)])
-dataset_filtrado 
-```
-
-
-```{r}
-frecuencia <- dataset_filtrado$Freq.x
-
-est_ing <- dataset_filtrado$ing_medio_zona
-
-data <- data.frame(est_ing, frecuencia)
-
-data
-saveRDS(data,"data_urbana.rds")
-```
-
-
-```{r}
-fig <- plot_ly(data, x = ~frecuencia, y = ~est_ing, name = 'High 2014', mode = 'points',
-        line = list(color = 'rgb(205, 12, 24)', width = 0.1))
+fig <- plot_ly(x=data$frecuencia, y=data$est_ing) 
+fig <- fig %>% add_trace(y=data$multipob, name = 'realidad', mode = 'markers')
+fig <- fig %>% add_trace(y=data$est_ing, name = 'simulación', mode = 'markers')
 fig
 ```
-
-
-```{r}
-fig <- fig %>% add_trace(y = ~frecuencia, name = 'Frecuencia', line = list(color = 'rgb(22, 96, 167)', width = 4)) 
-
-
-
-
-fig
-```
-
-
-
-
 
 
 

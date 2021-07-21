@@ -91,7 +91,7 @@ Generación de tabla de contingencia para la variable P02
 
 
 ```{r, warning = FALSE}
-tabla_con_clave <- readRDS("censos/censo_viviendas_con_clave_17.rds")
+tabla_con_clave <- readRDS("censos_con_clave/censo_viviendas_con_clave_17.rds")
 tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
 b <- tabla_con_clave_u$COMUNA
 c <- tabla_con_clave_u$P02
@@ -206,17 +206,22 @@ fig <- fig %>% layout(autosize = T)
 fig 
 ```
 
+```{r}
 
+df_2017_2f <- filter(df_2017_fig, df_2017_fig$ingresos_expandidos != 'is.na')
+df_2017_2f_sin_codigo <-  df_2017_2f[,-c(1)]
 
+df_2017_2f_sin_codigo_sin_ing_exp <-  df_2017_2f_sin_codigo[,-c(5)]
 
-# $\tau$
+```
+
 
 ```{r}
-df_2017_2f <- filter(df_2017_fig, df_2017_fig$ingresos_expandidos != 'is.na')
-III <- seq(2,(ncol(df_2017_2f)-1),1)
-my_data <- df_2017_2f[, c(III)]
-tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+
+tabla <- cor(x=df_2017_2f_sin_codigo_sin_ing_exp, y=df_2017_2f_sin_codigo$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+tabla <- tabla[-c(5),]
 tabla <- as.data.frame(tabla)
+
 ```
 
 ```{r}
@@ -233,32 +238,39 @@ tabla %>% rownames_to_column("Ocupación de la vivienda")%>%
     column_spec(2, color = "white")
 ```
 
+```{r}
+df_arreglo <- df_2017_fig
+
+```
+
 
 
 ##  Kendall
 
+
+
+
 ```{r}
-df_2017_fig <- df_2017_fig[,-c(1)]
+
+#df_2017_fig <- filter(df_arreglo, df_2017_2frt$ingresos_expandidos != 'is.na')
 ```
 
-
 ```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
-
-chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
+chart.Correlation(df_2017_2f_sin_codigo, histogram=TRUE, method = c( "kendall"), pch=20)
 ```
 
 ##  Pearson
  
 ```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
 
-chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
+chart.Correlation(df_2017_2f_sin_codigo, histogram=TRUE, method = c( "pearson"), pch=20)
 ```
 
 ##  Spearman
 
 ```{r,attr.source='.numberLines', warning=FALSE}
 
-chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
+chart.Correlation(df_2017_2f_sin_codigo, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
 
 
@@ -279,7 +291,7 @@ Leemos las respuestas a la pregunta **P02** del censo de viviendas 2017 y obtene
 
 
 ```{r, warning = FALSE}
-tabla_con_clave <- readRDS("censos/censo_viviendas_con_clave_17.rds")
+tabla_con_clave <- readRDS("censos_con_clave/censo_viviendas_con_clave_17.rds")
 tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
 b <- tabla_con_clave_u$COMUNA
 c <- tabla_con_clave_u$P02
@@ -353,8 +365,15 @@ kbl(head(df_2017_2,50)) %>%
 #### Tabla a correlacionar:
 
 ```{r}
+union_final_rur <- df_2017_2
+```
+
+
+
+
+```{r}
 #union_final_urb_corr  <- union_final_urb[,-c(1)]
-write_xlsx(df_2017_2, "P02_rural.xlsx")
+write_xlsx(union_final_rur, "P02_rural.xlsx")
 ```
 
 #### Estadísticos básicos de nuestras frecuencias
@@ -371,18 +390,15 @@ kbl(head(data_sum)) %>%
 
 
 
-```{r}
-union_final_urb <- df_2017_2
-```
-
 
 #### Gráficas:
 
+
 ```{r, warning=FALSE,message=FALSE}
 library(plotly)
-df_2017_fig <- union_final_urb 
-```
+df_2017_fig <- union_final_rur 
 
+```
 
 
 ```{r, warning=FALSE,message=FALSE}
@@ -404,14 +420,23 @@ fig <- fig %>% layout(autosize = T)
 fig 
 ```
 
+```{r}
+union_final_urb <- df_2017_fig
+
+```
+
 
 # $\tau$
 
+
 ```{r}
-df_2017_2f <- filter(df_2017_fig, df_2017_fig$ingresos_expandidos != 'is.na')
-III <- seq(2,(ncol(df_2017_2f)-1),1)
-my_data <- df_2017_2f[, c(III)]
-tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+df_2017_2f <- filter(union_final_urb, union_final_urb$ingresos_expandidos != 'is.na')
+df_2017_2fuy <- df_2017_2f[, -c(1,6)]
+```
+
+```{r}
+
+tabla <- cor(x=df_2017_2fuy, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
 tabla <- as.data.frame(tabla)
 ```
 
@@ -433,28 +458,24 @@ tabla %>% rownames_to_column("Ocupación de la vivienda")%>%
 
 ##  Kendall
 
-```{r}
-df_2017_fig <- df_2017_fig[,-c(1)]
-```
-
 
 ```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
 
-chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
+chart.Correlation(df_2017_2f_sin_codigo, histogram=TRUE, method = c( "kendall"), pch=20)
 ```
 
 ##  Pearson
  
 ```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
 
-chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
+chart.Correlation(df_2017_2f_sin_codigo, histogram=TRUE, method = c( "pearson"), pch=20)
 ```
 
 ##  Spearman
 
 ```{r,attr.source='.numberLines', warning=FALSE}
 
-chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
+chart.Correlation(df_2017_2f_sin_codigo, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
 
 

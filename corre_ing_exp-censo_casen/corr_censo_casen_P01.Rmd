@@ -76,6 +76,7 @@ library(moments)
 En los siguientes rpubs sólo llamaremos al rds ya construído llamado "Ingresos_expandidos_urbano_17.rds": 
 
 ```{r, attr.source='.numberLines'}
+
 x <- import("../../../archivos_grandes/Microdato_Censo2017-Personas.csv")
 casen_2017 <- readRDS(file = "../../../archivos_grandes/casen_2017_c.rds")
 casen_2017_u <- filter(casen_2017, casen_2017$zona == "Urbano")
@@ -100,10 +101,6 @@ df_2017 = merge( promedios_grupales, codigos_comunales,
                  by = "comuna", 
                  all.x = TRUE)
 
-```
-
-
-```{r, attr.source='.numberLines'}
 #saveRDS(df_2017,"Ingresos_expandidos_Urbano_17.rds")
 
 my_summary_data <- x %>%
@@ -141,14 +138,20 @@ df_2017_2$ingresos_expandidos <- df_2017_2$personas*df_2017_2$promedio_i
 
 df_2017_2  <- na.omit(df_2017_2)
 
+df_2017_2_urbano <- df_2017_2[, -c(2,3,4)]
+
+kbl(df_2017_2_urbano) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+
+
+
 ```
 
 
 ```{r, attr.source='.numberLines'}
-
-
-saveRDS(df_2017_2, "Ingresos_expandidos_urbano_17.rds")
-
+saveRDS(df_2017_2_urbano, "Ingresos_expandidos_urbano_17.rds")
 
 
 ```
@@ -218,12 +221,19 @@ df_2017_2 = merge(  comuna_corr, df_2017, by = "código", all.x = TRUE)
 df_2017_2$ingresos_expandidos <- df_2017_2$personas*df_2017_2$promedio_i
 df_2017_2  <- na.omit(df_2017_2)
 
-#df_2017_2_rural <- df_2017_2[, -c(2,3,4)]
+df_2017_2_rural <- df_2017_2[, -c(2,3,4)]
+
+kbl(df_2017_2_rural) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
 
 
+```
 
-saveRDS(df_2017_2, "Ingresos_expandidos_rural_17.rds")
 
+```{r, attr.source='.numberLines'}
+saveRDS(df_2017_2_rural, "Ingresos_expandidos_rural_17.rds")
 ```
 
 # Nivel nacional URBANO (código 1)
@@ -255,7 +265,7 @@ Leemos las respuestas a la pregunta **P01** del censo de viviendas 2017 y obtene
 # más adelante utilizaremos éste dataframe para calcular la población por comuna:
 # x <- import("../Microdato_Censo2017-Personas.csv")
 
-tabla_con_clave <- readRDS("censos/censo_viviendas_con_clave_17.rds")
+tabla_con_clave <- readRDS("censos_con_clave/censo_viviendas_con_clave_17.rds")
 tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
 b <- tabla_con_clave_u$COMUNA
 c <- tabla_con_clave_u$P01
@@ -352,7 +362,7 @@ kbl(head(data_sum)) %>%
 #### Gráficas:
 
 ```{r, warning=FALSE,message=FALSE}
-
+library(plotly)
 df_2017_fig <- union_final_urb 
 ```
 
@@ -387,13 +397,16 @@ df_2017_2f <- filter(union_final_urb, union_final_urb$ingresos_expandidos != 'is
 
 ```
 
+
 ```{r}
-my_data <- df_2017_2f[, -c(1,12)]
+my_data <- df_2017_2f[, -c(1,9:15)]
+my_data_2 <- df_2017_2f[, -c(1,9:14)]
+my_data_3 <- df_2017_2f[, -c(1,10:11)]
+
+
+
 tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
-
-tabla <- tabla[-c(9,10), ]
 tabla <- as.data.frame(tabla)
-
 ```
 
 ```{r}
@@ -410,38 +423,25 @@ tabla %>% rownames_to_column("Tipo de vivienda")%>%
     column_spec(2, color = "white")
 ```
 
-
-
-
-
-
-
-
-
-
-```{r}
-union_final_urb_corr <- union_final_urb[,-c(1)]
-```
-
 ##  Kendall
 
 ```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
 
-chart.Correlation(union_final_urb_corr, histogram=TRUE, method = c( "kendall"), pch=20)
+chart.Correlation(my_data_3, histogram=TRUE, method = c( "kendall"), pch=20)
 ```
 
 ##  Pearson
  
 ```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
 
-chart.Correlation(union_final_urb_corr, histogram=TRUE, method = c( "pearson"), pch=20)
+chart.Correlation(my_data_3, histogram=TRUE, method = c( "pearson"), pch=20)
 ```
 
 ##  Spearman
 
 ```{r,attr.source='.numberLines', warning=FALSE}
 
-chart.Correlation(union_final_urb_corr, histogram=TRUE, method = c( "spearman"), pch=20)
+chart.Correlation(my_data_3, histogram=TRUE, method = c( "spearman"), pch=20)
 ```
 
 # Nivel nacional RURAL (código 2)
@@ -473,7 +473,7 @@ Leemos las respuestas a la pregunta **P01** del censo de viviendas 2017 y obtene
 # más adelante utilizaremos éste dataframe para calcular la población por comuna:
 # x <- import("../Microdato_Censo2017-Personas.csv")
 
-tabla_con_clave <- readRDS("censos/censo_viviendas_con_clave_17.rds")
+tabla_con_clave <- readRDS("censos_con_clave/censo_viviendas_con_clave_17.rds")
 tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
 b <- tabla_con_clave_u$COMUNA
 c <- tabla_con_clave_u$P01
@@ -521,6 +521,11 @@ kbl(head(comuna_corr_rural,50)) %>%
   scroll_box(width = "100%", height = "300px")
 
 ```
+
+
+
+
+
 
 ### Unión de frecuencias con ingresos expandidos:
 

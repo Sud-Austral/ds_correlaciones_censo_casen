@@ -1,5 +1,5 @@
 ---
-title:  Expansión de la CASEN sobre el CENSO (Región 01)
+title:  Expansión de la CASEN sobre el CENSO (Región 02)
 author:
 - name: VE-CC-AJ
   affiliation: DataIntelligence
@@ -67,7 +67,7 @@ library(moments)
 
   Expandiremos los ingresos promedios (multiplicación del ingreso promedio y los habitantes) obtenidos de la CASEN 2017 sobre la categoría de respuesta: "Trabajó por un pago o especie" del campo P17 del CENSO de viviendas -del 2017-, que fue la categoría de respuesta que más alto correlacionó con los ingresos expandidos, ambos a nivel comunal.
   
-  Haremos el análisis sobre la región 01.
+  Haremos el análisis sobre la región 02.
   
   Ensayaremos diferentes modelos dentro del análisis de regresión cuya variable independiente será: "frecuencia de población que posee la variable Censal respecto a la zona" y la dependiente: "ingreso expandido por zona por proporción zonal a nivel comunal (**multipob**)"
   
@@ -108,7 +108,7 @@ regiones <- unique(tabla_con_clave$REGION)
 regiones
 ```
 
-Hagamos un subset con la region = 1, y área URBANA = 1.
+Hagamos un subset con la region = 2, y área URBANA = 1.
 
 ```{r}
 tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 2) 
