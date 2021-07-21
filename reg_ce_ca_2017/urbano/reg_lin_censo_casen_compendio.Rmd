@@ -357,6 +357,15 @@ write_csv2(receptaculo,"censo_casen_urb_2017.csv")
 ```
 
 
+```{r}
+receptaculo$ing_medio_zona <- as.numeric(receptaculo$ing_medio_zona)
+receptaculo
+write_csv2(receptaculo,"censo_casen_urb_2017_numeric.csv")
+```
+
+
+
+
 # Gráfica de la recta de regresión versus los valores verdaderos para la región 01:
 
 ```{r}
