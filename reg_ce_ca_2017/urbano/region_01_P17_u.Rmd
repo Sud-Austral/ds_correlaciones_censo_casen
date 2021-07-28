@@ -92,7 +92,7 @@ Leemos la tabla Censo 2017 de personas que ya tiene integrada la clave zonal:
 
 ```{r}
 tabla_con_clave <- 
-readRDS("../../../ds_correlaciones_censo_casen/corre_ing_exp-censo_casen/censos_con_clave/censo_personas_con_clave_17")
+readRDS("../../../ds_correlaciones_censo_casen/corre_censo_casen_2017/censos_con_clave/censo_personas_con_clave_17")
 r3_100 <- tabla_con_clave[c(1:100),]
 kbl(r3_100) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
@@ -100,6 +100,146 @@ kbl(r3_100) %>%
   scroll_box(width = "100%", height = "300px")
 ```
 <br>
+
+queremos saber cuantas personas en chile hay
+
+```{r}
+length(tabla_con_clave$clave)
+
+```
+
+Queremos saber cuantas zonas hay en Chile:
+
+
+```{r}
+length(unique(tabla_con_clave$clave))
+```
+
+### Cálculo de frecuencias
+
+Obtenemos las frecuencias a la pregunta P17 por zona:
+
+```{r}
+tabla_con_clave_f <- tabla_con_clave[,-c(1,2,4:31,33:48),drop=FALSE]
+```
+
+
+```{r}
+tabla_con_clave_f 
+```
+
+
+```{r}
+claves_con_1 <- filter(tabla_con_clave_f, tabla_con_clave_f$P17 == 1)
+```
+
+```{r}
+length(unique(claves_con_1$clave))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+nrow(tabla_con_clave_f)
+```
+
+determinar las comunas
+
+```{r}
+lista_de_comunas <- unique(tabla_con_clave_f$COMUNA)
+```
+
+
+```{r}
+lista_de_comunas
+```
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+
+e <- table(tabla_con_clave$clave, tabla_con_clave$P17) 
+
+# e
+# kbl(e) %>%
+#   kable_styling(bootstrap_options = c("striped", "hover")) %>%
+#   kable_paper() %>%
+#   scroll_box(width = "100%", height = "300px")
+```
+
+
+```{r}
+e <- as.data.frame(e)
+e
+```
+
+
+
+```{r}
+filtro_e <- filter(e, e$Var2 == 1)
+filtro_e
+```
+
+
+```{r}
+filter(filtro_e, filtro_e$Freq == 0)
+```
+
+Exactamente hay 48 zonas que no poseen data 1
+
+
+
+
+
+
 
 Despleguemos los códigos de regiones de nuestra tabla:
 
@@ -112,7 +252,7 @@ Hagamos un subset con la region = 1, y área URBANA = 1.
 
 ```{r}
 tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 1) 
-tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA== 1) 
+#tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA== 2) 
 ```
 
 
@@ -125,11 +265,73 @@ Obtenemos las frecuencias a la pregunta P17 por zona:
 tabla_con_clave_f <- tabla_con_clave[,-c(1,2,4:31,33:48),drop=FALSE]
 ```
 
+
+```{r}
+tabla_con_clave_f 
+```
+
+* Cuantas claves existen que no posean la respuesta 1?
+
+
+
+
+
+** se aproximan los ingresos estimadosa los reales?
+
+```{r}
+urc <- read_xlsx("urbano_rural_corregido.xlsx")
+```
+
+```{r}
+urc
+```
+
+
+```{r}
+losvilos <- filter(urc, urc$código.x == 4203)
+losvilos
+```
+
+```{r}
+mean(losvilos$ing_medio_zona)
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+urc2 <- read_xlsx("urbano_rural_corregido.xlsx")
+#urc2 <- filter(urc2, urc2$`código.x`== "4102") 
+urc2 <- filter(urc2, urc2$urb_rur== "1") 
+urc2
+```
+
+
+
+
+
+
+
+
+
 Renombramos y filtramos por la categoria `Trabajo por un sueldo` == 1: 
 
 ```{r}
 names(tabla_con_clave_f)[2] <- "Trabajo por un sueldo"
 ```
+
+
+```{r}
+tabla_con_clave_f
+```
+
 
 
 ```{r}
@@ -147,8 +349,7 @@ tabla <- as.data.frame(cross_tab)
 d <-tabla[!(tabla$Freq == 0),]
 names(d)[1] <- "zona" 
 d$anio <- "2017"
-
-head(d,5)
+d
 ```
 
 
@@ -238,8 +439,9 @@ y obtenemos la tabla de frecuencias de respuesta a la categoría = 1 de la pregu
 Hemos calculado ya éste valor como conclusión del punto 1.1 de [aquí](https://rpubs.com/dataintelligence/corr_casen_censo_002)
 
 
+
 ```{r}
-h_y_m_2017_censo <- readRDS("../../../ds_correlaciones_censo_casen/corre_ing_exp-censo_casen/ingresos_expandidos_urbano_17.rds")
+h_y_m_2017_censo <- readRDS("ingresos_expandidos_17.rds")
 head(h_y_m_2017_censo,5)
 ```
 
@@ -297,7 +499,7 @@ head(comunas_censo_casen,5)
 Creamos:
 
 ```{r}
-comunas_censo_casen$multipob <- comunas_censo_casen$ingresos_expandidos*comunas_censo_casen$p
+comunas_censo_casen$multipob <- comunas_censo_casen$Ingresos_expandidos*comunas_censo_casen$p
 ```
 
 ```{r}
@@ -533,6 +735,9 @@ comunas_censo_casen$est_ing <- exp(aa+bb*log(comunas_censo_casen$Freq.x))
 
 ```
 
+```{r}
+comunas_censo_casen
+```
 
 <br>
 
@@ -546,7 +751,10 @@ $$ Ingreso \_ Medio\_zona = est\_ing / (personas * p\_poblacional) $$
 
 ```{r}
 comunas_censo_casen$ing_medio_zona <- comunas_censo_casen$est_ing /(comunas_censo_casen$personas  * comunas_censo_casen$p)
+```
 
+
+```{r}
 r3_100 <- comunas_censo_casen[c(1:100),]
 kbl(r3_100) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
@@ -625,3 +833,46 @@ $$ \hat Y = {\beta_0}^2 + 2  \beta_0  \beta_1 \ln{X}+  \beta_1^2 ln^2X  $$
 ### Modelo log-log
 
 $$ \hat Y = e^{\beta_0+\beta_1  ln{X}} $$
+
+## Anexo: Integriedad de los datos estimados.
+
+```{r}
+region_01 <- readRDS("URBANO/region_01_P17_u.rds")
+region_01
+```
+
+
+
+Hipotesis de trabajo:
+
+Creeemos que existen respuestas a las pregunta P17 ¿Trabajó por un pago o especie? en la base de datos original.
+
+```{r}
+tabla_con_clave <- 
+readRDS("../../../ds_correlaciones_censo_casen/corre_censo_casen_2017/censos_con_clave/censo_personas_con_clave_17")
+r3_100 <- tabla_con_clave[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

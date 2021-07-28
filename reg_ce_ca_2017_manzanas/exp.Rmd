@@ -1,0 +1,618 @@
+---
+title:  Expansión de la CASEN sobre el CENSO a nivel de manzana (PASO 2)
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+  P17 ¿Trabajó por un pago o especie?: Correlación: 0.8717
+ 
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true    
+---
+
+date: `r format(Sys.time(), "%d-%m-%Y")`
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+library(plotly)
+library(normtest) 
+library(nortest)
+library(moments)
+```
+
+# Leemos el archivo censo2017_manzanas.csv
+
+```{r}
+manzanas <- read.csv('../../../archivos_grandes/censo2017_manzanas.csv',sep=";")
+```
+
+```{r}
+nrow(manzanas)
+```
+
+
+```{r}
+abc <- head(manzanas,15)
+kbl(abc) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+# Creación del campo zonas y manzanas
+
+No tenemos un campo que identifique de manera inequívoca una manzana, así que en el dataframe "manzanas"  construiremos una columna que se llame "zona" y otra que se llame "manzana", ésta última que integre al final de su propio código siempre tres dígitos añadiendo ceros cuando corresponda.
+
+
+## Generación del campo zona
+
+Seguimos los pasos del primer apartado de https://rpubs.com/dataintelligence/censo_2017_personas
+
+### Analicemos la estructura del código de Comuna:
+
+```{r}
+manzanas <- manzanas
+head(unique(manzanas$COMUNA),50)
+```
+Estructura que permanece inalterada en la forma del código zona.
+
+### Analicemos la estructura del código de DC:
+
+```{r}
+head(unique(manzanas$DC),10000)
+```
+
+Debemos agregar un cero a la izquierda a todos los códigos DC que contengan un dígito:
+
+```{r}
+codigos <- manzanas$DC
+rango <- seq(1:nrow(manzanas))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(1),(nchar(cadena)[rango]))
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+dc <- cbind(codigos,cadena)
+```
+
+
+Lo verificamos
+
+```{r}
+head(unique(dc$cadena),50)
+```
+
+Analicemos la estructura del código de zc_loc:
+
+```{r}
+a002 <- head(unique(manzanas$ZC_LOC),50)
+a002
+```
+
+Deben todos los codigos poseer tres dígitos, agregándole un cero a los que tienen 2 y dos ceros a los que tienen uno.
+
+```{r}
+codigos <- manzanas$ZC_LOC
+rango <- seq(1:nrow(manzanas))
+cadena<- paste("00",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(2),nchar(cadena)[rango])
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+cadena_c <- cbind(codigos,cadena)
+```
+
+lo verificamos
+
+```{r}
+head(unique(cadena_c$cadena),50)
+```
+
+Unimos nuestra nueva clave a nuestro dataframe original con el nombre de campo clave:
+
+
+```{r}
+manzanas$clave <- paste(manzanas$COMUNA, dc$cadena, manzanas$AREA,  cadena_c$cadena, sep="")
+```
+
+Verificamos para los primeros 50 registros y vemos que la última columna contiene la clave.
+
+```{r}
+tablamadre <- head(manzanas,50)
+
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+## Generación del campo zona manzanal
+
+Analicemos la estructura del código de MZ_ENT
+
+```{r}
+MZ_ENT_1 <- head(unique(manzanas$MZ_ENT),50)
+MZ_ENT_1
+```
+
+Deben todos los codigos poseer tres dígitos, agregándole un cero a los que tienen 2 y dos ceros a los que tienen uno.
+
+```{r}
+codigos <- manzanas$MZ_ENT
+rango <- seq(1:nrow(manzanas))
+cade<- paste("00",codigos[rango], sep = "")
+cade <- substr(cade,(nchar(cade)[rango])-(2),nchar(cade)[rango])
+codigos <- as.data.frame(codigos)
+cade <- as.data.frame(cade)
+cade_c <- cbind(codigos,cade)
+```
+
+lo verificamos:
+
+```{r}
+head(unique(cade_c$cade),50)
+```
+
+Creamos clave y clave_manzana
+
+```{r}
+manzanas$clave <- paste(manzanas$COMUNA, dc$cadena, manzanas$AREA,  cadena_c$cadena, sep="")
+manzanas$clave_manzana <- paste(manzanas$COMUNA, dc$cadena, manzanas$AREA,  cadena_c$cadena, cade_c$cade, sep="")
+```
+
+```{r}
+abc <- head(manzanas,15)
+kbl(abc) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+El problema es que en el primer paso obtuvimos frecuencias por zona, imposible de otra manera
+
+
+```{r}
+ver <- readxl::read_excel("censo_casen_urb_2017.xlsx")
+ver
+```
+
+Clave de manzana deberia tener frecuencia de respuesta censal propia SI
+
+```{r}
+nrow(manzanas)
+```
+
+
+
+```{r}
+manzanas$clave <- as.numeric(manzanas$clave)
+manzanas$clave_manzana <- as.numeric(manzanas$clave_manzana)
+manzanas_2 <- manzanas[,c(10,60,61)]
+options(scipen = 999)
+head(manzanas_2,5)
+```
+
+## Construcción de una tabla de proporciones de personas por manzana dentro de una área zonal
+
+```{r}
+codigos_com <- unique(manzanas_2$clave)
+frec_man_com_parcial_total <- data.frame()
+for(i in codigos_com){
+  frec_man_com_parcial <- filter(manzanas_2, manzanas_2$clave == i)
+  frec_man_com_parcial$p_poblacional <- frec_man_com_parcial$PERSONAS*100/sum(frec_man_com_parcial$PERSONAS)/100
+  frec_man_com_parcial_total <- rbind(frec_man_com_parcial_total,frec_man_com_parcial)
+}
+```
+
+```{r}
+tablamadre <- head(frec_man_com_parcial_total,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+```{r}
+nrow(frec_man_com_parcial_total)
+```
+
+Verifiquemos que la suma de p para la clave 1101011001 sea 1.
+
+
+```{r}
+frec_man_com_parcial_total_f <- filter(frec_man_com_parcial_total, frec_man_com_parcial_total$clave == "1101011001")
+frec_man_com_parcial_total_f
+```
+
+
+```{r}
+sum( frec_man_com_parcial_total_f$p)
+```
+
+
+# Unificación de las tablas construídas para zonas y manzanas
+
+```{r}
+# primer_paso <- read_excel("censo_casen_urb_2017.xlsx")
+primer_paso <- readRDS("urbano_rural_final.rds")
+names(primer_paso)[1] <- "clave"
+# names(primer_paso)[2] <- "código"
+names(primer_paso)[3] <- "frecuencia_de_respuesta_de_variable"
+#primer_paso <- primer_paso[,-c(9,11)]
+head(primer_paso,5)
+
+
+## p es la proporcion de personas por manzana dentro de una área zonal
+
+
+head(frec_man_com_parcial_total,5)
+```
+
+
+
+
+## Acá hacemos la union entre las proporciones de habitantes en cada manzana por zona y el primer paso
+
+
+```{r}
+union <- merge(x=primer_paso, y= frec_man_com_parcial_total, by="clave", all.x = TRUE)
+```
+
+```{r}
+#head(union,5)
+union
+```
+
+```{r}
+#unique(union$PERSONAS)
+```
+
+# El campo **multipob** manzana
+
+```{r}
+union$multipobmz <- union$ing_medio_zona*union$PERSONAS
+```
+
+
+proporcion de respuesta segun proporcion de PERSONAS por manzana
+
+
+```{r}
+
+head(union,5)
+```
+```{r}
+union <- filter(union, union$clave == "10101011001")
+```
+
+## Entonces lo que vamos a hacer sera calcular la proporcion de frecuencia_de_respuesta_de_variable segun la poblacion manzanal PERSONAS.
+
+
+```{r}
+union$frecuencia_poblacional <- union$frecuencia_de_respuesta_de_variable*union$p_poblacional
+```
+
+
+
+
+```{r}
+tablamadre <- head(union,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+```{r}
+union
+```
+
+
+
+```{r}
+variables_nuevas <- union[,c(1,12,13,14,17,20,21)]
+variables_nuevas
+```
+
+```{r}
+write_xlsx(variables_nuevas,"variables_nuevas.xlsx")
+```
+
+
+
+#####
+#####
+#####
+
+
+
+
+##  Diagrama de dispersión loess
+
+```{r}
+scatter.smooth(x=union$frecuencia_poblacional
+               , y=union$multipobmz
+, main="multipobmz ~ prop_variable",
+     xlab = "prop_variable",
+     ylab = "multipobmz",
+           col = 2) 
+```
+
+###########
+###########
+###########
+
+
+
+
+
+
+# Proporción de frecuencias de respuesta a: P17 ¿Trabajó por un pago o especie?
+
+Debemos crear un campo que sea proporción de respuesta por manzana dentro de una comuna:
+
+
+```{r}
+codigos_com <- unique(union$clave_manzana)
+frec_man_com_parcial_total <- data.frame()
+for(i in codigos_com){
+  frec_man_com_parcial <- filter(union, union$código == i)
+  frec_man_com_parcial$prop_variable <- frec_man_com_parcial$frecuencia*100/sum(frec_man_com_parcial$frecuencia)/100
+  frec_man_com_parcial_total <- rbind(frec_man_com_parcial_total,frec_man_com_parcial)
+}
+```
+
+```{r}
+tablamadre <- head(frec_man_com_parcial_total,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+## La prueba:
+
+```{r}
+head(frec_man_com_parcial_total,5)
+```
+
+
+```{r}
+frec_man_com_parcial_total <- filter(frec_man_com_parcial_total, frec_man_com_parcial_total$código == "10101")
+head(frec_man_com_parcial_total,5)
+```
+
+```{r}
+sum( frec_man_com_parcial_total$prop_variable)
+```
+
+
+```{r}
+saveRDS(frec_man_com_parcial_total, "paso_2_total.rds")
+```
+
+Hagamos un subset con la region = 1, y área URBANA = 1.
+
+```{r}
+# frec_total <- filter(frec_man_com_parcial_total, frec_man_com_parcial_total$identificador == "region_01") 
+# frec_total<- filter(frec_man_com_parcial_total, frec_man_com_parcial_total$urb_rur== "1") 
+
+frec_total <- frec_man_com_parcial_total
+
+
+```
+
+```{r}
+head(frec_total,5)
+```
+
+
+
+
+#  Análisis de regresión
+
+Aplicaremos un análisis de regresión donde:
+
+$$ Y(dependiente) = ingreso \ expandido \ por \ zona \ (multi\_pob)$$
+
+$$ X(independiente) = frecuencia \ de \ población \ que \ posee \ la \ variable \ Censal \ respecto \ a \ la \ zona \ (Freq.x)  $$
+<br>
+
+##  Diagrama de dispersión loess
+
+```{r}
+scatter.smooth(x=frec_total$multipobmz, y=frec_total$prop_variable
+, main="multipobmz ~ prop_variable",
+     xlab = "prop_variable",
+     ylab = "multipobmz",
+           col = 2) 
+```
+
+##  Outliers 
+
+Hemos demostrado en el punto 5.7.2 de [aquí](https://rpubs.com/dataintelligence/expansion_viviendas_001) que la exclusión de ouliers no genera ninguna mejora en el modelo de regresión.
+
+##  Modelo lineal 
+
+Aplicaremos un análisis de regresión lineal del ingreso expandido por zona sobre las frecuencias de respuestas zonales.
+
+```{r}
+linearMod <- lm(multipobmz~(prop_variable) , data=frec_total)
+summary(linearMod) 
+```
+
+##  Gráfica de la recta de regresión lineal
+
+```{r, warning = FALSE, message = FALSE}
+ggplot(frec_total, aes(x = prop_variable , y = multipobmz)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+```
+
+
+Si bien obtenemos nuestro modelo lineal da cuenta del 0.9994 de la variabilidad de los datos de respuesta en torno a su media, modelos alternativos pueden ofrecernos una explicación de la variable dependiente aún mayor.
+
+###  Análisis de residuos
+
+```{r}
+par(mfrow = c (2,2))
+plot(linearMod)
+```
+
+#  Modelos alternativos
+
+```{r}
+frecuencia <- frec_total$prop_variable
+union <- frec_total
+```
+
+
+
+
+```{r}
+### 8.1 Modelo cuadrático
+
+linearMod <- lm( multipobmz~(frecuencia^2) , data=union)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "cuadrático"
+sintaxis <- "linearMod <- lm( multi_pob~(frecuencia^2) , data=h_y_m_comuna_corr_01)"
+
+modelos1 <- cbind(modelo,dato,sintaxis)
+
+
+modelos1 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.2 Modelo cúbico
+ 
+linearMod <- lm( multipobmz~(frecuencia^3) , data=union)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "cúbico"
+sintaxis <- "linearMod <- lm( multi_pob~(frecuencia^3) , data=h_y_m_comuna_corr_01)"
+
+modelos2 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.3 Modelo logarítmico
+ 
+linearMod <- lm( multipobmz~log(frecuencia) , data=union)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "logarítmico"
+sintaxis <- "linearMod <- lm( multi_pob~log(frecuencia) , data=h_y_m_comuna_corr_01)"
+
+modelos3 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.5 Modelo con raíz cuadrada 
+ 
+linearMod <- lm( multipobmz~sqrt(frecuencia) , data=union)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz cuadrada"
+sintaxis <- "linearMod <- lm( multi_pob~sqrt(frecuencia) , data=h_y_m_comuna_corr_01)"
+
+modelos5 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.6 Modelo raíz-raíz
+ 
+linearMod <- lm( sqrt(multipobmz)~sqrt(frecuencia) , data=union)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz-raíz"
+sintaxis <- "linearMod <- lm( sqrt(multi_pob)~sqrt(frecuencia) , data=h_y_m_comuna_corr_01)"
+
+modelos6 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.7 Modelo log-raíz
+ 
+linearMod <- lm( log(multipobmz)~sqrt(frecuencia) , data=union)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "log-raíz"
+sintaxis <- "linearMod <- lm( log(multi_pob)~sqrt(frecuencia) , data=h_y_m_comuna_corr_01)"
+
+modelos7 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.8 Modelo raíz-log
+ 
+linearMod <- lm( sqrt(multipobmz)~log(frecuencia) , data=union)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz-log"
+sintaxis <- "linearMod <- lm( sqrt(multi_pob)~log(frecuencia) , data=h_y_m_comuna_corr_01)"
+
+modelos8 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.9 Modelo log-log
+ 
+linearMod <- lm( log(multipobmz)~log(frecuencia) , data=union)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "log-log"
+sintaxis <- "linearMod <- lm( log(multi_pob)~log(frecuencia) , data=h_y_m_comuna_corr_01)"
+
+modelos9 <- cbind(modelo,dato,sintaxis)
+ 
+modelos_bind <- rbind(modelos1, modelos2,modelos3,modelos5,modelos6,modelos7,modelos8,modelos9)
+modelos_bind <- as.data.frame(modelos_bind)
+
+modelos_bind <<- modelos_bind[order(modelos_bind$dato, decreasing = T ),]
+h_y_m_comuna_corr_01 <<- union
+
+kbl(modelos_bind) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+
+
+
+
+
+
+
+
+

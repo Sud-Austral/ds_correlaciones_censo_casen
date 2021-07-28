@@ -1,0 +1,381 @@
+---
+title: Correlaciones entre variables del CENSO de Viviendas, Hogares y Personas e Ingresos promedios comunales de la CASEN 2017.
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+date: "Martes 13-07-2021"
+
+abstract: |
+  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población también comunal** que llamaremos **ingresos expandidos** extraídos de la Casen 2017 y las frecuencias de respuesta por categoría a la pregunta **P17** del Censo de viviendas 2017, también extraídas a nivel comunal. Lo haremos a nivel nacional.
+  
+  Haremos las correlaciones tanto a nivel Urbano como Rural.
+  
+  Importante es aplicar la librería **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
+    
+    Identificamos una violación a un supuesto a la correlación de Pearson; demostramos que lo correcto es aplicar la $\tau$ de Kendall.  
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true    
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+
+```
+
+<br> 
+
+# Nivel nacional URBANO (código 1)
+
+## Pregunta **P17**: Trabajó durante la semana pasada
+
+Categorías de respuesta:
+
+1 Por un pago en dinero o especies\
+2 Sin pago para un familiar\
+3 Tenía empleo pero estuvo de vacaciones, con licencia, en descanso laboral, etc.\
+4 Se encontraba buscando empleo\
+5 Estaba estudiando\
+6 Realizó quehaceres de su hogar\
+7 Es jubilado, pensionado o rentista\
+8 Otra situación\
+
+##  Generación de tabla de contingencia para la variable P17
+ 
+
+```{r,attr.source='.numberLines', warning=FALSE}
+tabla_con_clave <- readRDS("censos/censo_personas_con_clave_17")
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
+b <- tabla_con_clave_u$COMUNA
+c <- tabla_con_clave_u$P17
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:8){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+
+```
+
+
+```{r,attr.source='.numberLines', warning=FALSE}
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+names(comuna_corr)[ncol(comuna_corr)] <- "código"
+
+```
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(3,(ncol(comuna_corr)-1),3)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+
+names(comuna_corr)[2] <- "Por un pago en dinero o especies"
+names(comuna_corr)[4] <- "Sin pago para un familiar"
+names(comuna_corr)[6] <- "Tenía empleo pero estuvo de vacaciones, con licencia, en descanso laboral, etc."
+names(comuna_corr)[8] <- "Se encontraba buscando empleo"
+names(comuna_corr)[10] <- "Estaba estudiando"
+names(comuna_corr)[12] <- "Realizó quehaceres de su hogar"
+names(comuna_corr)[14] <- "Es jubilado, pensionado o rentista"
+names(comuna_corr)[16] <- "Otra situación"
+```
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(1,(ncol(comuna_corr)-1),2)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+```
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+union_final_urb <- df_2017_2[,-c(1,(ncol(df_2017_2)-1))]
+write_xlsx(union_final_urb, "P17_urbano.xlsx")
+```
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(union_final_urb)
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
+```
+
+
+Graficas:
+
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+library(plotly)
+
+df_2017_fig <- df_2017_2[,-c((ncol(df_2017_2)-1))]
+
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=7000, height=400) 
+}
+for (g in 3:(ncol(df_2017_2)-1)) {
+grafica_fn(g)
+
+}
+
+fig <- fig %>% layout(autosize = T )
+fig 
+```
+
+
+
+#  **Correlaciones**
+
+La distribución es asimétrica, poseyendo un sesgo positivo.
+
+
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+df_2017_2f <- filter(union_final_urb, union_final_urb$ingresos_expandidos != 'is.na')
+III <- seq(1,(ncol(df_2017_2f)-1),1)
+my_data <- df_2017_2f[, c(III)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+tabla <- as.data.frame(tabla)
+tabla <- tabla %>% drop_na()
+colnames(tabla) <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_P17_URB.rds")
+
+tabla %>%
+  rownames_to_column("Trabajó durante la semana pasada") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
+```
+
+ ##  Kendall
+
+```{r}
+# union_final_urb <- mutate_all(union_final_urb, ~replace(., is.na(.), -99))
+```
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+chart.Correlation(union_final_urb, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+ 
+
+##  Pearson
+ 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(union_final_urb, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+##  Spearman
+
+```{r,attr.source='.numberLines', warning=FALSE}
+
+chart.Correlation(union_final_urb, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+
+# Nivel nacional RURAL (código 2)
+
+
+```{r,attr.source='.numberLines', warning=FALSE}
+tabla_con_clave <- readRDS("censos/censo_personas_con_clave_17")
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
+b <- tabla_con_clave_u$COMUNA
+c <- tabla_con_clave_u$P17
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:8){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+```
+
+
+```{r,attr.source='.numberLines', warning=FALSE}
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+names(comuna_corr)[ncol(comuna_corr)] <- "código"
+
+```
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(3,(ncol(comuna_corr)-1),3)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+names(comuna_corr)[2] <- "Por un pago en dinero o especies"
+names(comuna_corr)[4] <- "Sin pago para un familiar"
+names(comuna_corr)[6] <- "Tenía empleo pero estuvo de vacaciones, con licencia, en descanso laboral, etc."
+names(comuna_corr)[8] <- "Se encontraba buscando empleo"
+names(comuna_corr)[10] <- "Estaba estudiando"
+names(comuna_corr)[12] <- "Realizó quehaceres de su hogar"
+names(comuna_corr)[14] <- "Es jubilado, pensionado o rentista"
+names(comuna_corr)[16] <- "Otra situación"
+ 
+```
+ 
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+quitar <- seq(1,(ncol(comuna_corr)-1),2)
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_rural_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+```
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+union_final_urb <- df_2017_2[,-c(1,(ncol(df_2017_2)-1))]
+write_xlsx(union_final_urb, "P17_rural.xlsx")
+```
+
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(union_final_urb)
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
+```
+
+
+Graficas:
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+library(plotly)
+
+df_2017_fig <- df_2017_2[,-c((ncol(df_2017_2)-1))]
+
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=7000, height=400) 
+}
+for (g in 3:(ncol(df_2017_2)-1)) {
+grafica_fn(g)
+
+}
+
+fig <- fig %>% layout(autosize = T )
+fig 
+```
+
+
+
+#  **Correlaciones**
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+df_2017_2f <- filter(union_final_urb, union_final_urb$ingresos_expandidos != 'is.na')
+III <- seq(1,(ncol(df_2017_2f)-1),1)
+my_data <- df_2017_2f[, c(III)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+tabla <- as.data.frame(tabla)
+tabla <- tabla %>% drop_na()
+colnames(tabla) <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_P17_RU.rds")
+tabla %>%
+  rownames_to_column("Trabajó durante la semana pasada") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
+```
+
+
+```{r}
+# union_final_urb <- mutate_all(union_final_urb, ~replace(., is.na(.), -99))
+```
+
+
+##  Kendall
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+chart.Correlation(union_final_urb, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+##  Pearson
+ 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+chart.Correlation(union_final_urb, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+##  Spearman
+
+```{r,attr.source='.numberLines', warning=FALSE}
+chart.Correlation(union_final_urb, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+
+
+
+

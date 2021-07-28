@@ -1,0 +1,197 @@
+---
+title: Correlaciones entre variables del Censo y CASEN a nivel de Zona Censal
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+date: "Lunes 14-06-2021"
+
+abstract: |
+  Nuestro objetivo es determinar cuáles variables de la CASEN pueden ser utilizadas para realizar predicciones a nivel de Zona Censal utilizando los datos del Censo 2017. El primer paso será, siempre dentro de la Casen del 2017, calcular las correlaciones entre el ingreso total promedio por comuna multiplicado por la poblacion de la misma, y la frecuencia de categorías específicas de variables tales como educación, calidad de la vivienda y edad. El Coeficiente de Correlación de Pearson es un estadístico paramétrico cuya aplicación es adecuada. Se asume que las variables a correlacionar variables tienen una distribución aproximadamente normal.
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+```
+
+
+## 1.1 Ingresos promedio por comuna
+
+Obtenemos el dato de "ingreso promedio anual" según CASEN 2017 (a nivel de comuna).
+
+### 1.1.1 Leemos la base de datos:
+
+```{r}
+# leemos la base de datos:
+casen_2017 <- readRDS(file = "../../../../archivos_grandes/casen_2017_c.rds")
+```
+
+
+### 1.1.2 Eliminamos del dataframe los registros que no posean valores en la columna del ingreso total:
+
+```{r}
+casen_2017 <- casen_2017[!is.na(casen_2017$ytotcor),]
+```
+
+### 1.1.3 Excluimos los outliers:
+
+```{r}
+Q <- quantile(casen_2017$ytotcor, probs=c(.25, .75), na.rm = FALSE)
+iqr <- IQR(casen_2017$ytotcor)
+casen_2017_sin_o <- subset(casen_2017, casen_2017$ytotcor > (Q[1] - 1.5*iqr) & casen_2017$ytotcor < (Q[2]+1.5*iqr))
+casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character), stringsAsFactors=FALSE)
+
+# despleguemos los primeros 100 registros en pantalla del subset creado:
+# eliminated_100 <- eliminated[c(1:100),]
+# eliminated_100 %>%  kbl() %>%
+# kable_material(c("striped", "hover"), font_size = 12)%>%
+#    scroll_box(width = "100%", height = "500px")
+```
+
+### 1.1.4 Obtenemos los promedios de ingreso comunales:
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+b <-  as.numeric(casen_2017_sin_o$ytotcor)
+a <- casen_2017_sin_o$comuna
+
+promedios_grupales <-aggregate(b, by=list(a), FUN = mean , na.rm=TRUE )
+
+```
+
+### 1.1.5 Veamos los primeros 5 registros:
+
+```{r}
+head(promedios_grupales,5)
+```
+
+### 1.1.6 Renombramos y agregamos una columna año:
+
+```{r}
+#Asignamos nombres con sentido a las cabeceras:
+names(promedios_grupales)[1] <- "comuna"
+names(promedios_grupales)[2] <- "promedio_i"
+promedios_grupales$año <- "2017"
+```
+
+Existen 346 comunas en Chile
+
+### 1.1.7 Agregamos los codigos comunales:
+
+```{r}
+codigos_comunales <- readRDS(file = "../../../../archivos_grandes/codigos_comunales_2011-2017.rds")
+names(codigos_comunales)[1] <- "código"
+names(codigos_comunales)[2] <- "comuna"
+
+df_2017 = merge( x = promedios_grupales, y = codigos_comunales, by = "comuna", all.x = TRUE)
+```
+
+Veamos los primeros 5 registros:
+
+```{r}
+head(df_2017,5)
+```
+
+### 1.1.8 Agreguemos una columna con la variable de ingresos ponderada por poblacion. Para ello contamos las frecuencias de los registros por comuna en el Censo del 2017.
+
+
+
+```{r}
+library("rio")
+x <- import("../../../../archivos_grandes/Microdato_Censo2017-Personas.csv")
+```
+
+
+```{r}
+my_summary_data <- x %>%
+    group_by(x$COMUNA) %>%
+    summarise(Count = n()) 
+```
+
+
+```{r}
+head(my_summary_data,5)
+```
+
+### 1.1.9 Agregamos un cero antes de cada codigo comunal para poder hacer el merge posteriormente con la tabla de frecuencias.
+
+
+```{r}
+names(my_summary_data)[1] <- "comuna"     
+names(my_summary_data)[2] <- "personas"
+my_summary_data
+```
+
+```{r}
+# recogemos el campo Comuna:
+codigos <- my_summary_data$comuna
+# construimos una secuencia llamada rango del 1 al total de filas del dataset:
+rango <- seq(1:nrow(my_summary_data))
+# Creamos un string que agrega un cero a todos los registros:
+cadena <- paste("0",codigos[rango], sep = "")
+
+# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser siempre 5 agregandole un cero al inicio de los que tienen 4.
+# Para ello extraemos un substring de la cadena sobre todas las filas (rangos) comenzando desde el primero o el segundo y llegando siempre al 6.
+
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(my_summary_data,cadena)
+head(comuna_corr,5)
+```
+
+```{r}
+names(comuna_corr)[3] <- "código"  
+head(comuna_corr,5)
+```
+
+### 1.1.10 unimos:
+
+```{r}
+df_2017_2 = merge( x = df_2017, y = comuna_corr, by = "código", all.x = TRUE)
+head(df_2017_2,5)
+```
+
+
+### 1.1.11 Agregamos la columna "Ingresos_expandidos"
+
+```{r}
+df_2017_2$Ingresos_expandidos <- df_2017_2$promedio_i*df_2017_2$personas
+head(df_2017_2,5)
+
+saveRDS(df_2017_2, "ingresos_expandidos_17.rds")
+```
+

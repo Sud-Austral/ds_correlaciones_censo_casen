@@ -1,0 +1,1633 @@
+---
+title: Expansión de la CASEN sobre el CENSO compendio 2017
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+abstract: |
+  Exponemos las correlaciones descubiertas. 
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true    
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
+date: `r format(Sys.time(), "%d-%m-%Y")`
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+
+```
+
+
+
+
+# CASEN 2017 y CENSO Vivienda 2017
+
+Hemos correlacionado una variable llamada multipob, que multiplica el ingreso promedio mensual comunal (extraído de la Casen 2017) por la cantidad de habitantes de la comuna en cuestión, con la frecuencia de cada una de las categorías de respuesta de cada pregunta del Censo 2017. La primera variable la podemos interpretar como un **pseudo-PIB-salarial** comunal -la potencia económica salarial comunal **PESC**-, la segunda una frecuencia simple de respuesta.
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P01**: [Tipo de vivienda](https://rpubs.com/dataintelligence/corr_ce_ca_P01)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P01_URBANO.rds")
+tabla %>%
+  rownames_to_column("Tipo de vivienda") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F)%>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P01_RURAL.rds")
+tabla %>%
+  rownames_to_column("Tipo de vivienda") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption="RURAL") %>% 
+    kable_paper(full_width = F) %>% 
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+
+</div>
+</div>
+
+<br>
+
+### *Variables a excluir*: 
+
+El primer criterio de exclusión será la cantidad de respuestas obtenidas del Censo muy menores.Se excluyen:
+
+Vivienda tradicional indígena 56\
+(carpa, casa rodante o similar) 38\
+Vivienda colectiva 365\
+Operativo personas en tránsito (no es vivienda) 1\
+Operativo calle (no es vivienda) 1\
+
+### *Interpretación a nivel urbano*: 
+
+La variable que mejor se ajusta a cambios en la potencia económica salarial comunal es la variable casa. Es decir, más personas declaran vivir en casas a medida que la comuna de la persona posea mayor potencia económica salarial. La frecuencia está corregida en cuanto la variable **multipob** incluye la cantidad de habitantes comunal.
+
+Se supondría que la segunda variable que mejor correlacione fuera "Departamento en edificio", pero es "Pieza en casa antigua o en conventillo", lo que revela un déficit habitacional o la incapacidad de las personas para acceder a vivir en casas o departamentos.
+
+### *Interpretación a nivel rural*: 
+
+El primer criterio de exclusión será la cantidad de respuestas obtenidas del Censo.Se excluyen:
+
+
+Pieza en casa antigua o en conventillo 131\
+(carpa, casa rodante o similar) 35\
+Vivienda colectiva 84\
+Operativo personas en tránsito (no es vivienda) 1\
+Operativo calle (no es vivienda) NA
+
+"Otro tipo de vivienda particular" resulta un concepto ambigüo. No está claramente definida en el diccionario de conceptos del censo 2017. La segunda variable que mejor correlaciona como se espera en "Casa".
+
+</div>
+
+  
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P02**: [Ocupación de la vivienda](https://rpubs.com/dataintelligence/corr_ce_ca_P02)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P02_URBANO.rds")
+tabla %>%
+  rownames_to_column("Ocupación de la vivienda") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P02_RURAL.rds")
+tabla %>%
+  rownames_to_column("Ocupación de la vivienda") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+
+</div>
+</div>
+
+<br>
+
+### *Variables a excluir*: 
+
+No existen variables tan poco frecuentes como para excluir.
+
+### *Interpretación a nivel urbano*: 
+
+Correlacionan casi homogéneamente las casas con  moradores presentes, ausentes y casas en venta, siendo más fuerte la correlación con los primeros. Se entiende lo anterior por el predominio de la población en zonas urbanas.
+
+Más personas declaran estar presentes en sus viviendas a medida que su comuna posea mayor potencia económica salarial. Se puede interpretar que a menor **PESC**, más personas están fuera de sus hogares trabajando, generando recursos para la subsistencia.
+
+Las viviendas de vacaciones correlacionan mucho más en el ambiente urbano, pues personas que pueden proveerse de una las eligen en comunas con mayor **PESC**.
+   
+   
+### *Interpretación a nivel rural*:     
+   
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P03A**: [Material de los muros exteriores](https://rpubs.com/dataintelligence/corr_ce_ca_P03A)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P03A_URBANO.rds")
+tabla %>%
+  rownames_to_column("Material de los muros exteriores") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P03A_RURAL.rds")
+tabla %>%
+  rownames_to_column("Material de los muros exteriores") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+No existen variables cuyo tamaño amerite excluir.
+
+### *Interpretación a nivel urbano*: 
+
+
+### *Interpretación a nivel rural*:    
+   
+   
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P03B**: [Material en la cubierta del techo](https://rpubs.com/dataintelligence/corr_ce_ca_P03B)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P03B_URBANO.rds")
+tabla %>%
+  rownames_to_column("Material en la cubierta del techo") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P03B_RURAL.rds")
+tabla %>%
+  rownames_to_column("Material en la cubierta del techo") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+Paja, coirón, totora o caña: 62
+
+Sin cubierta sólida de techo: 242
+
+*Nivel Rural*:
+
+Fonolita o plancha de fieltro embreado: 141
+
+Paja, coirón, totora o caña : 176
+
+Sin cubierta sólida de techo: 39
+
+### *Interpretación a nivel urbano*: 
+
+
+### *Interpretación a nivel rural*:  
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P03C**: [Material de construcción del piso](https://rpubs.com/dataintelligence/corr_ce_ca_P03C)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P03C_URBANO.rds")
+tabla %>%
+  rownames_to_column("Material de construcción del piso") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P03C_RURAL.rds")
+tabla %>%
+  rownames_to_column("Material de construcción del piso") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+*Nivel Rural*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+### *Interpretación a nivel urbano*: 
+
+
+### *Interpretación a nivel rural*:  
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P04**: [Número de piezas usadas exclusivamente como dormitorio](https://rpubs.com/dataintelligence/corr_ce_ca_P04)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P04_URBANO.rds")
+tabla %>%
+  rownames_to_column("Número de piezas usadas exclusivamente como dormitorio") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P04_RURAL.rds")
+tabla %>%
+  rownames_to_column("Número de piezas usadas exclusivamente como dormitorio") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+6 o más piezas: NA 
+
+*Nivel Rural*:
+
+6 o más piezas: NA 
+
+### *Interpretación a nivel urbano*: 
+
+
+### *Interpretación a nivel rural*:  
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P05**: [Origen del agua](https://rpubs.com/dataintelligence/corr_ce_ca_P05)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P05_URBANO.rds")
+tabla %>%
+  rownames_to_column("Origen del agua") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P05_RURAL.rds")
+tabla %>%
+  rownames_to_column("Origen del agua") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+*Nivel Rural*:
+
+No existen variables cuyo tamaño amerite excluirlas.
+
+### *Interpretación a nivel urbano*: 
+
+
+### *Interpretación a nivel rural*:  
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+
+
+
+## **CANT_HOG**: [Cantidad de hogares](https://rpubs.com/dataintelligence/corr_ca_ce_CANT_HOG)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_CANT_HOG_URBANO.rds")
+tabla %>%
+  rownames_to_column("Cantidad de hogares") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_CANT_HOG_RURAL.rds")
+tabla %>%
+  rownames_to_column("Cantidad de hogares") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+A partir de los 9 hogares por vivienda la cifra comienza a bajar drásticamente y a partir de la cantidad de hogares 21 sólo existen NA o 1.
+
+9_hogar: 25\
+10_hogar: 13\
+11_hogar: 10\
+12_hogar: 14\
+13_hogar: 6\
+14_hogar: 6\
+15_hogar: 3\
+16_hogar: 5\
+17_hogar: 4\
+18_hogar: 1\
+19_hogar: 2\
+20_hogar: 2\
+
+
+*Nivel Rural*:
+
+A partir del 4 hogar por vivienda sólo existen 1 o NA.
+
+### *Interpretación a nivel urbano*: 
+
+Más personas declaran vivir en un sólo hogar a medida que la comuna de la persona posea mayor potencia económica salarial.
+
+
+### *Interpretación a nivel rural*:  
+
+Debemos considerar sólo hasta el 3 hogar. La variable que más correlaciona son dos hogares y tiene relación con el mayor nivel de pobreza que se presenta en las zonas rurales que obligan a dos hogares a vivir dentro de una misma vivienda.
+
+Que significa el hogar 0?
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **CANT_PER**: [Cantidad de personas](https://rpubs.com/dataintelligence/corr_ca_ce_CANT_PER)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_CANT_PER_URBANO.rds")
+tabla %>%
+  rownames_to_column("Cantidad de personas") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_CANT_PER_RURAL.rds")
+tabla %>%
+  rownames_to_column("Cantidad de personas") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+Se excluyen:
+
+13_personas: 156\
+14_personas: 106\
+15_personas: 66
+
+en el grupo de 16_personas a las 30 personas existen 55 **casos** o menos.  
+
+*Nivel Rural*:
+
+Se excluyen:
+
+9_personas: 51\
+10_personas: 27\
+11_personas: 12
+
+en el grupo de 12_personas a las 30 personas existen 7 **casos** o menos. Se excluyen.
+
+
+
+### *Interpretación a nivel urbano*: 
+
+La variable que mejor se ajusta a cambios en la potencia económica salarial comunal es 4 personas por vivienda.
+
+Más personas declaran que viven 4 personas en sus viviendas a medida que la comuna de la persona posea mayor potencia económica salarial.
+
+### *Interpretación a nivel rural*:  
+
+# CASEN 2017 y CENSO Hogares 2017
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **TIPO_HOGAR**: [Tipo de hogar](https://rpubs.com/dataintelligence/corr_ca_ce_TIPO_HOGAR)
+ 
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_TIPO_HOGAR_URBANO.rds")
+tabla %>%
+  rownames_to_column("Tipo de hogar") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_TIPO_HOGAR_RURAL.rds")
+tabla %>%
+  rownames_to_column("Tipo de hogar") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+*Nivel Rural*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+**Hogar**:  corresponde  a  una  o  más  personas  que, unidas  o  no  por  un  vínculo  de  parentesco, alojaron  la noche del 18 al 19 de abril de 2017 en una misma vivienda o parte de ella y se benefician de un mismo presupuesto para alimentación.
+
+
+
+### *Interpretación a nivel urbano*: 
+
+**Hogar nuclear biparental con hijos**: son los hogares cuyos únicos integrantes son la jefatura 
+de hogar; un cónyuge, conviviente de hecho o conviviente por unión civil, y sus hijos o hijas, 
+ya sean de ambos, solo del jefe o jefa o solo del cónyuge, conviviente o pareja.
+
+### *Interpretación a nivel rural*: 
+
+**Hogar compuesto**: hogar que cuenta con un núcleo 
+(hogar  nuclear)  y  además  incluye  no  parientes  de la jefatura del hogar. Puede o no ser integrado por otros parientes de la jefatura del hogar.
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **TIPO_OPERATIVO**: [Tipo de operativo
+](https://rpubs.com/dataintelligence/corr_ca_ce_TIPO_OPERATIVO)
+ 
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_TIPO_OPERATIVO_URBANO.rds")
+tabla %>%
+  rownames_to_column("Tipo de hogar") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_TIPO_OPERATIVO_RURAL.rds")
+tabla %>%
+  rownames_to_column("Tipo de hogar") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+
+POBLACIÓN TOTAL POR TIPO DE OPERATIVO
+
+En este tabulado se presenta la cantidad de personas efectivamente censadas de acuerdo al tipo de 
+operativo en que fueron censadas. Es decir, se muestra la cantidad de población censada en viviendas 
+particulares ocupadas con moradores presentes, en viviendas colectivas, en operativo especial de 
+tránsito y en operativo especial calle.
+ 
+Población efectivamente censada: Corresponde al total de personas que fueron censadas en 
+los distintos operativos de empadronamiento, es decir, viviendas particulares ocupadas con 
+moradores presentes, viviendas colectivas, operativo especial tránsito y operativo especial 
+calle.
+
+Personas en viviendas particulares ocupadas con moradores presentes: Corresponde a 
+aquellas personas que fueron censadas en viviendas dentro de una propiedad, destinada 
+total o parcialmente a la habitación permanente o temporal de personas. Para ser 
+considerada vivienda particular, debe necesariamente disponer de acceso independiente 
+para sus moradores. El concepto de propiedad no hace alusión a la propiedad legal, sino que 
+se refiere a un espacio geográfico con límites reconocibles, en el que se ubica una o más 
+viviendas particulares.
+
+Personas en otros operativos: Hace alusión a aquellas personas que fueron censadas a través 
+de alguno de los operativos adicionales al de viviendas particulares. Estos son: operativo de 
+viviendas colectivas, operativo especial tránsito y operativo especial calle.
+El objetivo de estos operativos fue censar a las personas que pasaron el momento censal 
+(00:00 horas del 19 de abril de 2017) en territorio nacional, pero que no alojaron esa noche 
+en una vivienda particular.
+
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+Hogar en vivienda particular: 173881 casos.\
+Vivienda colectiva (no es hogar): 365 casos.\
+Operativo personas en tránsito (no es hogar): 1 caso.\
+Operativo calle (no es hogar): 1 caso.
+
+*Nivel Rural*:
+
+Hogar en vivienda particular: 16405 casos.\
+Vivienda colectiva (no es hogar): 84 casos.\
+Operativo personas en tránsito (no es hogar): 1 caso.\
+Operativo calle (no es hogar): NA.
+
+Se propone no considerar ésta pregunta como relevante, pues prácticamente toda la poblacin censada tanto a nivel urbano como rural lo fué en "Hogar en vivienda particular".
+
+### *Interpretación a nivel urbano*: 
+
+Se propone no considerar.
+
+### *Interpretación a nivel rural*: 
+
+Se propone no considerar.
+
+# CASEN 2017 y CENSO Personas 2017
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P07**: [Relación de parentesco](https://rpubs.com/dataintelligence/corr_ce_ca_P07)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P07_URB.rds")
+tabla %>%
+  rownames_to_column("Relación de parentesco") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P07_RU.rds")
+tabla %>%
+  rownames_to_column("Relación de parentesco") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+Cuál es su relación de parentezco con el jefe o jefa de hogar?
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+Abuelo/a30: 388 casos.\
+Persona en operativo calle: 730 casos.
+
+*Nivel Rural*:
+
+Conviviente por unión civil: 141\
+Abuelo/a30: 26\
+Persona en operativo calle: NA
+
+### *Interpretación a nivel urbano*: 
+
+En la pregunta "Relación de parentesco", la categoría que mejor se ajusta a cambios en la potencia económica salarial comunal es la variable **hijo**. Es decir, más personas declaran ser hijos del jefe/a de hogar a medida que la comuna de la persona posea mayor potencia económica salarial. 
+
+
+### *Interpretación a nivel rural*:  
+
+En la pregunta "Relación de parentesco", la categoría que mejor se ajusta a cambios en la potencia económica salarial comunal es la variable **Suegro/a**. Es decir, más personas declaran ser suegros del jefe/a de hogar a medida que la comuna de la persona posea mayor potencia económica salarial. 
+
+Se explica pues a nivel rural, y por razones no estrictamente económicas sino tanmbién culturales, los padres de los jefes/as de hogar suelen vivir en el mismo hogar que los hijos.
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P08**: [Sexo](https://rpubs.com/dataintelligence/corr_ce_ca_P08)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P08_URB.rds")
+tabla %>%
+  rownames_to_column("Sexo") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P08_RU.rds")
+tabla %>%
+  rownames_to_column("Sexo") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+No aplica.
+
+### *Interpretación a nivel urbano*: 
+
+No existe diferencia por sexo a cambios en la potencia económica salarial comunal.
+
+### *Interpretación a nivel rural*:  
+
+Existe una sutil mayor correlación de la frecuencia de hombres a cambios en la potencia salarial comunal. En el sector rural por motivos culturales los hombres participan en una leve mayor proporción de la fuerza de trabajo.
+
+   
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P13**: [Asiste actualmente a la educación formal](https://rpubs.com/dataintelligence/corr_ce_ca_P13)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P13_URB.rds")
+tabla %>%
+  rownames_to_column("Asiste actualmente a la educación formal") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P13_RU.rds")
+tabla %>%
+  rownames_to_column("Asiste actualmente a la educación formal") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+*Nivel Rural*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+### *Interpretación a nivel urbano*: 
+
+No existe ningún tipo de diferencia significativa en la correlación entre las tres categorías de respuesta a nivel urbano y la potencia económica salarial comunal.<span style="color:red">Ésta homogeneidad puede significar un error conceptual al momento de plantear el modelo de correlación. La teoría nos dice que a mayor poder salarial comunal menor debiese ser la población estudiante en relación a la trabajadora.</span>
+
+### *Interpretación a nivel rural*:  
+
+Podemos decir acá que comunas con mayor Poder Económico Salarial Comunal  (**PESC**) pueden permitirse la posibilidad de que sus hijos integren el sistema de educación formal.
+   
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P14**: [Curso o año más alto aprobado]()
+
+Se omite pues está incluída en la columna calculada **ESCOLARIDAD**.
+
+<div class = "row">
+<div class = "col-md-6"> 
+
+</div>
+<div class = "col-md-6">
+
+</div>
+</div>
+
+
+
+Se construyen dos tablas, una que contempla los niveles alcanzados por las personas y que efectivamente concluyeron ( P15A = 1) y los que no lo hicieron ( P15A = 2).
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P15 y P15A**: [Nivel del curso más alto aprobado y si completó el nivel especificado
+](https://rpubs.com/dataintelligence/corr_ce_ca_P15_P15A)
+
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P15_A_sí_URB.rds")
+tabla %>%
+  rownames_to_column("Nivel del curso más alto aprobado y sí completó el nivel especificado") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P15_A_no_URB.rds")
+tabla %>%
+  rownames_to_column("Nivel del curso más alto aprobado y no completó el nivel especificado") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+
+
+<br>
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P15_A_sí_RU.rds")
+tabla %>%
+  rownames_to_column("Nivel del curso más alto aprobado y sí completó el nivel especificado") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P15_A_no_RU.rds")
+tabla %>%
+  rownames_to_column("Nivel del curso más alto aprobado y no completó el nivel especificado") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+Doctorado(no) :610
+
+*Nivel Rural*:
+
+Doctorado(no): 22\
+Magíster(no): 57
+
+### *Interpretación a nivel urbano*: 
+
+La variable que mejor se ajusta a cambios en la potencia económica salarial comunal en la pregunta "Nivel del curso más alto aprobado y si completó el nivel especificado" es la variable **Kinder** tanto para los que lo completaron como para los que no. Más personas declaran haber estudiado en kinder a medida que la comuna de la persona posea mayor potencia económica salarial. Pero falta una aspecto en el análisis: la segunda variable que más alto correlaciona con el **PESC** tanto para los que completaron como no el nivel fue Científico-humanista. Ésto indica los esfuerzos gubernamentales sobre y el interes de las personas en el ámbito urbano de que sus hijos pasen por el kinder.
+
+
+### *Interpretación a nivel rural*:    
+
+Acá la sensibilidad de la correlación con el **PESC** es más alta en la variable Profesional, tanto para los que la completaron como para los que no. Implica ésto condiciones más difíciles de subsistencia en el área rural que hacen necesario una mayor educación que permita a las comuna acumular mayor **PESC**.
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P16**: [Se considera perteneciente a un pueblo indígena u originario](https://rpubs.com/dataintelligence/corr_ce_ca_P16)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P16_URB.rds")
+tabla %>%
+  rownames_to_column("Se considera perteneciente a un pueblo indígena u originario") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P16_RU.rds")
+tabla %>%
+  rownames_to_column("Se considera perteneciente a un pueblo indígena u originario") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+No existen variables cuyo tamaño amerite excluir.
+
+### *Interpretación a nivel urbano y rural*: 
+
+La variable que mejor se ajusta a cambios en la potencia económica salarial comunal es la variable "No se considera perteneciente a un pueblo indígena u originario". Más personas declaran no considerarse parte de pueblos originarios" a medida que la comuna de la persona posea mayor potencia económica salarial. Lo anterior indica mayor precarización de la vida de los pueblos originarios. 
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P16A**: [Pueblo indígena u originario listado](https://rpubs.com/dataintelligence/corr_ce_ca_P16A)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P16A_URB.rds")
+tabla %>%
+  rownames_to_column("Pueblo indígena u originario listado") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P16A_RU.rds")
+tabla %>%
+  rownames_to_column("Pueblo indígena u originario listado") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+Kawésqar: 627\
+Yagán o Yamana: 184
+
+*Nivel Rural*:
+
+Kawésqar : 43\
+Yagán o Yamana : 8
+
+### *Interpretación a nivel urbano*: 
+
+Es ambigüa la respuesta "Otro". son personas que prefieren no declarar su etnia muy probablemente por razones de discriminación, que sin embargo son las más sensibles a los cambios en el **PESC**.
+
+
+### *Interpretación a nivel rural*:  
+
+La Etnia Rapa Nui es entre todas las demás la que posee la mejor situación económica. 
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P16A_OTRO**: [Pueblo indígena u originario (Otro)](https://rpubs.com/dataintelligence/corr_ce_ca_P16A_OTRO)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P16A_OTRO_URB.rds")
+tabla %>%
+  rownames_to_column("Pueblo indígena u originario (Otro)") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P16A_OTRO_RU.rds")
+tabla %>%
+  rownames_to_column("Pueblo indígena u originario (Otro)") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+Lafquenche: 17\
+Picunche: 22\
+Chonos: 26\
+Ona: 82\
+Tehuelches: 16\
+Otros pueblos presentes en el territorio nacional: 7 
+
+*Nivel Rural*:
+
+Lafquenche: 18\
+Picunche: 2\
+Changos: NA\
+Chonos: 3\
+Ona: 2\
+Tehuelches: 4\
+Pueblos de América Latina: 7\
+Pueblos del resto del mundo: 5\
+Afrodescendiente: 2\
+Otros pueblos presentes en el territorio nacional: 1
+
+
+
+### *Interpretación a nivel urbano y rural*: 
+
+La categoría "Pueblo no declarado" correlaciona mejor con los cambios en el **PESC**, pero es difícil saber el por qué. 
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P17**: [Trabajó durante la semana pasada](https://rpubs.com/dataintelligence/corr_ce_ca_P17)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P17_URB.rds")
+tabla %>%
+  rownames_to_column("Trabajó durante la semana pasada") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P17_RU.rds")
+tabla %>%
+  rownames_to_column("Trabajó durante la semana pasada") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+*Nivel Rural*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+### *Interpretación a nivel urbano y rural*: 
+
+La interpretación obvia es que variaciones en la **PESC** están muy directamente correlacionadas con el hecho de estar trabajando por dinero o especies.
+
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P18**: [Rama de actividad económica](https://rpubs.com/dataintelligence/corr_ce_ca_P18)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P18_URB.rds")
+tabla %>%
+  rownames_to_column("Rama de actividad económica") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P18_RU.rds")
+tabla %>%
+  rownames_to_column("Rama de actividad económica") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+*Nivel Rural*:
+
+Suministro de agua: 151\
+Actividades artísticas: 156\
+Otras actividades: 144\
+Actividades de organizaciones: 6
+
+### *Interpretación a nivel urbano*: 
+
+Es coherente por el tipo de desarrollo económico del país desde el reemplazo de la política de sustitución de importaciones que el comercio sea la actividad que más sea sensible a los cambios en la **PESC**.
+
+### *Interpretación a nivel rural*:  
+
+Actividades profesionales	0.485.
+
+No tiene mucho sentido interpretar ésta correlacion con "Actividades porfesionales" sin asociarlas con todas las otras variables que puntúan sobre 0,4 y que son: Comercio, Transporte, Información, Actividades financieras, Actividades de servicios, salud humana, Actividades artísticas y Otras actividades
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P19**: [Total hijos/as nacidos vivos](https://rpubs.com/dataintelligence/corr_ce_ca_P19)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P19_URB.rds")
+tabla %>%
+  rownames_to_column("Total hijos/as nacidos vivos") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P19_RU.rds")
+tabla %>%
+  rownames_to_column("Total hijos/as nacidos vivos") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+10_hijos/as: respondieron 202 casos en una comuna como máximo. De ahí en adelante se excluyen.
+
+*Nivel Rural*:
+
+10_hijos/as: respondieron 83 casos en una comuna como máximo. De ahí en adelante se excluyen.
+
+
+
+
+### *Interpretación a nivel urbano y rural *: 
+
+Movimientos en la **PESC** correlacionan positivamente mientras menos hijos tengan las personas.
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P20**: [Total hijos/as actualmente vivos](https://rpubs.com/dataintelligence/corr_ce_ca_P20)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P20_URB.rds")
+tabla %>%
+  rownames_to_column("Total hijos/as actualmente vivos") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P20_RU.rds")
+tabla %>%
+  rownames_to_column("Total hijos/as actualmente vivos") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+12_hijos/as: 37 máximo de casos\
+a mayor hijos menor es la frecuencia por lo que se excluyen a partir de ese número de corte.
+
+*Nivel Rural*:
+
+12_hijos/as: 23 máximo de casos\
+a mayor hijos menor es la frecuencia por lo que se excluyen a partir de ése número de corte.
+
+
+
+### *Interpretación a nivel urbano*: 
+
+
+### *Interpretación a nivel rural*:  
+
+La mayor correlación se da con 2_hijos/as:	0.395
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **ESCOLARIDAD**: [Años de escolaridad](https://rpubs.com/dataintelligence/corr_ce_ca_ESCOLARIDAD)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_ESCOLARIDAD_URB.rds")
+tabla %>%
+  rownames_to_column("Años de escolaridad") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_ESCOLARIDAD_RU.rds")
+tabla %>%
+  rownames_to_column("Años de escolaridad") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+*Nivel Rural*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+
+### *Interpretación a nivel urbano*: 
+
+Hay que hacer el mismo análisis que se hizo en el punto 3.5 P15 y P15A: Nivel del curso más alto aprobado y si completó el nivel especificado. 
+
+LA segunda correlación más alta es 12_Años	0.852, sin embargo nos da 0_años: 0,854.
+
+Correlaciones tan cercanas entre s[i confunden por lo que hay que aplicar un criterio de decisión, el cual más apropiado parece ser los 12 añosÑ 0.852.
+
+### *Interpretación a nivel rural*:
+
+
+Resulta coherente la correlación a los 14 años.
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## **P16A_GRUPO**: [Pueblo indígena u originario (grupo)](https://rpubs.com/dataintelligence/corr_ce_ca_P16A_GRUPO)
+ 
+
+<div class = "row">
+<div class = "col-md-6"> 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[1])
+tabla <- readRDS("tablas_de_corr/C_P16_GRUPO_URB.rds")
+tabla %>%
+  rownames_to_column("Pueblo indígena u originario (grupo)") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "URBANO") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+<div class = "col-md-6">
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE, echo=FALSE }
+# direccion <- paste0("tablas_de_corr/",tablas[2])
+tabla <- readRDS("tablas_de_corr/C_P16_GRUPO_RU.rds")
+tabla %>%
+  rownames_to_column("Pueblo indígena u originario (grupo)") %>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE, caption = "RURAL") %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")%>%
+  scroll_box(height = "300px")
+```
+</div>
+</div>
+
+<br>
+   
+### *Variables a excluir*: 
+
+*Nivel Urbano*:
+
+No existen variables cuyo tamaño amerite excluir.
+
+*Nivel Rural*:
+
+Kawésqar: 43
+Yagán o Yamana: 8
+
+### *Interpretación a nivel urbano y rural*: 
+
+Ocurre los mismo que con el punto 3.8 P16A_OTRO: Pueblo indígena u originario (Otro). Resulta muy difícil comprender porque cambios en el **PESC** correlaciona más perfectamente con "Pueblo no declarado", es ésta caso "Otro".
+
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+## Conclusiones:
+
+La variable a utilizar a nivel urbano será: 
+
+<span style="color:red">**P17** Trabajó por un pago o especie:\
+Correlación: 0.8717</span>
+
+La variable a utilizar a nivel rural será:
+
+<span style="color:red">**ESCOLARIDAD**\
+Correlación: 0.49237</span>
+
+<br>
+<br>
+
+## Propuestas de mejora:
+
+1. La variable **multipob** nos entrega una cantidad que no parece apropiada para poder determinar en forma diferenciada dos comunas. Dos comunas con características muy distintas pueden poseer el mismo valor **multipob**, por lo que se sugiere utilizar en vez de la multiplicación  de ingresos medios comunales mensuales por población comunal, su división.
+
+```{r, echo=FALSE,message=FALSE,warning=FALSE}
+library(plotly)
+library(ggplot2)
+data <- data.frame(
+ 
+               # grafica horizontal
+               x_start = c(0, 0,0,2), 
+               x_end = c(1, 4, 2,2), 
+               #grafica vertical
+               y_start = c(4, 0,0,2),  
+               y_end = c(1, 1,2,2),  
+               
+               info = c("ricos", "pobres" ))
+
+p <- ggplot(data ,aes(xmin=x_start, xmax=x_end, ymin=y_start, ymax=y_end, fill=info)) + geom_rect()+ labs ( title= "Ingresos versus hbtes", 
+          subtitle="Diferentes realidades poseen un mismo multipob", 
+          x="hbtes", 
+          y="Ingresos", 
+          caption= "EJEMPLO"
+          )
+p
+```
+
+
+
+
+
+2. Las frecuencias que utilizamos en el cálculo de las correlaciones son absolutas, lo que no permite determinar una comparación fidedigna entre ellas. Se propone utilizar las frecuencias de respuesta por cada 100.000 habitantes en la respectiva comuna.
+
+3. No fue necesario excluir las correlaciones cuyas ambas variables consideraran la variable población.
+
+<br>
+<br>
+<hr style="height:1px;border-width:3;color:Grey;background-color:Grey">
+
+
+
+
+
+
+
+
+
+
+
+

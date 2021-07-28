@@ -1,0 +1,174 @@
+---
+title:  Expansión de la CASEN sobre el CENSO a nivel de manzana
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+  P17 ¿Trabajó por un pago o especie?: Correlación: 0.8717
+  Expansión a nivel de manzanas.
+ 
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true    
+---
+
+date: `r format(Sys.time(), "%d-%m-%Y")`
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+library(plotly)
+library(normtest) 
+library(nortest)
+library(moments)
+```
+
+# Leemos el archivo censo2017_manzanas.csv
+
+1 urbano
+2 rural
+
+# RURAL
+
+```{r}
+rur <- read.csv2("censo_casen_rur_2017.csv")
+rur$urb_rur <- "2"
+rur
+```
+
+```{r}
+rur$multipob_2 <- round(rur$multipob)
+rur$multipob_2 <- as.character(rur$multipob_2)
+rur
+```
+
+```{r}
+rur$est_ing_2 <- round(rur$est_ing)
+rur$est_ing_2 <- as.character(rur$est_ing_2)
+rur
+```
+
+```{r}
+rur$ing_medio_zona_2 <- round(rur$ing_medio_zona)
+rur$ing_medio_zona_2 <- as.character(rur$ing_medio_zona_2)
+
+
+names(rur)[2] <- "código.x"
+names(rur)[7] <- "año"
+names(rur)[11] <- "código.y"
+rur
+```
+
+
+
+
+# URBANO
+
+
+
+```{r}
+urb <- readxl::read_xlsx("censo_casen_urb_2017.xlsx")
+urb$urb_rur <- "1"
+urb
+```
+
+```{r}
+urb$multipob_2 <- round(urb$multipob)
+urb$multipob_2 <- as.character(urb$multipob_2)
+urb
+```
+
+```{r}
+urb$est_ing_2 <- round(urb$est_ing)
+urb$est_ing_2 <- as.character(urb$est_ing_2)
+urb
+```
+
+```{r}
+urb$ing_medio_zona_2 <- round(urb$ing_medio_zona)
+urb$ing_medio_zona_2 <- as.character(urb$ing_medio_zona_2)
+urb
+```
+
+
+# Unión
+
+```{r}
+urbano_rural_corregido <- rbind(rur, urb)
+writexl::write_xlsx(urbano_rural_corregido, "urbano_rural_corregido.xlsx")
+```
+
+ 
+```{r}
+write.csv2(urbano_rural_corregido, "urbano_rural_corregido.csv")
+```
+
+
+```{r}
+library(gtools)
+tablilla <- read.csv2("urbano_rural_corregido.csv")
+t <- na.replace(tablilla, "-999")
+write.csv2(t, "t-999.csv")
+```
+
+```{r}
+ta <- read.csv2("t-999.csv")
+```
+
+
+```{r}
+ta
+```
+```{r}
+library("writexl")
+write_xlsx(ta,"ta.xlsx")
+```
+
+```{r}
+install.packages("foreign")
+library(foreign)
+write.dbf(ta, "ta.dbf")
+```
+
+
+

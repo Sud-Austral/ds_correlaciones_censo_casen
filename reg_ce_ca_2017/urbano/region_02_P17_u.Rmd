@@ -92,7 +92,7 @@ Leemos la tabla Censo 2017 de personas que ya tiene integrada la clave zonal:
 
 ```{r}
 tabla_con_clave <- 
-readRDS("../../../ds_correlaciones_censo_casen/corre_ing_exp-censo_casen/censos_con_clave/censo_personas_con_clave_17")
+readRDS("../../../ds_correlaciones_censo_casen/corre_censo_casen_2017/censos_con_clave/censo_personas_con_clave_17")
 r3_100 <- tabla_con_clave[c(1:100),]
 kbl(r3_100) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
@@ -239,7 +239,7 @@ Hemos calculado ya éste valor como conclusión del punto 1.1 de [aquí](https:/
 
 
 ```{r}
-h_y_m_2017_censo <- readRDS("../../../ds_correlaciones_censo_casen/corre_ing_exp-censo_casen/ingresos_expandidos_urbano_17.rds")
+h_y_m_2017_censo <- readRDS("ingresos_expandidos_17.rds")
 head(h_y_m_2017_censo,5)
 ```
 
@@ -297,9 +297,8 @@ head(comunas_censo_casen,5)
 Creamos:
 
 ```{r}
-comunas_censo_casen$multipob <- comunas_censo_casen$ingresos_expandidos*comunas_censo_casen$p
+comunas_censo_casen$multipob <- comunas_censo_casen$Ingresos_expandidos*comunas_censo_casen$p.x
 ```
-
 ```{r}
 head(comunas_censo_casen,5)
 ```
@@ -543,8 +542,14 @@ $$ Ingreso \_ Medio\_zona = est\_ing / (personas * p\_poblacional) $$
 
 <br>
 
+
 ```{r}
-comunas_censo_casen$ing_medio_zona <- comunas_censo_casen$est_ing /(comunas_censo_casen$personas  * comunas_censo_casen$p)
+comunas_censo_casen
+```
+
+
+```{r}
+comunas_censo_casen$ing_medio_zona <- comunas_censo_casen$est_ing /(comunas_censo_casen$personas  * comunas_censo_casen$p.x)
 
 r3_100 <- comunas_censo_casen[c(1:100),]
 kbl(r3_100) %>%

@@ -1,0 +1,1589 @@
+---
+title: Correlaciones entre variables del Censo de Viviendas, Hogares y Personas e ingresos promedios comunales de la CASEN 2017.
+author: 
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+date: "Miércoles 30-06-2021"
+
+abstract: |
+  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población comunal** que llamaremos **ipcmp** extraído de la Casen 2017 y las frecuencias de categorías de respuesta para todas las variables del Censo de viviendas, hogares y personas al 2017, también extraídas a nivel comunal.
+  
+  Importante es aplicar la libreria **dplyr** para evitar que en los filtros se desplieguen series de tiempo.
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+```
+
+
+
+## 1.2 Pregunta **P03A**: Material de los muros exteriores
+
+Ésta pregunta posee 6 categorías de respuesta:
+
+1 Hormigón armado\
+2 Albañilería: bloque de cemento, piedra o ladrillo\
+3 Tabique forrado por ambas caras (madera o acero)\
+4 Tabique sin forro interior (madera u otro) \
+5 Adobe, barro, quincha, pirca u otro artesanal tradicional \
+6 Materiales precarios (lata, cartón, plástico, etc.)\
+98 No aplica\
+99 Missing \
+
+### 1.2.1 Cálculo de frecuencias
+
+Leemos las respuestas a la pregunta **P03A** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r, warning = FALSE}
+tabla_con_clave <- readRDS("../censo_viviendas_con_clave_17.rds")
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P03A
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:6){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+
+tablamadre <- head(d_t,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.2.2 Construcción de un código comunal ad-hoc
+Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
+
+```{r}
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+
+names(comuna_corr)[19] <- "código" 
+
+tablamadre <- head(comuna_corr,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.2.3 Unión con los ingresos comunales expandidos
+
+Hacemos la unión con los ingresos promedio comunales expandidos:
+
+```{r}
+ingresos_expandidos_2017 <- readRDS("../ingresos_expandidos_17.rds")
+
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.2.4 Renombre de columnas
+
+```{r}
+names(df_2017_2)[3] <- "Hormigón"
+names(df_2017_2)[6] <- "Albañilería"
+names(df_2017_2)[9] <- "Tabique forrado"
+names(df_2017_2)[12] <- "Tabique sin forro"
+names(df_2017_2)[15] <- "Adobe"
+names(df_2017_2)[18] <- "Materiales precarios"
+
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+```{r}
+df_2017_2
+```
+
+
+
+### 1.2.5 **Correlaciones**
+
+```{r}
+my_data <- df_2017_2[, c(3,6,9,12,15,18,25)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+
+<hr style="height:1px;border-width:1;color:Green;background-color:Green">
+<br>
+
+## 1.3 Pregunta **P03B**: Material en la cubierta del techo 
+
+1 Tejas o tejuelas de arcilla, metálicas, de cemento, de madera, asfálticas o plásticas\
+2 Losa hormigón\
+3 Planchas metálicas de zinc, cobre, etc. o fibrocemento (tipo pizarreño)\
+4 Fonolita o plancha de fieltro embreado\
+5 Paja, coirón, totora o caña\
+6 Materiales precarios (lata, cartón, plásticos, etc.)\
+7 Sin cubierta sólida de techo\
+98 No aplica\
+99 Missing
+
+### 1.3.1 Cálculo de frecuencias
+
+Leemos las respuestas a la pregunta **P03B** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r, warning = FALSE}
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P03B
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:7){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+```
+
+```{r}
+tablamadre <- head(d_t,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.3.2 Construcción de un código comunal ad-hoc
+Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
+
+```{r}
+codigos <- d_t$
+unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+```
+
+
+```{r}
+names(comuna_corr)[22] <- "código" 
+tablamadre <- head(comuna_corr,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+
+### 1.3.3 Unión con los ingresos comunales expandidos
+Hacemos la unión con los ingresos promedio comunales expandidos:
+
+```{r}
+ingresos_expandidos_2017 <- readRDS("../ingresos_expandidos_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+### 1.3.4 Renombre de columnas
+
+```{r}
+names(df_2017_2)[3] <- "Tejas o tejuelas de arcilla"
+names(df_2017_2)[6] <- "Losa hormigón"
+names(df_2017_2)[9] <- "Planchas metálicas"
+names(df_2017_2)[12] <- "Fonolita"
+names(df_2017_2)[15] <- "Paja"
+names(df_2017_2)[18] <- "Materiales precarios"
+names(df_2017_2)[21] <- "Sin cubierta sólida"
+
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+
+### 1.3.5 **Correlaciones**
+
+```{r}
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,28)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+<hr style="height:1px;border-width:1;color:Green;background-color:Green">
+<br>
+
+## 1.4 Pregunta **P03C**: Material de construcción del piso 
+
+1 Parquet, piso flotante, cerámico, madera, alfombra, flexit, cubrepiso u otro similar, sobre radier o vigas de madera\
+2 Radier sin revestimiento\
+3 Baldosa de cemento\
+4 Capa de cemento sobre tierra\
+5 Tierra\
+
+### 1.4.1 Cálculo de frecuencias
+
+Leemos las respuestas a la pregunta P03C del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r, warning = FALSE}
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P03C
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:5){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+```
+
+```{r}
+tablamadre <- head(d_t,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.4.2 Construcción de un código comunal ad-hoc
+
+Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
+
+```{r}
+codigos <- d_t$
+unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+```
+
+```{r}
+names(comuna_corr)[16] <- "código" 
+tablamadre <- head(comuna_corr,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.4.3 Unión con los ingresos comunales expandidos 
+
+Hacemos la unión con los ingresos promedio comunales expandidos:
+
+```{r}
+ingresos_expandidos_2017 <- readRDS("../ingresos_expandidos_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.4.4 Renombre de columnas
+
+```{r}
+names(df_2017_2)[3] <- "Parquet"
+names(df_2017_2)[6] <- "Radier"
+names(df_2017_2)[9] <- "Baldosa"
+names(df_2017_2)[12] <- "Capa de cemento"
+names(df_2017_2)[15] <- "Tierra"
+
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.4.5 **Correlaciones**
+
+```{r}
+my_data <- df_2017_2[, c(3,6,9,12,15,22)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+<hr style="height:1px;border-width:1;color:Green;background-color:Green">
+<br>
+
+## 1.5 Pregunta **P04**: Número de piezas usadas exclusivamente como dormitorio 
+
+0 0 piezas\
+1 1 pieza\
+2 2 piezas\
+3 3 piezas\
+4 4 piezas\
+5 5 piezas\
+6 6 o más piezas\
+
+98 No aplica\
+99 Missing
+
+### 1.5.1 Cálculo de frecuencias
+Leemos las respuestas a la pregunta P04 del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r, warning = FALSE}
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P04
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+d_t <- filter(d,d$unlist.c. == 0)
+for(i in 1:6){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+```
+```{r}
+tablamadre <- head(d_t,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.5.2 Construcción de un código comunal ad-hoc
+
+Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
+
+
+```{r}
+codigos <- d_t$
+unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+```
+
+```{r}
+names(comuna_corr)[22] <- "código" 
+tablamadre <- head(comuna_corr,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.5.3 Unión con los ingresos comunales expandidos
+
+Hacemos la unión con los ingresos promedio comunales expandidos:
+
+```{r}
+ingresos_expandidos_2017 <- readRDS("../ingresos_expandidos_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+### 1.5.4 Renombre de columnas
+
+```{r}
+names(df_2017_2)[3] <- "0 pieza"
+names(df_2017_2)[6] <- "1 pieza"
+names(df_2017_2)[9] <- "2 piezas"
+names(df_2017_2)[12] <- "3 piezas"
+names(df_2017_2)[15] <- "4 piezas"
+names(df_2017_2)[18] <- "5 piezas"
+names(df_2017_2)[21] <- "6 o más piezas"
+
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+### 1.5.5 **Correlaciones**
+
+```{r}
+# library("PerformanceAnalytics")
+# my_data <- df_2017_2[, c(3,6,9,12,15,18,21,31)]
+# chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+<span style="color:red">No se pueden establecer correlaciones con 6 piezas o más. Hay que investigar que sucede.</span>
+
+<hr style="height:1px;border-width:1;color:Green;background-color:Green">
+<br>
+
+## 1.6 Pregunta **P05**: Origen del agua
+
+1 Red pública\
+2 Pozo o noria\
+3 Camión aljibe\
+4 Río, vertiente, estero, canal, lago, etc.\
+
+98 No aplica\
+99 Missing\
+
+### 1.6.1 Cálculo de frecuencias
+
+Leemos las respuestas a la pregunta P05 del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r}
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P05
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+```
+
+
+```{r, warning = FALSE}
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:4){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+```
+```{r}
+tablamadre <- head(d_t,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.6.2 Construcción de un código comunal ad-hoc
+
+Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
+
+```{r}
+codigos <- d_t$
+unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+```
+
+```{r}
+names(comuna_corr)[13] <- "código" 
+tablamadre <- head(comuna_corr,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.6.3 Unión con los ingresos comunales expandidos
+
+Hacemos la unión con los ingresos promedio comunales expandidos:
+
+```{r}
+ingresos_expandidos_2017 <- readRDS("../ingresos_expandidos_17.rds")
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+
+
+
+
+### 1.6.4 Renombre de columnas
+
+```{r}
+names(df_2017_2)[3] <- "Red pública"
+names(df_2017_2)[6] <- "Pozo o noria"
+names(df_2017_2)[9] <- "Camión aljibe"
+names(df_2017_2)[12] <- "Río"
+
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+### 1.6.5 Correlaciones
+
+```{r}
+my_data <- df_2017_2[, c(3,6,9,12,19)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+<hr style="height:1px;border-width:1;color:Green;background-color:Green">
+<br>
+
+## 1.7 Pregunta **CANT_HOG**: Cantidad de hogares
+
+(0-36)
+
+### 1.7.1 Cálculo de frecuencias
+
+Leemos las respuestas a la pregunta CANT_HOG del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r}
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$CANT_HOG
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+```
+
+```{r}
+d_unique <- unique(d$unlist.c.)
+d_unique
+```
+
+
+
+
+```{r, warning = FALSE}
+d_t <- filter(d,d$unlist.c. == 0)
+for(i in 1:36){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+```
+```{r}
+tablamadre <- head(d_t,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.7.2 Construcción de un código comunal ad-hoc
+
+Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
+
+```{r}
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+```
+
+```{r}
+names(comuna_corr)[112] <- "código" 
+tablamadre <- head(comuna_corr,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.7.3 Unión con los ingresos comunales expandidos
+
+Hacemos la unión con los ingresos promedio comunales expandidos:
+
+```{r}
+ingresos_expandidos_2017 <- readRDS("../ingresos_expandidos_17.rds")
+
+
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.7.4 Renombre de columnas
+
+```{r}
+names(df_2017_2)[3] <- "0 hogar"
+names(df_2017_2)[6] <- "1 hogar"
+names(df_2017_2)[9] <- "2 hogar"
+names(df_2017_2)[12] <- "3 hogar"
+
+names(df_2017_2)[15] <- "4 hogar"
+names(df_2017_2)[18] <- "5 hogar"
+names(df_2017_2)[21] <- "6 hogar"
+names(df_2017_2)[24] <- "7 hogar"
+
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+
+
+### 1.7.5 Correlaciones
+
+```{r}
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21, 118)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+<span style="color:red">Con 7 hogares o más ya no es posible establecer correlaciones. Se debe averiguar por  qué. Se sospecha que a mayor cantidad de hogares por vivienda menor será su correlación con los ingresos expandidos comunales.</span>
+
+<hr style="height:1px;border-width:1;color:Green;background-color:Green">
+<br>
+
+
+
+## Christian
+
+## 1.8 Pregunta **CANT_PER**: Cantidad de personas
+
+### 1.8.1 Cálculo de frecuencias
+Leemos las respuestas a la pregunta CANT_PER del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r}
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$CANT_HOG
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+```
+```{r}
+d_unique <- unique(d$unlist.c.)
+d_unique
+```
+
+
+
+
+
+```{r, warning = FALSE}
+d_t <- filter(d,d$unlist.c. == 0)
+for(i in 1:28){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+
+```
+
+
+
+
+
+```{r}
+tablamadre <- head(d_t,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.8.2 Construcción de un código comunal ad-hoc
+
+Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
+
+```{r}
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+```
+
+
+
+```{r}
+names(comuna_corr)[88] <- "código" 
+tablamadre <- head(comuna_corr,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 1.8.3 Unión con los ingresos comunales expandidos
+
+Hacemos la unión con los ingresos promedio comunales expandidos:
+
+```{r}
+ingresos_expandidos_2017 <- readRDS("../ingresos_expandidos_17.rds")
+
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+### 1.8.4 Renombre de columnas
+
+
+```{r}
+names(df_2017_2)[3] <- "1 persona"
+names(df_2017_2)[6] <- "2 persona"
+names(df_2017_2)[9] <- "3 persona"
+names(df_2017_2)[12] <- "4 persona"
+names(df_2017_2)[15] <- "5 persona"
+names(df_2017_2)[18] <- "6 persona"
+names(df_2017_2)[21] <- "7 persona"
+names(df_2017_2)[24] <- "8 persona"
+
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+
+### 1.8.5 Correlaciones
+
+```{r}
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24, 94)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+
+<span style="color:red">Con más de 9 personas ya no es posible establecer correlaciones, debemos averiguar por qué, pero se sospecha que las correlaciones mientras más personas habiten una vivienda serán menores con los ingresos expandidos comunales.</span>
+
+
+
+
+<hr style="height:3px;border-width:3;color:Green;background-color:Green">
+<br>
+
+# 2 Construcción de tablas con frecuencias de respuesta por categoría desde el Censo: **Personas**
+
+## 2.1 Pregunta **P08**: Sexo
+
+1 Hombre\
+2 Mujer
+
+### 2.1.1 Cálculo de frecuencias
+
+Leemos las respuestas a la pregunta P08 del censo de **personas** 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r}
+tabla_con_clave <- readRDS("../censo_personas_con_clave_17")
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P08
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+```
+
+```{r}
+library(dplyr)
+d_t <- filter(d,d$unlist.c. == 1)
+d_i <- filter(d,d$unlist.c. == 2)
+d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+```
+
+```{r}
+tablamadre <- head(d_t,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 2.1.2 Construcción de un código comunal ad-hoc
+
+Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
+
+```{r}
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+```
+
+```{r}
+names(comuna_corr)[7] <- "código" 
+tablamadre <- head(comuna_corr,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 2.1.3 Unión con los ingresos comunales expandidos
+
+Hacemos la unión con los ingresos promedio comunales expandidos:
+
+```{r}
+ingresos_expandidos_2017 <- readRDS("../ingresos_expandidos_17.rds")
+
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+### 2.1.4 Renombre de columnas
+
+```{r}
+names(df_2017_2)[3] <- "hombres"
+names(df_2017_2)[6] <- "mujeres"
+
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 2.1.5 **Correlaciones**
+
+```{r}
+my_data <- df_2017_2[, c(3,6,13)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+<hr style="height:1px;border-width:1;color:Green;background-color:Green">
+<br>
+
+## 2.2 Pregunta **P09**: Edad
+
+1 Edad 0…99\
+2 100 100 años y más
+
+### 2.2.1 Cálculo de frecuencias
+
+Leemos las respuestas a la pregunta P09 del censo de **personas** 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r}
+tabla_con_clave <- readRDS("../censo_personas_con_clave_17")
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P09
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+```
+
+```{r}
+d_unique <- unique(d$unlist.c.)
+d_unique
+```
+
+```{r, warning = FALSE}
+d_t <- filter(d,d$unlist.c. == 0)
+for(i in 1:101){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+```
+
+```{r}
+tablamadre <- head(d_t,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 2.2.2 Construcción de un código comunal ad-hoc
+
+Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
+
+```{r}
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+```
+
+```{r}
+names(comuna_corr)[307] <- "código" 
+tablamadre <- head(comuna_corr,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 2.2.3 Unión con los ingresos comunales expandidos
+
+Hacemos la unión con los ingresos promedio comunales expandidos:
+
+```{r}
+ingresos_expandidos_2017 <- readRDS("../ingresos_expandidos_17.rds")
+
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 2.2.4 Renombre de columnas
+
+
+```{r}
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+```{r}
+III <- seq(3,303,3)
+for (i in 1:101) {
+  names(df_2017_2)[III[i]] <- i
+  # cadena <- paste0("names(df_2017_2)[",III[i],"] <-", i-1)
+  # print(cadena)
+}
+```
+
+### 2.2.5 **Correlaciones**
+
+```{r}
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30,313)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+```{r}
+my_data <- df_2017_2[, c(33,36,39,42,45,48,51,54,57,60,313)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+```{r}
+my_data <- df_2017_2[, c(63,66,69,72,75,78,81,84,87,90,313)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+```{r}
+my_data <- df_2017_2[, c(93,96,99,102,105,108,111,114,117,120,313)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+```{r}
+
+my_data <- df_2017_2[, c(123,126,129,132,135,138,141,144,147,150,313)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+```{r}
+my_data <- df_2017_2[, c(153,156,159,162,165,168,171,174,177,180,313)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+```{r}
+my_data <- df_2017_2[, c(183,186,189,192,195,198,201,204,207,210,313)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+```{r}
+my_data <- df_2017_2[, c(213,216,219,222,225,228,231,234,237,240,313)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+```{r}
+my_data <- df_2017_2[, c(243,246,249,252,255,258,261,264,267,270,313)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+```{r}
+my_data <- df_2017_2[, c(270,273,276,279,282,285,288,291,294,297,300,313)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+
+<hr style="height:1px;border-width:1;color:Green;background-color:Green">
+<br>
+
+
+## 2.3 Pregunta **P15**: Nivel del curso más alto aprobado
+
+1 Sala cuna o jardín infantil\
+2 Prekínder\
+3 Kínder\
+4 Especial o diferencial\
+5 Educación básica\
+6 Primaria o preparatorio (sistema antiguo)\
+7 Científico-humanista\
+8 Técnica profesional\
+9 Humanidades (sistema antiguo)\
+10 Técnica comercial, industrial/normalista\ (sistema antiguo)\
+11 Técnico superior (1-3 años)\
+12 Profesional (4 o más años)\
+13 Magíster\
+14 Doctorado\
+98 No aplica\
+99 Missing\
+
+### 2.3.1 Cálculo de frecuencias
+
+Leemos las respuestas a la pregunta P15 del censo de **personas** 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r}
+tabla_con_clave <- readRDS("../censo_personas_con_clave_17")
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P15
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+```
+
+```{r}
+d_unique <- unique(d$unlist.c.)
+d_unique
+```
+
+
+
+```{r, warning = FALSE}
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:14){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+```
+
+```{r}
+tablamadre <- head(d_t,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 2.3.2 Construcción de un código comunal ad-hoc
+
+Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
+
+```{r}
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+```
+
+```{r}
+names(comuna_corr)[43] <- "código" 
+tablamadre <- head(comuna_corr,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 2.3.3 Unión con los ingresos comunales expandidos
+
+Hacemos la unión con los ingresos promedio comunales expandidos:
+
+```{r}
+ingresos_expandidos_2017 <- readRDS("../ingresos_expandidos_17.rds")
+
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 2.3.4 Renombre de columnas
+
+```{r}
+names(df_2017_2)[3] <- "Sala cuna"
+names(df_2017_2)[6] <- "Prekínder"
+names(df_2017_2)[9] <- "Kínder"
+names(df_2017_2)[12] <- "Especial"
+names(df_2017_2)[15] <- "Educación básica"
+names(df_2017_2)[18] <- "Primaria"
+names(df_2017_2)[21] <- "Científico-humanista"
+names(df_2017_2)[24] <- "Técnica profesional"
+names(df_2017_2)[27] <- "Humanidades"
+names(df_2017_2)[30] <- "Técnica comercial"
+names(df_2017_2)[33] <- "Técnico superior "
+names(df_2017_2)[36] <- "Profesional"
+names(df_2017_2)[39] <- "Magíster"
+names(df_2017_2)[42] <- "Doctorado"
+
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+
+
+
+
+### 2.3.5 **Correlaciones**
+
+```{r}
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30,33,36,39,42,49)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+
+######################
+#########################
+##########################
+
+
+<hr style="height:1px;border-width:1;color:Green;background-color:Green">
+<br>
+
+## 2.3 Pregunta **P17**: ¿Trabajó durante la semana pasada?
+
+1 Por un pago en dinero o especies\
+2 Sin pago para un familiar\
+3 Tenía empleo pero estuvo de vacaciones, con licencia, en descanso laboral, etc.\
+4 Se encontraba buscando empleo\
+5 Estaba estudiando\
+6 Realizó quehaceres de su hogar\
+7 Es jubilado, pensionado o rentista\
+8 Otra situación\
+
+98 No aplica\
+99 Missing
+
+### 2.3.1 Cálculo de frecuencias
+
+Leemos las respuestas a la pregunta P17 del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+
+```{r}
+tabla_con_clave <- readRDS("../censo_personas_con_clave_17")
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P17
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+```
+
+```{r}
+d_unique <- unique(d$unlist.c.)
+d_unique
+```
+
+
+
+```{r, warning = FALSE}
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:8){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+```
+
+```{r}
+tablamadre <- head(d_t,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 2.3.2 Construcción de un código comunal ad-hoc
+
+Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
+
+```{r}
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+
+names(comuna_corr)[25] <- "código" 
+tablamadre <- head(comuna_corr,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 2.3.3 Unión con los ingresos comunales expandidos
+
+Hacemos la unión con los ingresos promedio comunales expandidos:
+
+```{r}
+ingresos_expandidos_2017 <- readRDS("../ingresos_expandidos_17.rds")
+
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+### 2.3.4 Renombre de columnas
+
+```{r}
+head(df_2017_2,5)
+```
+
+
+
+```{r}
+names(df_2017_2)[3] <- "Por un pago"
+names(df_2017_2)[6] <- "Sin pago"
+names(df_2017_2)[9] <- "Tenía empleo pero"
+names(df_2017_2)[12] <- "Se encontraba buscando"
+names(df_2017_2)[15] <- "Estaba estudiando"
+names(df_2017_2)[18] <- "Realizó quehaceres"
+names(df_2017_2)[21] <- "Es jubilado"
+names(df_2017_2)[24] <- "Otra situación"
+
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+
+### 2.3.5 **Correlaciones**
+
+```{r}
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,31)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+
+<hr style="height:1px;border-width:1;color:Green;background-color:Green">
+<br>
+
+## 2.4 Pregunta **P18**: Rama de actividad económica
+
+1 A Agricultura, ganadería, silvicultura y pesca\
+2 B Explotación de minas y canteras\
+3 C Industrias manufactureras\
+4 D Suministro de electricidad, gas, vapor y aire acondicionado\
+5 E Suministro de agua; evacuación de aguas residuales, gestión de desechos y descontaminación\
+6 F Construcción\
+7 G Comercio al por mayor y al por menor; reparación de vehículos automotores y motocicletas\
+8 H Transporte y almacenamiento\
+9 I Actividades de alojamiento y de servicios de comidas\
+10 J Información y comunicaciones\
+11 K Actividades financieras y de seguros\
+12 L Actividades inmobiliarias\
+13 M Actividades profesionales, científicas y técnicas\
+14 N Actividades de servicios administrativos y de apoyo\
+15 O Administración pública y defensa; planes de seguridad social de afiliación obligatoria\
+16 P Enseñanza\
+17 Q Actividades de atención de la salud humana y de asistencia social\
+18 R Actividades artísticas, de entretenimiento y recreativas\
+19 S Otras actividades de servicios\
+20 T Actividades de los hogares como empleadores; actividades no diferenciadas de los hogares como productores de bienes y servicios para uso propio\
+21 U Actividades de organizaciones y órganos extraterritoriales\
+22 Z Rama no declarada\
+
+98 No aplica\
+99 Missing
+ 
+### 2.4.1 Cálculo de frecuencias
+
+Leemos las respuestas a la pregunta P18 del censo de personas 2017 y obtenemos la tabla de frecuencias por categoría de respuesta:
+ 
+ 
+```{r}
+tabla_con_clave <- readRDS("../censo_personas_con_clave_17")
+b <- tabla_con_clave$COMUNA
+c <- tabla_con_clave$P18
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+```
+ 
+```{r}
+head(d,5)
+```
+ 
+```{r}
+d$unlist.c. <- as.character(d$unlist.c.)
+d <- d[-5] 
+```
+
+
+```{r}
+d$unlist.c.[d$unlist.c. == "A"] <- "1"
+d$unlist.c.[d$unlist.c. == "B"] <- "2"
+d$unlist.c.[d$unlist.c. == "C"] <- "3"
+d$unlist.c.[d$unlist.c. == "D"] <- "4"
+d$unlist.c.[d$unlist.c. == "E"] <- "5"
+
+d$unlist.c.[d$unlist.c. == "F"] <- "6"
+d$unlist.c.[d$unlist.c. == "G"] <- "7"
+d$unlist.c.[d$unlist.c. == "H"] <- "8"
+d$unlist.c.[d$unlist.c. == "I"] <- "9"
+d$unlist.c.[d$unlist.c. == "J"] <- "10"
+
+d$unlist.c.[d$unlist.c. == "K"] <- "11"
+d$unlist.c.[d$unlist.c. == "L"] <- "12"
+d$unlist.c.[d$unlist.c. == "M"] <- "13"
+d$unlist.c.[d$unlist.c. == "N"] <- "14"
+d$unlist.c.[d$unlist.c. == "O"] <- "15"
+
+d$unlist.c.[d$unlist.c. == "P"] <- "16"
+d$unlist.c.[d$unlist.c. == "Q"] <- "17"
+d$unlist.c.[d$unlist.c. == "R"] <- "18"
+d$unlist.c.[d$unlist.c. == "S"] <- "19"
+d$unlist.c.[d$unlist.c. == "T"] <- "20"
+
+d$unlist.c.[d$unlist.c. == "U"] <- "21"
+d$unlist.c.[d$unlist.c. == "Z"] <- "22"
+
+```
+
+```{r}
+head(d,5)
+```
+
+```{r}
+d$unlist.c. <- as.numeric(d$unlist.c.)
+```
+
+```{r}
+head(d,5)
+```
+
+ 
+ 
+ 
+```{r}
+d_unique <- unique(d$unlist.c.)
+d_unique
+```
+ 
+```{r, warning = FALSE}
+d_t <- filter(d,d$unlist.c. == 1)
+for(i in 2:22){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+```
+ 
+```{r}
+tablamadre <- head(d_t,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+ 
+### 2.4.2 Construcción de un código comunal ad-hoc
+
+Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada código:
+ 
+```{r}
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+```
+ 
+ 
+```{r}
+names(comuna_corr)[67] <- "código" 
+tablamadre <- head(comuna_corr,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+ 
+ 
+### 2.4.3 Unión con los ingresos comunales expandidos
+
+Hacemos la unión con los ingresos promedio comunales expandidos:
+ 
+```{r}
+ingresos_expandidos_2017 <- readRDS("../ingresos_expandidos_17.rds")
+
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+ 
+ <br>
+ 
+ ### 2.4.4 Renombre de columnas
+ 
+```{r}
+names(df_2017_2)[3] <- "Agricultura"
+names(df_2017_2)[6] <- "Explotación "
+names(df_2017_2)[9] <- "Industrias"
+names(df_2017_2)[12] <- "Suministro de electricidad"
+names(df_2017_2)[15] <- "Suministro de agua"
+names(df_2017_2)[18] <- "Construcción"
+names(df_2017_2)[21] <- "Comercio"
+names(df_2017_2)[24] <- "Transporte "
+names(df_2017_2)[27] <- "Actividades de alojamiento"
+names(df_2017_2)[30] <- "Información "
+names(df_2017_2)[33] <- "Actividades financieras"
+names(df_2017_2)[36] <- "Actividades inmobiliarias"
+names(df_2017_2)[39] <- "Actividades profesionales"
+names(df_2017_2)[42] <- "Actividades de servicios"
+
+tablamadre <- head(df_2017_2,50)
+kbl(tablamadre) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+ 
+ 
+ 
+### 2.4.5 **Correlaciones** 
+ 
+```{r}
+my_data <- df_2017_2[, c(3,6,9,12,15,18,21,24,27,30,33,36,39,42,73)]
+chart.Correlation(my_data, histogram=TRUE, pch=20)
+```
+ 
+```{r}
+# names(df_2017_2)[45] <- "Agricultura"
+# names(df_2017_2)[48] <- "Explotación "
+# names(df_2017_2)[51] <- "Industrias"
+# names(df_2017_2)[54] <- "Suministro de electricidad"
+# names(df_2017_2)[57] <- "Suministro de agua"
+# names(df_2017_2)[60] <- "Construcción"
+# names(df_2017_2)[63] <- "Comercio"
+# names(df_2017_2)[66] <- "Transporte "
+# names(df_2017_2)[69] <- "Actividades de alojamiento"
+# names(df_2017_2)[72] <- "Información "
+# names(df_2017_2)[75] <- "Actividades financieras"
+# names(df_2017_2)[78] <- "Actividades inmobiliarias"
+# names(df_2017_2)[81] <- "Actividades profesionales"
+# names(df_2017_2)[84] <- "Actividades de servicios"
+```
+ 
+ 
+<hr style="height:1px;border-width:1;color:Green;background-color:Green">
+<br>
+
+
+## 3 Referencias
+
+https://rpubs.com/osoramirez/316691
+
+https://dataintelligencechile.shinyapps.io/casenfinal
+
+Manual_de_usuario_Censo_2017_16R.pdf\
+
+http://www.censo2017.cl/microdatos/
+
+Censo de Población y Vivienda\
+
+https://www.ine.cl/estadisticas/sociales/censos-de-poblacion-y-vivienda/poblacion-y-vivienda
+
+Modelos Lineales Aplicados en R\
+
+Juan Aparicio, Ma Asunción Martínez Mayoral y Javier Morales\
+Depto. Estadística, Matemáticas e Informática\
+Centro de Investigación Operativa\
+Universidad Miguel Hernández
+
+

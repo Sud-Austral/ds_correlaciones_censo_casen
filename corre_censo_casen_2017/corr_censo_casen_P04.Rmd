@@ -1,0 +1,437 @@
+---
+title: Correlaciones entre variables del CENSO de Viviendas, Hogares y Personas e Ingresos promedios comunales de la CASEN 2017.
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+
+date: "Martes 13-07-2021"
+
+abstract: |
+  Calculamos correlaciones entre el ingreso promedio comunal **multiplicado por la población también comunal** que llamaremos **ingresos expandidos** extraídos de la Casen 2017 y las frecuencias de respuesta por categoría a la pregunta **P04** del Censo de viviendas 2017, también extraídas a nivel comunal. Lo haremos a nivel nacional.
+  
+  Se espera encontrar en área urbana una mayor correlación entre los ingresos y una cantidad baja de habitaciones disponibles para dormir.
+   
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true    
+    
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  class.source = "numberLines lineAnchors"
+  )
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+
+```
+
+
+# Nivel nacional URBANO (código 1)
+
+Cantidad de dormitorios: Todo espacio habitable de una vivienda que sea cerrado por paredes o tabiques y que tenga espacio suficiente para dar cabida a una cama y sólo se use para dormir.
+Esto se ve reflejado en aquellas viviendas particulares con moradores presentes que declararon en la pregunta 4 ¿Cuántas piezas de esta vivienda se usan exclusivamente como dormitorio? una categoría entre 0 y 6.
+
+## Pregunta **P04**: Número de piezas usadas exclusivamente como dormitorio
+
+Esta pregunta posee 7 categorias de respuesta:
+   
+0 piezas\
+1 pieza\
+2 piezas\
+3 piezas\
+4 piezas\
+5 piezas\
+6 o más piezas\
+  
+Leemos las respuestas a la pregunta **P04** del censo de viviendas 2017 y obtenemos la tabla de frecuencias por categoría:
+
+```{r, warning = FALSE}
+tabla_con_clave <- readRDS("censos/censo_viviendas_con_clave_17.rds")
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 1)
+b <- tabla_con_clave_u$COMUNA
+c <- tabla_con_clave_u$P04
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+categorias <- sort(unique(tabla_con_clave_u$P03B ))
+categorias <- as.data.frame(categorias)
+names(categorias)[1] <- "cat"
+
+categorias <- filter(categorias, categorias$cat != 99)
+categorias <- filter(categorias, categorias$cat != 98)
+
+d_t <- filter(d,d$unlist.c. == categorias[1,1])
+for(i in categorias[2,1]:categorias[nrow(categorias),1]){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+ 
+# Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada **código**:
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+ 
+names(comuna_corr)[ncol(comuna_corr)] <- "código"
+ 
+quitar <- seq(3,(ncol(comuna_corr)-1),3)
+
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+
+names(comuna_corr )[2] <- "0 piezas"
+names(comuna_corr )[4] <- "1 pieza"
+names(comuna_corr )[6] <- "2 piezas"
+names(comuna_corr )[8] <- "3 piezas"
+names(comuna_corr )[10] <- "4 piezas"
+names(comuna_corr )[12] <- " 5 piezas"
+names(comuna_corr )[14] <- "6 o más piezas"
+
+renombrar <- seq(1,(ncol(comuna_corr)-2),2)
+vv <- 0
+for (v in renombrar) {
+  vv <- vv+1
+  contador <- paste0("categoria_",vv)
+  names(comuna_corr)[v] <- contador
+}
+
+ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_urbano_17.rds")
+
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+```
+
+
+```{r}
+df_2017_2 <- df_2017_2[, -c(2,4,6,8,10,12,14,16)]
+kbl(head(df_2017_2,50)) %>% kable_styling(bootstrap_options = c("striped", "hover")) %>% kable_paper() %>% scroll_box(width = "100%", height = "300px")
+```
+
+#### Tabla a correlacionar:
+
+```{r}
+#union_final_urb_corr  <- union_final_urb[,-c(1)]
+write_xlsx(df_2017_2, "P04_urbano.xlsx")
+```
+
+#### Estadísticos básicos de nuestras frecuencias
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(df_2017_2)
+
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
+```
+
+```{r}
+union_final_urb <- df_2017_2
+```
+
+#### Gráficas:
+
+```{r, warning=FALSE,message=FALSE}
+library(plotly)
+
+df_2017_fig <- df_2017_2[,-c((ncol(df_2017_2)-1))]
+
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=7000, height=400) 
+}
+for (g in 3:(ncol(df_2017_2)-1)) {
+grafica_fn(g)
+
+}
+
+fig <- fig %>% layout(autosize = T)
+
+fig 
+```
+
+# $\tau$ de Kendall
+
+```{r}
+df_2017_2f <- filter(df_2017_fig, df_2017_fig$ingresos_expandidos != 'is.na')
+III <- seq(2,(ncol(df_2017_2f)-1),1)
+my_data <- df_2017_2f[, c(III)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+tabla <- as.data.frame(tabla)
+tabla 
+```
+```{r}
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_P04_URBANO.rds")
+```
+
+```{r}
+tabla %>% rownames_to_column("Cantidad de piezas")%>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
+```
+
+##  Kendall
+
+```{r}
+df_2017_fig <- df_2017_fig[,-c(1)]
+```
+
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+##  Pearson
+ 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+##  Spearman
+
+```{r,attr.source='.numberLines', warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+<br>
+<hr style="height:3px;border-width:1;color:Gray;background-color:Gray">
+<br>
+
+# Nivel nacional RURAL (código 2)
+
+```{r, warning = FALSE}
+tabla_con_clave <- readRDS("censos/censo_viviendas_con_clave_17.rds")
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA == 2)
+b <- tabla_con_clave_u$COMUNA
+c <- tabla_con_clave_u$P04
+cross_tab =  xtabs( ~ unlist(b) + unlist(c))
+tabla <- as.data.frame(cross_tab)
+d <-tabla[!(tabla$Freq == 0),]
+d$anio <- "2017"
+
+categorias <- sort(unique(tabla_con_clave_u$P03B ))
+categorias <- as.data.frame(categorias)
+names(categorias)[1] <- "cat"
+
+categorias <- filter(categorias, categorias$cat != 99)
+categorias <- filter(categorias, categorias$cat != 98)
+
+d_t <- filter(d,d$unlist.c. == categorias[1,1])
+for(i in categorias[2,1]:categorias[nrow(categorias),1]){
+  d_i <- filter(d,d$unlist.c. == i)
+  d_t = merge( x = d_t, y = d_i, by = "unlist.b.", all.x = TRUE)
+}
+ 
+# Agregamos un cero a los códigos comunales de 4 dígitos, que queda en la columna llamada **código**:
+codigos <- d_t$unlist.b.
+rango <- seq(1:nrow(d_t))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(d_t,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE] 
+ 
+names(comuna_corr)[ncol(comuna_corr)] <- "código"
+ 
+quitar <- seq(3,(ncol(comuna_corr)-1),3)
+
+comuna_corr <- comuna_corr[,-c(quitar),drop=FALSE]
+
+names(comuna_corr )[2] <- "0 piezas"
+names(comuna_corr )[4] <- "1 pieza"
+names(comuna_corr )[6] <- "2 piezas"
+names(comuna_corr )[8] <- "3 piezas"
+names(comuna_corr )[10] <- "4 piezas"
+names(comuna_corr )[12] <- " 5 piezas"
+names(comuna_corr )[14] <- "6 o más piezas"
+
+renombrar <- seq(1,(ncol(comuna_corr)-2),2)
+vv <- 0
+for (v in renombrar) {
+  vv <- vv+1
+  contador <- paste0("categoria_",vv)
+  names(comuna_corr)[v] <- contador
+}
+
+ingresos_expandidos_2017 <- readRDS("Ingresos_expandidos_rural_17.rds")
+
+df_2017_2 = merge( x = comuna_corr, y = ingresos_expandidos_2017, by = "código", all.x = TRUE)
+```
+
+
+```{r}
+df_2017_2 <- df_2017_2[, -c(2,4,6,8,10,12,14,16)]
+kbl(head(df_2017_2,50)) %>% kable_styling(bootstrap_options = c("striped", "hover")) %>% kable_paper() %>% scroll_box(width = "100%", height = "300px")
+```
+
+#### Tabla a correlacionar:
+
+```{r}
+#union_final_urb_corr  <- union_final_urb[,-c(1)]
+write_xlsx(df_2017_2, "P04_rural.xlsx")
+```
+
+#### Estadísticos básicos de nuestras frecuencias
+
+```{r, warning = FALSE, attr.source='.numberLines'}
+data_sum <- summary(df_2017_2)
+
+kbl(head(data_sum)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "500px")
+```
+
+```{r}
+union_final_urb <- df_2017_2
+```
+
+#### Gráficas:
+
+```{r, warning=FALSE,message=FALSE}
+library(plotly)
+
+df_2017_fig <- df_2017_2[,-c((ncol(df_2017_2)-1))]
+
+fig <- plot_ly(df_2017_fig, x = df_2017_fig$código, y = df_2017_fig[,2]
+, name = colnames(df_2017_fig[2]), type = 'scatter', mode = 'lines',
+                 width=7000, height=400) 
+
+grafica_fn <- function(g){
+  fig <<- fig %>% add_trace(y = ~df_2017_fig[,g]
+, name = colnames(df_2017_fig[g]), mode = 'lines',
+                 width=7000, height=400) 
+}
+for (g in 3:(ncol(df_2017_2)-1)) {
+grafica_fn(g)
+
+}
+
+fig <- fig %>% layout(autosize = T)%>%
+  layout(xaxis = list(rangeslider = list()))
+fig 
+```
+
+# $\tau$ de Kendall
+
+
+```{r}
+df_2017_2f <- filter(df_2017_fig, df_2017_fig$ingresos_expandidos != 'is.na')
+III <- seq(2,(ncol(df_2017_2f)-1),1)
+my_data <- df_2017_2f[, c(III)]
+tabla <- cor(x=my_data, y=df_2017_2f$ingresos_expandidos, method=c("kendall"), use = "pairwise")
+tabla <- as.data.frame(tabla)
+```
+```{r}
+names(tabla)[1] <- "Correlación"
+saveRDS(tabla,"tablas_de_corr/C_P04_RURAL.rds")
+```
+
+```{r}
+tabla %>% rownames_to_column("Cantidad de piezas")%>%  
+  mutate(Correlación = cell_spec(Correlación, background=ifelse(Correlación == max(Correlación), "#fc0303", "#5cb81f"))) %>% 
+  kbl(booktabs = T, linesep = "", escape=FALSE) %>% 
+    kable_paper(full_width = F) %>%
+    column_spec(1, color = "black")%>%
+    column_spec(2, color = "white")
+```
+
+##  Kendall
+
+```{r}
+df_2017_fig <- df_2017_fig[,-c(1)]
+```
+
+
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "kendall"), pch=20)
+```
+
+##  Pearson
+ 
+```{r, attr.source='.numberLines', message=FALSE, warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "pearson"), pch=20)
+```
+
+##  Spearman
+
+```{r,attr.source='.numberLines', warning=FALSE}
+
+chart.Correlation(df_2017_fig, histogram=TRUE, method = c( "spearman"), pch=20)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

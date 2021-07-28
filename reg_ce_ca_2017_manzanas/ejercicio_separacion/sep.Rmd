@@ -1,0 +1,149 @@
+---
+title:  Expansión de la CASEN sobre el CENSO a nivel de manzana
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+  P17 ¿Trabajó por un pago o especie?: Correlación: 0.8717
+  Expansión a nivel de manzanas.
+ 
+    
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true    
+---
+
+date: `r format(Sys.time(), "%d-%m-%Y")`
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+library(plotly)
+library(normtest) 
+library(nortest)
+library(moments)
+```
+
+# Leemos el archivo censo2017_manzanas.csv
+
+```{r}
+el_archivo <- readRDS("cod_c.rds")
+```
+
+```{r}
+el_archivo <- as.data.frame(el_archivo)
+
+el_archivo
+```
+
+```{r}
+#el_archivo$codigos_comunales_unicos
+```
+
+
+```{r}
+el_archivo$provincia  <-  ifelse(str_length(as.numeric(el_archivo$codigos_comunales_unicos)) == 5 ,substr(el_archivo$codigos_comunales_unicos, 1, 3),substr(el_archivo$codigos_comunales_unicos, 1, 2))
+
+el_archivo$region <-  ifelse(str_length(as.numeric(el_archivo$codigos_comunales_unicos)) == 5 ,substr(el_archivo$codigos_comunales_unicos, 1, 2),substr(el_archivo$codigos_comunales_unicos, 1, 1))
+
+el_archivo$provincia <-  ifelse(str_length(as.numeric(el_archivo$provincia)) == 2 ,paste(0, el_archivo$provincia, sep=""),)
+```
+
+
+```{r}
+el_archivo
+```
+
+
+
+
+
+
+
+```{r}
+el_archivo$prov <- ifelse(length(as.numeric(el_archivo$codigos_comunales_unicos> 4)), substr(el_archivo$codigos_comunales_unicos, 3, 5),  substr(el_archivo$codigos_comunales_unicos, 1, 4))
+```
+
+
+
+```{r}
+el_archivo
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- ```{r} -->
+<!-- # the indices where each substr will start -->
+<!-- starts <- seq(1,num.chars, by=2) -->
+
+<!-- # chop it up -->
+<!-- sapply(starts, function(ii) { -->
+<!--   substr(string, ii, ii+1) -->
+<!-- }) -->
+<!-- ``` -->
+
+
+
+
+
+
+
+
+
+
+
