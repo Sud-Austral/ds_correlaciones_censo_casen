@@ -12,9 +12,9 @@
 
 5. PrimerasRegresiones lineales: ds_correlaciones_censo_casen/reg_ce_ca_2017
 
-
+**Primeras regresiones lineales con las mas altas correlaciones.**\
 6. ds_correlaciones_censo_casen/reg_ce_ca_2017/urbano/analisis_a_nivel_nacional_urbano.Rmd/ (producción)/
-   **Primeras regresiones lineales con las mas altas correlaciones.**
+   
 
 
 7. ds_correlaciones_censo_casen/corre_censo_casen_2017/
