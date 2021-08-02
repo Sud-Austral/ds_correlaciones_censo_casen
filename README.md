@@ -10,6 +10,7 @@
 <hr style="height:3px;border-width:1;color:Gray;background-color:Gray">
 <br>
 
-
-5. ds_correlaciones_censo_casen/reg_ce_ca_2017/urbano/analisis_a_nivel_nacional_urbano.Rmd/
+5. PrimerasRegresiones lineales: ds_correlaciones_censo_casen/reg_ce_ca_2017
+6. 
+7. ds_correlaciones_censo_casen/reg_ce_ca_2017/urbano/analisis_a_nivel_nacional_urbano.Rmd/ (producción)
 
