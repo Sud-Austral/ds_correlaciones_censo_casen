@@ -182,6 +182,16 @@ claves_con_1 <- filter(tabla_con_clave_f, tabla_con_clave_f$P17 == 1)
 head(claves_con_1,10)
 ```
 
+
+
+
+
+
+
+
+
+
+
 #### Tabla de contingencia:
 
 

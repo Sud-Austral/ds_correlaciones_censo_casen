@@ -1,0 +1,338 @@
+---
+title:  Expansión de la CASEN sobre el CENSO de PERSONAS (Nivel nacional rural para el 2017)
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+      <div style='line-height : 25px'> <span style='font-size: 25px'>Y regresión lineal de ingresos medios por zona sobre frecuencias de respuesta a la pregunta: ¿Cuantos años de escolaridad tiene?, cuya correlación necesitó de su corrección por porcentaje de existencia por zona.</style></div >
+
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true    
+---
+
+date: `r format(Sys.time(), "%d-%m-%Y")`
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+library(plotly)
+library(normtest) 
+library(nortest)
+library(moments)
+library(foreign)
+```
+
+ 
+
+###########################################################################################################################################
+###########################################################################################################################################
+###########################################################################################################################################
+
+
+```{r}
+tabla_con_clave <- 
+readRDS("../../../ds_correlaciones_censo_casen/corre_censo_casen_2017/censos_con_clave/censo_personas_con_clave_17")
+
+abc <- head(tabla_con_clave,50)
+kbl(abc) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+Cuantas personas hay en Chile?
+
+
+
+```{r}
+length(tabla_con_clave$clave)
+```
+
+
+
+
+Cuántas **zonas** hay en Chile?
+
+
+```{r}
+length(unique(tabla_con_clave$clave))
+```
+
+### Filtro a nivel urbano:
+
+```{r}
+tabla_con_clave_u <- filter(tabla_con_clave, tabla_con_clave$AREA ==2)
+```
+
+Cuantas personas hay en Chile urbanas?
+
+```{r}
+length(tabla_con_clave_u$clave)
+```
+
+
+Cuantas **zonas** hay en el nivel urbano?
+
+
+```{r}
+length(unique(tabla_con_clave_u$clave))
+```
+
+
+### Cálculo de respuestas censales
+
+Obtenemos las respuestas a la pregunta P17 por zona eliminando los campos innecesarios. Despleguemos los primeros 1000 registros:
+
+```{r}
+tabla_con_clave_f <- tabla_con_clave_u[,-c(1,2,4:32,33:40,42:48),drop=F]
+abc <- head(tabla_con_clave_f,1000)
+
+kbl(abc) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+```{r}
+nrow(tabla_con_clave_f)
+```
+
+Vemos que el número total de registros coincide con el total de personas urbanas.
+
+Modifiquemos la tabla para poder trabajarla un poco mejor:
+
+1. Agregamos un cero a los códigos comunales de cuatro dígitos.
+2. Renombramos la columna clave por código.
+
+```{r}
+codigos <- tabla_con_clave_f$COMUNA
+rango <- seq(1:nrow(tabla_con_clave_f))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(tabla_con_clave_f,cadena)
+comuna_corr <- comuna_corr[,-c(1),drop=FALSE]
+names(comuna_corr)[3] <- "código" 
+
+abc <- head(comuna_corr,50)
+kbl(abc) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+```{r}
+tabla_con_clave_f <- comuna_corr
+```
+
+
+<br>
+Obtenemos la cuenta de las respuestas 1:
+
+```{r}
+claves_con_1 <- filter(tabla_con_clave_f, tabla_con_clave_f$P17 == 1)
+head(claves_con_1,10)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+estadisticos_finales
+```
+```{r}
+tabla_f <- filter(estadisticos_finales, estadisticos_finales$código =="15201")
+tabla_f
+```
+```{r}
+comuna_15201_censo <- filter(tabla_original, tabla_original$COMUNA == "15201")
+comuna_15201_censo
+```
+```{r}
+comuna_ingresos <- filter(df_2017_2, df_2017_2$código == "15201")
+comuna_ingresos
+```
+ ###########
+
+```{r}
+claves_con_2 <- filter(comuna_corr, comuna_corr$ESCOLARIDAD == 12)
+claves_con_2 <- filter(claves_con_2, claves_con_2$código == "15201")
+claves_con_2
+```
+```{r}
+union <- merge(x = comuna_ingresos, y = claves_con_2, by = "código", all.x = TRUE )
+union
+```
+  
+```{r}
+tabla_de_prop_pob <- readRDS("tabla_de_prop_pob.rds")
+names(tabla_de_prop_pob)[1]  <- "clave"
+tabla_de_prop_pob
+```
+```{r}
+union2 = merge( x = union, y =tabla_de_prop_pob, by = "clave", all.x = TRUE)
+union2$p <- as.character(union2$p)
+union2
+```
+```{r}
+lista <- as.list(0)
+
+for (nnn in 1:nrow(union2)) {
+  
+  
+  
+  ppp <- table(union2$clave == union2$clave[nnn]) 
+  ppp <- as.numeric(ppp[2])
+  
+  # union2$cant <- ppp
+  
+  lista <- c(lista,ppp)
+  
+  # print(ppp)
+}
+```
+
+
+```{r}
+lista <- as.data.frame.list(lista)
+lista
+```
+```{r}
+t(lista)
+```
+  
+  
+  
+  
+  
+```{r}
+ppp <- table(union2$clave == union2$clave[1]) 
+# ppp <- as.numeric(ppp[])
+ppp
+```
+ 
+
+```{r}
+union2$p_prop <- (union2$p)/ 
+```
+
+```{r}
+comunas_censo_casen_6666 = merge( x = comunas_censo_casen_666, y = tabla_de_prop_pob, by = "clave", all.x = TRUE)
+comunas_censo_casen_6666$multipob <- comunas_censo_casen_6666$ingresos_expandidos*comunas_censo_casen_6666$p
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+trabajo_001 = merge( x = con4, y =claves_con_1, by = "clave", all.x = TRUE)
+trabajo003 <- unique(trabajo_001)
+trabajo003 <- trabajo003[,-c(2,4)]
+
+df_2017_2 <- readRDS("Ingresos_expandidos_rural_17.rds")
+
+comunas_censo_casen_666 = merge( x = trabajo003, y = df_2017_2, by = "código", all.x = TRUE)
+
+
+tabla_de_prop_pob <- readRDS("tabla_de_prop_pob.rds")
+names(tabla_de_prop_pob)[1]  <- "clave"
+
+
+comunas_censo_casen_6666 = merge( x = comunas_censo_casen_666, y = tabla_de_prop_pob, by = "clave", all.x = TRUE)
+comunas_censo_casen_6666$multipob <- comunas_censo_casen_6666$ingresos_expandidos*comunas_censo_casen_6666$p
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
