@@ -2,7 +2,7 @@
 
 ![title](linear_regresssion.jpeg)
 
-1. Correlaciones: corre_ing_exp-censo_casen/ 
+1. Correlaciones: corre_ing_exp-censo_casen 
 2. Regresiones lineales a nivel urbano: reg_ce_ca_2017/urbano
 3. Compendio de regresiones urbanas: reg_ce_ca_2017/urbano/reg_lin_censo_casen_compendio.Rmd 
 4. Compendio de correlaciones: corre_ing_exp-censo_casen/corr_censo_casen_compendio.html
@@ -13,9 +13,9 @@
 5. PrimerasRegresiones lineales: ds_correlaciones_censo_casen/reg_ce_ca_2017
 
 **Primeras regresiones lineales con las mas altas correlaciones.**\
-6. ds_correlaciones_censo_casen/reg_ce_ca_2017/urbano/analisis_a_nivel_nacional_urbano.Rmd/ (producción)/
+6. ds_correlaciones_censo_casen/reg_ce_ca_2017/urbano/analisis_a_nivel_nacional_urbano.Rmd/(producción)
    
 
-
+**Generacion de tablas de correlaciones.**\
 7. ds_correlaciones_censo_casen/corre_censo_casen_2017/
-    **Generacion de tablas de correlaciones.**
+    
