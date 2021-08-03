@@ -1,7 +1,7 @@
 # Correlaciones y regresiones entre el Censo y la Casen
 
-https://towardsdatascience.com/linear-regression-explained-1b36f97b7572
 ![title](linear_regresssion.jpeg)
+https://towardsdatascience.com/linear-regression-explained-1b36f97b7572
 
 1. Correlaciones: corre_ing_exp-censo_casen 
 2. Regresiones lineales a nivel urbano: reg_ce_ca_2017/urbano
