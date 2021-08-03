@@ -18,4 +18,11 @@ https://towardsdatascience.com/linear-regression-explained-1b36f97b7572
    
 **Generación de tablas de correlaciones:**\
 7. ds_correlaciones_censo_casen/corre_censo_casen_2017/
+
+
+
+************************************************************
+
+
+
     
