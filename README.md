@@ -21,7 +21,7 @@ https://towardsdatascience.com/linear-regression-explained-1b36f97b7572
 8. 
 
 ************************************************************
-************************************************************
+******************* Regiones urbanas ***********************
 ************************************************************
 El siguiente Rmd calcula las **frecuencias** de respuestas 1 (¿Trabajó por un pago o especie?) a P17 que unimos a los ingresos promedios comunales, y construimos el campo **multipob**, con el que lanzamos varios modelos de regresión eligiendo el mejor. Ésto lo hacemos por el momento en forma "manual".
 
