@@ -31,5 +31,5 @@ Lo que debe quedar meridianamente claro son las tablas **rurales** y **urbanas**
 ds_correlaciones_censo_casen\reg_ce_ca_2017\urbano\ingresos_expandidos_Casen_u_y_r.Rmd
     
 ingresos_expandidos_casen_2017_totales.rds       
-ingresos_expandidos_casen_2017_totales_r.rds
+ingresos_expandidos_casen_2017_totales_r.rds\
 ingresos_expandidos_casen_2017_totales_u.rds
