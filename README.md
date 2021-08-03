@@ -27,6 +27,6 @@ El siguiente Rmd calcula las **frecuencias** de respuestas 1 (¿Trabajó por un 
 
 1. ds_correlaciones_censo_casen/reg_ce_ca_2017/urbano/region_01_P17_u
 ************************************************************
-Lo que debe quedar meridianamente claro son las tablas **rurales** y **urbanas** de los ingresos extraídos de la Casen promediados por comuna, que están aquí:
+Lo que debe quedar meridianamente claro son las tablas **rurales** y **urbanas** de los ingresos extraídos de la Casen promediados por comuna, que están aquí:\
 https://rpubs.com/dataintelligence/corr_casen_censo_002
     
