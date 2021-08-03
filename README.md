@@ -28,5 +28,5 @@ El siguiente Rmd calcula las **frecuencias** de respuestas 1 (¿Trabajó por un 
 1. ds_correlaciones_censo_casen/reg_ce_ca_2017/urbano/region_01_P17_u
 ************************************************************
 Lo que debe quedar meridianamente claro son las tablas **rurales** y **urbanas** de los ingresos extraídos de la Casen promediados por comuna, que están aquí:\
-C:\Users\chris\OneDrive\Documentos\GitHub\ds_correlaciones_censo_casen\reg_ce_ca_2017\urbano\ingresos_expandidos_Casen_u_y_r.Rmd
+ds_correlaciones_censo_casen\reg_ce_ca_2017\urbano\ingresos_expandidos_Casen_u_y_r.Rmd
     
