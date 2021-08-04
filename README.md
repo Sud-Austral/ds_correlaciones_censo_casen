@@ -23,9 +23,13 @@ https://towardsdatascience.com/linear-regression-explained-1b36f97b7572
 ************************************************************
 ******************* Regiones urbanas ***********************
 ************************************************************
-El siguiente Rmd calcula las **frecuencias** de respuestas 1 (¿Trabajó por un pago o especie?) a P17 que unimos a los ingresos promedios comunales, y construimos el campo **multipob**, con el que lanzamos varios modelos de regresión eligiendo el mejor. Ésto lo hacemos por el momento en forma "manual".
+El siguiente Rmd:\
 
-1. ds_correlaciones_censo_casen/reg_ce_ca_2017/urbano/region_01_P17_u
+1. ds_correlaciones_censo_casen/reg_ce_ca_2017/urbano/region_01_P17_u\
+
+calcula las **frecuencias** de respuestas 1 (¿Trabajó por un pago o especie?) a P17 que unimos a la multiplicación de los ingresos promedios comunales, la población comunal y la proporción poblacional zonal respecto a la comuna y construimos el campo **multipob**, con el que lanzamos varios modelos de regresión eligiendo el mejor. Ésto lo hacemos por el momento en forma "manual".
+
+
 ************************************************************
 Lo que debe quedar meridianamente claro son las tablas **rurales** y **urbanas** de los ingresos extraídos de la Casen promediados por comuna, que están aquí:\
 ds_correlaciones_censo_casen\reg_ce_ca_2017\urbano\ingresos_expandidos_Casen_u_y_r.Rmd
