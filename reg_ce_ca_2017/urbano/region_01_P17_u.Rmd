@@ -98,7 +98,9 @@ tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$P09 > 15)
 
 
 
-Queremos saber cuantas personas en Chile hay
+Queremos saber cuantas personas en Chile hay mayores de 15 años:
+
+
 
 ```{r}
 length(tabla_con_clave$clave)
@@ -107,8 +109,12 @@ length(tabla_con_clave$clave)
 Queremos saber cuantas zonas hay en Chile:
 
 ```{r}
-length(unique(tabla_con_clave$clave))
+longitud <- length(unique(tabla_con_clave$clave))
+longitud 
 ```
+
+
+
 
 ### Cálculo de frecuencias
 
@@ -116,9 +122,19 @@ Obtenemos las frecuencias a la pregunta P17 filtradas por region = 1 y zona urba
 
 ```{r}
 tabla_con_clave_f <- tabla_con_clave[,-c(2,4,6:31,33:48),drop=FALSE]
+
+# para ruralidad: ESCOLARIDAD = 12
+
 claves_con_1 <- filter(tabla_con_clave_f, tabla_con_clave_f$P17 == 1)
 claves_con_1 <- filter(claves_con_1, claves_con_1$AREA == 1)
-claves_con_1 <- filter(claves_con_1, claves_con_1$REGION == 01)
+
+#####################################################################################################################
+#####################################################################################################################
+
+# claves_con_1 <- filter(claves_con_1, claves_con_1$REGION ==15)
+
+
+
 claves_con_1 <- as.data.frame(claves_con_1)
 
 head(claves_con_1,10)
@@ -422,6 +438,7 @@ Desplegamos una curva suavizada por loess en el diagrama de dispersión.
 
 ```{r}
 scatter.smooth(x=log(tabla_5$frecuencia_de_resp), y=log(tabla_5$multipob), lpars = list(col = "red", lwd = 2, lty = 1), main="multi_pob ~ Freq.x")
+
 ```
 
 
@@ -456,6 +473,7 @@ $$  \hat Y = e^{13.10277 + 1.064123 \cdot ln{X}}  $$
 <br>
 ```{r}
 linearMod <- lm( log(multipob)~log(frecuencia_de_resp) , data=tabla_5)
+#linearMod <- lm( sqrt(multipob)~sqrt(frecuencia_de_resp) , data=tabla_5)
 aa <- linearMod$coefficients[1]
 bb <- linearMod$coefficients[2]
 aa
@@ -471,10 +489,19 @@ bb
 Esta nueva variable se llamará: est_ing
 
 ```{r}
-tabla_5$est_ing <- exp(aa+bb*log(tabla_5$frecuencia_de_resp))
-
-
+# tabla_5$est_ing <- exp(aa+bb*log(tabla_5$frecuencia_de_resp))
 ```
+
+
+
+
+
+```{r}
+# solo para la region 15
+tabla_5$est_ing <- aa^2+2*aa*bb*sqrt(tabla_5$frecuencia_de_resp) + bb^2*tabla_5$frecuencia_de_resp
+```
+
+
 
 ```{r}
 head(tabla_5,10)
@@ -541,7 +568,8 @@ pp + theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust=1))
 Guardamos:
 
 ```{r}
-saveRDS(tabla_5, "URBANO/region_01_P17_u_nuevo.rds")
+casen_2017_sin_o$region <- 15
+saveRDS(casen_2017_sin_o, "urbanidad/region_15_P17_u_nuevo.rds")
 ```
  
 
@@ -608,6 +636,43 @@ $$ \hat Y = {\beta_0}^2 + 2  \beta_0  \beta_1 \ln{X}+  \beta_1^2 ln^2X  $$
 ### Modelo log-log
 
 $$ \hat Y = e^{\beta_0+\beta_1  ln{X}} $$
+
+***
+
+https://www.investopedia.com/terms/e/empirical-rule.asp
+
+
+```{r}
+archivos <- dir("urbanidad/", pattern = "*.rds")
+
+unadataframe <- data.frame()
+
+for(i in archivos ){
+
+  tablilla <- paste0('urbanidad/',i)
+
+  region <- readRDS(tablilla)
+
+  unadataframe = rbind( unadataframe, region )
+}
+
+saveRDS(unadataframe, "urbanidad/nacional_P17_u_nuevo.rds")
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

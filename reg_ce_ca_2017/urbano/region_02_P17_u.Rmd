@@ -111,7 +111,7 @@ regiones
 Hagamos un subset con la region = 2, y área URBANA = 1.
 
 ```{r}
-tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 2) 
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 1) 
 tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA== 1) 
 ```
 
@@ -563,7 +563,7 @@ kbl(r3_100) %>%
 Guardamos:
 
 ```{r}
-saveRDS(comunas_censo_casen, "URBANO/region_02_P17_u.rds")
+saveRDS(comunas_censo_casen, "urbanidad/region_01_P17_u.rds")
 ```
  
 
