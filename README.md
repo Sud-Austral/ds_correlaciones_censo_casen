@@ -32,6 +32,7 @@ ds_correlaciones_censo_casen\reg_ce_ca_2017\urbano\ingresos_expandidos_Casen_u_y
     
 **Debe hacerse el filtro sobre los mayores de 12 años** 
 
+Se refieren las totales, las rurales y las urbanas:
 ingresos_expandidos_casen_2017_totales.rds       
 ingresos_expandidos_casen_2017_totales_r.rds\
 ingresos_expandidos_casen_2017_totales_u.rds
