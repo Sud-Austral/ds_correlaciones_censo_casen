@@ -25,9 +25,13 @@ https://towardsdatascience.com/linear-regression-explained-1b36f97b7572
 ************************************************************
 El siguiente Rmd:\
 
-1. ds_correlaciones_censo_casen/reg_ce_ca_2017/urbano/region_01_P17_u\
+1. ds_correlaciones_censo_casen/reg_ce_ca_2017/urbano/region_01_P17_u es el modelo sobre el que construir en cualquier región o a nivel nacional.
 
-calcula las **frecuencias** de respuestas 1 (¿Trabajó por un pago o especie?) a P17 que unimos a la multiplicación de los ingresos promedios comunales, la población comunal y la proporción poblacional zonal respecto a la comuna y construimos el campo **multipob**, con el que lanzamos varios modelos de regresión eligiendo el mejor. Ésto lo hacemos por el momento en forma "manual".
+Se automatiza para obtener el óptimo modelo lineal modificando variables. 
+
+Se compara cuál es el mejor: el lanzado a nivel nacional o a parcial.
+
+calcula las **frecuencias** de respuestas 1 (¿Trabajó por un pago o especie?) a P17 que unimos a la multiplicación de los ingresos promedios comunales, la población comunal y la proporción poblacional zonal respecto a la comuna y construimos el campo **multipob**, que utilizamos sobre las frecuencias de respuesta,
 
 
 ************************************************************
