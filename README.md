@@ -30,6 +30,8 @@ El siguiente Rmd calcula las **frecuencias** de respuestas 1 (¿Trabajó por un 
 Lo que debe quedar meridianamente claro son las tablas **rurales** y **urbanas** de los ingresos extraídos de la Casen promediados por comuna, que están aquí:\
 ds_correlaciones_censo_casen\reg_ce_ca_2017\urbano\ingresos_expandidos_Casen_u_y_r.Rmd
     
+<span style="color:red">Debe hacerse el filtro sobre los mayores de 12 años  </span>  
+    
 ingresos_expandidos_casen_2017_totales.rds       
 ingresos_expandidos_casen_2017_totales_r.rds\
 ingresos_expandidos_casen_2017_totales_u.rds
