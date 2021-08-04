@@ -5,12 +5,8 @@ author:
   affiliation: DataIntelligence
 subtitle: | 
   P17 ¿Trabajó por un pago o especie?: Correlación: 0.8717
-  
- 
-    
 header-includes:
    - \usepackage[]{babel}
-
 output:
   rmdformats::html_clean:
     highlight: kate
@@ -19,7 +15,6 @@ output:
 ---
 
 date: `r format(Sys.time(), "%d-%m-%Y")`
-
 <style type="text/css">
 .main-container {
   max-width: 1600px;
@@ -27,7 +22,6 @@ date: `r format(Sys.time(), "%d-%m-%Y")`
   margin-right: auto;
 }
 </style>
-
 
 ```{r, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -65,26 +59,21 @@ library(moments)
 
 # Resumen 
 
-  Expandiremos los ingresos promedios (multiplicación del ingreso promedio y los habitantes) obtenidos de la CASEN 2017 sobre la categoría de respuesta: "Trabajó por un pago o especie" del campo P17 del CENSO de viviendas -del 2017-, que fue la categoría de respuesta que más alto correlacionó con los ingresos expandidos, ambos a nivel comunal.
+  Expandiremos los ingresos promedios (multiplicando el ingreso promedio y los habitantes) obtenidos de la CASEN 2017 sobre la categoría de respuesta: "Trabajó por un pago o especie" del campo P17 del CENSO de viviendas -del 2017-, que fue la categoría de respuesta que más alto correlacionó con los ingresos expandidos, ambos a nivel comunal.
   
-  Haremos el análisis sobre la región 01.
+  Haremos el análisis sobre la región 01 yen el ambiente urbano.
   
   Ensayaremos diferentes modelos dentro del análisis de regresión cuya variable independiente será: "frecuencia de población que posee la variable Censal respecto a la zona" y la dependiente: "ingreso expandido por zona por proporción zonal a nivel comunal (**multipob**)"
   
   Lo anterior para elegir el que posea el mayor coeficiente de determinación y así contruir una tabla de valores predichos.
 
-
-
-# Generación de ingresos expandidos a nivel Urbano
-
-En adelante sólo llamaremos al rds ya construído llamado "Ingresos_expandidos_urbano_17.rds" 
+# Generación de ingresos expandidos a nivel Urbano para la región 1:
 
 <br>
 
 ##  Variable CENSO
 
 Necesitamos calcular las frecuencias a nivel censal de las respuestas correspondientes a la categoría: "Trabajó por un pago o especie" del campo **P17** del Censo de personas. Recordemos que ésta fué la más alta correlación en relación a los ingresos expandidos [(ver punto 2 Correlaciones aquí)](https://rpubs.com/dataintelligence/corr_ce_ca_P17).
-
 
 ### Lectura y filtrado de la tabla censal de personas
 
@@ -101,15 +90,13 @@ kbl(r3_100) %>%
 ```
 <br>
 
-queremos saber cuantas personas en chile hay
+Queremos saber cuantas personas en Chile hay
 
 ```{r}
 length(tabla_con_clave$clave)
-
 ```
 
 Queremos saber cuantas zonas hay en Chile:
-
 
 ```{r}
 length(unique(tabla_con_clave$clave))
@@ -117,394 +104,135 @@ length(unique(tabla_con_clave$clave))
 
 ### Cálculo de frecuencias
 
-Obtenemos las frecuencias a la pregunta P17 por zona:
+Obtenemos las frecuencias a la pregunta P17 filtradas por region = 1 y zona urbana = 1 y respuesta 1.
 
 ```{r}
-tabla_con_clave_f <- tabla_con_clave[,-c(1,2,4:31,33:48),drop=FALSE]
-```
-
-
-```{r}
-tabla_con_clave_f 
-```
-
-
-```{r}
+tabla_con_clave_f <- tabla_con_clave[,-c(2,4,6:31,33:48),drop=FALSE]
 claves_con_1 <- filter(tabla_con_clave_f, tabla_con_clave_f$P17 == 1)
+claves_con_1 <- filter(claves_con_1, claves_con_1$AREA == 1)
+claves_con_1 <- filter(claves_con_1, claves_con_1$REGION == 01)
+claves_con_1 <- as.data.frame(claves_con_1)
+
+head(claves_con_1,10)
 ```
 
-```{r}
-length(unique(claves_con_1$clave))
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Hay que arreglar el codigo comunal a aaa:
 
 ```{r}
-nrow(tabla_con_clave_f)
-```
-
-determinar las comunas
-
-```{r}
-lista_de_comunas <- unique(tabla_con_clave_f$COMUNA)
-```
-
-
-```{r}
-lista_de_comunas
-```
-
-
-
-```{r}
-
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```{r}
-
-
-e <- table(tabla_con_clave$clave, tabla_con_clave$P17) 
-
-# e
-# kbl(e) %>%
-#   kable_styling(bootstrap_options = c("striped", "hover")) %>%
-#   kable_paper() %>%
-#   scroll_box(width = "100%", height = "300px")
-```
-
-
-```{r}
-e <- as.data.frame(e)
-e
-```
-
-
-
-```{r}
-filtro_e <- filter(e, e$Var2 == 1)
-filtro_e
-```
-
-
-```{r}
-filter(filtro_e, filtro_e$Freq == 0)
-```
-
-Exactamente hay 48 zonas que no poseen data 1
-
-
-
-
-
-
-
-Despleguemos los códigos de regiones de nuestra tabla:
-
-```{r}
-regiones <- unique(tabla_con_clave$REGION)
-regiones
-```
-
-Hagamos un subset con la region = 1, y área URBANA = 1.
-
-```{r}
-tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$REGION == 1) 
-#tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$AREA== 2) 
-```
-
-
-
-### Cálculo de frecuencias
-
-Obtenemos las frecuencias a la pregunta P17 por zona:
-
-```{r}
-tabla_con_clave_f <- tabla_con_clave[,-c(1,2,4:31,33:48),drop=FALSE]
-```
-
-
-```{r}
-tabla_con_clave_f 
-```
-
-* Cuantas claves existen que no posean la respuesta 1?
-
-
-
-
-
-** se aproximan los ingresos estimadosa los reales?
-
-```{r}
-urc <- read_xlsx("urbano_rural_corregido.xlsx")
-```
-
-```{r}
-urc
-```
-
-
-```{r}
-losvilos <- filter(urc, urc$código.x == 4203)
-losvilos
-```
-
-```{r}
-mean(losvilos$ing_medio_zona)
-```
-
-
-
-
-
-
-
-
-
-
-
-```{r}
-urc2 <- read_xlsx("urbano_rural_corregido.xlsx")
-#urc2 <- filter(urc2, urc2$`código.x`== "4102") 
-urc2 <- filter(urc2, urc2$urb_rur== "1") 
-urc2
-```
-
-
-
-
-
-
-
-
-
-Renombramos y filtramos por la categoria `Trabajo por un sueldo` == 1: 
-
-```{r}
-names(tabla_con_clave_f)[2] <- "Trabajo por un sueldo"
-```
-
-
-```{r}
-tabla_con_clave_f
-```
-
-
-
-```{r}
-tabla_con_clave_ff <- filter(tabla_con_clave_f, tabla_con_clave_f$`Trabajo por un sueldo` == 1)
-```
-
-
-```{r}
-# Determinamos las frecuencias por zona:
-b <- tabla_con_clave_ff$clave
-c <- tabla_con_clave_ff$`Trabajo por un sueldo`
-d <- tabla_con_clave_ff$COMUNA
-cross_tab =  xtabs( ~ unlist(b) + unlist(c)+ unlist(d))
-tabla <- as.data.frame(cross_tab)
-d <-tabla[!(tabla$Freq == 0),]
-names(d)[1] <- "zona" 
-d$anio <- "2017"
-d
-```
-
-
-
-
-<!-- ### 1.4 Calculamos la proporción de las frecuencias en cada comuna a nivel zonal -->
-
-<!-- ```{r} -->
-<!-- codigos_com <- unique(d$unlist.d.) -->
-<!-- frec_man_com_parcial_total <- data.frame() -->
-<!-- for(i in codigos_com){ -->
-<!--   # debemos dividir por 100 para obtener las proporciones y no los porcentajes: -->
-<!--   frec_man_com_parcial <- filter(d, d$unlist.d. == i) -->
-<!--   frec_man_com_parcial$p <- frec_man_com_parcial$Freq*100/sum(frec_man_com_parcial$Freq)/100 -->
-<!--   frec_man_com_parcial_total <- rbind(frec_man_com_parcial_total,frec_man_com_parcial) -->
-<!-- } -->
-<!-- ``` -->
-
-
-
-<!-- ### 1.5 Observemos los primeros 100 registros -->
-
-<!-- ```{r} -->
-<!-- r3_100 <- frec_man_com_parcial_total[c(1:100),] -->
-
-<!-- kbl(r3_100) %>% -->
-<!--   kable_styling(bootstrap_options = c("striped", "hover")) %>% -->
-<!--   kable_paper() %>% -->
-<!--   scroll_box(width = "100%", height = "300px") -->
-<!-- ``` -->
-
-
-
-<!-- ### 1.6 Verificación del cálculo correcto de proporciones -->
-
-<!-- Verifiquemos que la suma de las proporciones sea 1 para la comuna 15101: -->
-
-<!-- ```{r} -->
-<!-- r3_100_f <- filter(frec_man_com_parcial_total, frec_man_com_parcial_total$unlist.d. == 1107) -->
-<!-- ``` -->
-
-
-<!-- ```{r} -->
-<!-- sum(r3_100_f$p) -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- nrow(frec_man_com_parcial_total) -->
-<!-- ``` -->
-
-Agregamos un cero a los códigos comunales de cuatro dígitos:
-
-```{r}
-codigos <- d$unlist.d.
-rango <- seq(1:nrow(d))
+codigos <- claves_con_1$COMUNA
+rango <- seq(1:nrow(claves_con_1))
 cadena <- paste("0",codigos[rango], sep = "")
 cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
 codigos <- as.data.frame(codigos)
 cadena <- as.data.frame(cadena)
-comuna_corr <- cbind(d,cadena)
-comuna_corr <- comuna_corr[,-c(2,3),drop=FALSE]
-names(comuna_corr)[4] <- "código" 
-
+comuna_corr <- cbind(claves_con_1,cadena)
+#comuna_corr <- comuna_corr[,-c(2,3),drop=FALSE]
+#names(comuna_corr)[3] <- "código" 
+head(comuna_corr,10)
 ```
-
-### Tabla de frecuencias:
 
 ```{r}
-head(comuna_corr,5)
-```
-```{r}
-nrow(comuna_corr)
+unicos <- unique(comuna_corr)
+head(unicos,10)
 ```
 
 
 
-
-y obtenemos la tabla de frecuencias de respuesta a la categoría = 1 de la pregunta P17 a nivel zonal.
-
-<br>
-
-
-##  Variable CASEN
-
-### Tabla de ingresos expandidos
-
-Hemos calculado ya éste valor como conclusión del punto 1.1 de [aquí](https://rpubs.com/dataintelligence/corr_casen_censo_002)
 
 
 
 ```{r}
-h_y_m_2017_censo <- readRDS("ingresos_expandidos_17.rds")
-head(h_y_m_2017_censo,5)
+#e <- table(claves_con_1$clave, claves_con_1$P17) 
+library(MASS)
+e <- xtabs(~clave+P17, data=claves_con_1)
+e <- as.data.frame(e)
+head(e,10)
 ```
 
 ```{r}
-nrow(h_y_m_2017_censo)
+nrow(e)
 ```
 
 
-Unión Censo-Casen:
+
+
+1. Unir los codigos comunales correctos a las frecuencias
 
 ```{r}
-comunas_censo_casen = merge( x = comuna_corr, y = h_y_m_2017_censo, by = "código", all.x = TRUE)
-comunas_censo_casen <- comunas_censo_casen[,-c(4)]
-head(comunas_censo_casen,5)
+tabla_1 = merge( x = e, y = unicos, by = "clave", all.x = TRUE)
+head(tabla_1,10)
 ```
+
 
 ```{r}
-nrow(comunas_censo_casen)
+nrow(tabla_1)
+```
+
+## Eliminemos la grasa y renombremos:
+
+```{r}
+tabla_2 <- tabla_1[, -c(2,5,6,7)]
+names(tabla_2)[4] <- "código"  
+head(tabla_2,10)
 ```
 
 
 
-##  Unión de la proporción zonal por comuna con la tabla censo-casen:
+2. Unir los ingresos expandidos urbanos
 
 
-Para calcular la variable multipob, debemos calcular:
-
-$$ multipob = promedio\_i \cdot personas \cdot p\_poblacional	$$
-
-Del censo obtenemos la cantidad de población a nivel de zona y estimamos su proporción a nivel comunal. Ya hemos calculado ésta proporción  [aquí](https://rpubs.com/dataintelligence/tabla_de_proporciones).
-
+```{r}
+ingresos_expandidos_urbanos <- readRDS("ingresos_expandidos_casen_2017_totales_u.rds")
+head(ingresos_expandidos_urbanos,10)
+```
 
 
-###  Ingreso promedio expandido por zona (**multi_pob**)
 
-En éste momento vamos a construir nuestra variable dependiente de regresión aplicando la siguiente fórmula:
+```{r}
+tabla_3 = merge( x = tabla_2 , y = ingresos_expandidos_urbanos, by = "código", all.x = TRUE)
+names(tabla_3)[2] <- "zona" 
+names(tabla_3)[5] <- "comuna" 
+names(tabla_3)[6] <- "tipo" 
+tabla_3$zona <- as.character(tabla_3$zona) 
+head(tabla_3,10)
+```
 
-Para calcular la variable multipob, debemos:
 
-$$ multipob = promedio\_i \cdot personas \cdot p\_poblacional	$$
-
-Unimos:
+hay que integrar las proporciones poblacionales zonales:
 
 ```{r}
 tabla_de_prop_pob <- readRDS("../../../../archivos_grandes/tabla_de_prop_pob.rds")
-names(tabla_de_prop_pob)[1]  <- "zona"
-
+names(tabla_de_prop_pob)[1] <- "zona" 
+tabla_de_prop_pob$zona <- as.character(tabla_de_prop_pob$zona) 
+head(tabla_de_prop_pob,10)
 ```
 
 ```{r}
-comunas_censo_casen = merge( x = comunas_censo_casen, y = tabla_de_prop_pob, by = "zona", all.x = TRUE)
-head(comunas_censo_casen,5)
+tabla_4 = merge( x = tabla_3, y = tabla_de_prop_pob, by = "zona", all.x = TRUE)
+head(tabla_4,10)
 ```
 
-Creamos:
-
-```{r}
-comunas_censo_casen$multipob <- comunas_censo_casen$Ingresos_expandidos*comunas_censo_casen$p
-```
+## Eliminemos la grasa y renombremos:
 
 ```{r}
-head(comunas_censo_casen,5)
+tabla_5 <- tabla_4[, -c( 11,13)]
+names(tabla_5)[2] <- "código"  
+names(tabla_5)[3] <- "frecuencia_de_resp"  
+names(tabla_5)[4] <- "region"  
+head(tabla_5,10)
 ```
+
+
+3. construir multipob
+
+
+```{r}
+tabla_5$multipob <- tabla_5$Ingresos_expandidos*tabla_5$p
+head(tabla_5,10)
+```
+
+
+
 
 
 
@@ -520,10 +248,10 @@ $$ X(independiente) = frecuencia \ de \ población \ que \ posee \ la \ variable
 ##  Diagrama de dispersión loess
 
 ```{r}
-scatter.smooth(x=comunas_censo_casen$Freq.x, y=comunas_censo_casen$multipob, main="multi_pob ~ Freq.x",
-     xlab = "Freq.x",
+scatter.smooth(x=tabla_5$frecuencia_de_resp, y=tabla_5$multipob, main="multi_pob ~ Freq",
+     xlab = "Freq",
      ylab = "multi_pob",
-           col = 2) 
+           col = 2, is.na = T) 
 ```
 
 ##  Outliers 
@@ -535,14 +263,14 @@ Hemos demostrado en el punto 5.7.2 de [aquí](https://rpubs.com/dataintelligence
 Aplicaremos un análisis de regresión lineal del ingreso expandido por zona sobre las frecuencias de respuestas zonales.
 
 ```{r}
-linearMod <- lm( multipob~(Freq.x) , data=comunas_censo_casen)
+linearMod <- lm( multipob~(frecuencia_de_resp) , data=tabla_5)
 summary(linearMod) 
 ```
 
 ##  Gráfica de la recta de regresión lineal
 
 ```{r, warning = FALSE, message = FALSE}
-ggplot(comunas_censo_casen, aes(x = Freq.x , y = multipob)) + 
+ggplot(tabla_5, aes(x = frecuencia_de_resp, y = multipob)) + 
   geom_point() +
   stat_smooth(method = "lm", col = "red")
 ```
@@ -555,7 +283,7 @@ Si bien obtenemos nuestro modelo lineal da cuenta del 0.9659 de la variabilidad 
 ```{r}
 ### 8.1 Modelo cuadrático
 
-linearMod <- lm( multipob~(Freq.x^2) , data=comunas_censo_casen)
+linearMod <- lm( multipob~(frecuencia_de_resp^2) , data=tabla_5)
 datos <- summary(linearMod)
 dato <- datos$adj.r.squared
 modelo <- "cuadrático"
@@ -568,7 +296,7 @@ modelos1 <- cbind(modelo,dato,sintaxis)
  
 ### 8.2 Modelo cúbico
  
-linearMod <- lm( multipob~(Freq.x^3) , data=comunas_censo_casen)
+linearMod <- lm( multipob~(frecuencia_de_resp^3) , data=tabla_5)
 datos <- summary(linearMod)
 dato <- datos$adj.r.squared
 modelo <- "cúbico"
@@ -578,7 +306,7 @@ modelos2 <- cbind(modelo,dato,sintaxis)
  
 ### 8.3 Modelo logarítmico
  
-linearMod <- lm( multipob~log(Freq.x) , data=comunas_censo_casen)
+linearMod <- lm( multipob~log(frecuencia_de_resp) , data=tabla_5)
 datos <- summary(linearMod)
 dato <- datos$adj.r.squared
 modelo <- "logarítmico"
@@ -588,7 +316,7 @@ modelos3 <- cbind(modelo,dato,sintaxis)
  
 ### 8.5 Modelo con raíz cuadrada 
  
-linearMod <- lm( multipob~sqrt(Freq.x) , data=comunas_censo_casen)
+linearMod <- lm( multipob~sqrt(frecuencia_de_resp) , data=tabla_5)
 datos <- summary(linearMod)
 dato <- datos$adj.r.squared
 modelo <- "raíz cuadrada"
@@ -598,7 +326,7 @@ modelos5 <- cbind(modelo,dato,sintaxis)
  
 ### 8.6 Modelo raíz-raíz
  
-linearMod <- lm( sqrt(multipob)~sqrt(Freq.x) , data=comunas_censo_casen)
+linearMod <- lm( sqrt(multipob)~sqrt(frecuencia_de_resp) , data=tabla_5)
 datos <- summary(linearMod)
 dato <- datos$adj.r.squared
 modelo <- "raíz-raíz"
@@ -608,7 +336,7 @@ modelos6 <- cbind(modelo,dato,sintaxis)
  
 ### 8.7 Modelo log-raíz
  
-linearMod <- lm( log(multipob)~sqrt(Freq.x) , data=comunas_censo_casen)
+linearMod <- lm( log(multipob)~sqrt(frecuencia_de_resp) , data=tabla_5)
 datos <- summary(linearMod)
 dato <- datos$adj.r.squared
 modelo <- "log-raíz"
@@ -618,7 +346,7 @@ modelos7 <- cbind(modelo,dato,sintaxis)
  
 ### 8.8 Modelo raíz-log
  
-linearMod <- lm( sqrt(multipob)~log(Freq.x) , data=comunas_censo_casen)
+linearMod <- lm( sqrt(multipob)~log(frecuencia_de_resp) , data=tabla_5)
 datos <- summary(linearMod)
 dato <- datos$adj.r.squared
 modelo <- "raíz-log"
@@ -628,7 +356,7 @@ modelos8 <- cbind(modelo,dato,sintaxis)
  
 ### 8.9 Modelo log-log
  
-linearMod <- lm( log(multipob)~log(Freq.x) , data=comunas_censo_casen)
+linearMod <- lm( log(multipob)~log(frecuencia_de_resp) , data=tabla_5)
 datos <- summary(linearMod)
 dato <- datos$adj.r.squared
 modelo <- "log-log"
@@ -640,7 +368,8 @@ modelos_bind <- rbind(modelos1, modelos2,modelos3,modelos5,modelos6,modelos7,mod
 modelos_bind <- as.data.frame(modelos_bind)
 
 modelos_bind <<- modelos_bind[order(modelos_bind$dato, decreasing = T ),]
-h_y_m_comuna_corr_01 <<- comunas_censo_casen
+
+#h_y_m_comuna_corr_01 <<- comunas_censo_casen
 
 kbl(modelos_bind) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
@@ -656,17 +385,17 @@ Elegimos el modelo log-log (8) pues tiene el más alto $R^2$
 
 ```{r}
 
-h_y_m_comuna_corr <- h_y_m_comuna_corr_01
+#h_y_m_comuna_corr <- h_y_m_comuna_corr_01
 metodo <- 8
 switch (metodo,
-        case = linearMod <- lm( multipob~(Freq.x^2) , data=h_y_m_comuna_corr),
-        case = linearMod <- lm( multipob~(Freq.x^3) , data=h_y_m_comuna_corr),
-        case = linearMod <- lm( multipob~log(Freq.x) , data=h_y_m_comuna_corr),
-        case = linearMod <- lm( multipob~sqrt(Freq.x) , data=h_y_m_comuna_corr),
-        case = linearMod <- lm( sqrt(multipob)~sqrt(Freq.x) , data=h_y_m_comuna_corr),
-        case = linearMod <- lm( log(multipob)~sqrt(Freq.x) , data=h_y_m_comuna_corr),
-        case = linearMod <- lm( sqrt(multipob)~log(Freq.x) , data=h_y_m_comuna_corr),
-        case = linearMod <- lm( log(multipob)~log(Freq.x) , data=h_y_m_comuna_corr)
+        case = linearMod <- lm( multipob~(frecuencia_de_resp^2) , data=tabla_5),
+        case = linearMod <- lm( multipob~(frecuencia_de_resp^3) , data=tabla_5),
+        case = linearMod <- lm( multipob~log(frecuencia_de_resp) , data=tabla_5),
+        case = linearMod <- lm( multipob~sqrt(frecuencia_de_resp) , data=tabla_5),
+        case = linearMod <- lm( sqrt(multipob)~sqrt(frecuencia_de_resp) , data=tabla_5),
+        case = linearMod <- lm( log(multipob)~sqrt(frecuencia_de_resp) , data=tabla_5),
+        case = linearMod <- lm( sqrt(multipob)~log(frecuencia_de_resp) , data=tabla_5),
+        case = linearMod <- lm( log(multipob)~log(frecuencia_de_resp) , data=tabla_5)
 )
 summary(linearMod)
 ```
@@ -684,15 +413,18 @@ Es éste el modelo que nos entrega el mayor coeficiente de determinación de tod
 Desplegamos una curva suavizada por loess en el diagrama de dispersión.
 
 ```{r}
-scatter.smooth(x=log(comunas_censo_casen$Freq.x), y=log(comunas_censo_casen$multipob), lpars = list(col = "red", lwd = 2, lty = 1), main="multi_pob ~ Freq.x")
+scatter.smooth(x=log(tabla_5$frecuencia_de_resp), y=log(tabla_5$multipob), lpars = list(col = "red", lwd = 2, lty = 1), main="multi_pob ~ Freq.x")
 ```
 
 
 
 ```{r, warning = FALSE, message = FALSE}
-ggplot(comunas_censo_casen, aes(x = log(Freq.x) , y = log(multipob))) + geom_point() + stat_smooth(method = "lm", col = "red")
+ggplot(tabla_5, aes(x = log(frecuencia_de_resp) , y = log(multipob))) + geom_point() + stat_smooth(method = "lm", col = "red")
 ```
 
+```{r}
+head(tabla_5,10)
+```
 
 
 
@@ -710,15 +442,16 @@ $$ \hat Y = e^{\beta_0+\beta_1  ln{X}} $$
 
 ### Modelo real:
 
-$$  \hat Y = e^{13.13441+1.06604 \cdot ln{X}}  $$
+$$  \hat Y = e^{13.10300 + 1.06405 \cdot ln{X}}  $$
 
 
 <br>
 ```{r}
-linearMod <- lm( log(multipob)~log(Freq.x) , data=comunas_censo_casen)
+linearMod <- lm( log(multipob)~log(frecuencia_de_resp) , data=tabla_5)
 aa <- linearMod$coefficients[1]
 bb <- linearMod$coefficients[2]
-
+aa
+bb
 ```
 
 
@@ -730,13 +463,13 @@ bb <- linearMod$coefficients[2]
 Esta nueva variable se llamará: est_ing
 
 ```{r}
-comunas_censo_casen$est_ing <- exp(aa+bb*log(comunas_censo_casen$Freq.x))
+tabla_5$est_ing <- exp(aa+bb*log(tabla_5$frecuencia_de_resp))
 
 
 ```
 
 ```{r}
-comunas_censo_casen
+head(tabla_5,10)
 ```
 
 <br>
@@ -750,12 +483,12 @@ $$ Ingreso \_ Medio\_zona = est\_ing / (personas * p\_poblacional) $$
 <br>
 
 ```{r}
-comunas_censo_casen$ing_medio_zona <- comunas_censo_casen$est_ing /(comunas_censo_casen$personas  * comunas_censo_casen$p)
+tabla_5$ing_medio_zona <- tabla_5$est_ing /(tabla_5$personas  * tabla_5$p)
 ```
 
 
 ```{r}
-r3_100 <- comunas_censo_casen[c(1:100),]
+r3_100 <- tabla_5[c(1:100),]
 kbl(r3_100) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
@@ -763,13 +496,29 @@ kbl(r3_100) %>%
 ```
 
 
+
+
+
+
+```{r}
+pp <- ggplot(data = tabla_5) + geom_boxplot(aes(x=comuna, y=ing_medio_zona, color=comuna))
+pp + theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust=1))
+```
+
+
+
+
+
 <br>
 Guardamos:
 
 ```{r}
-saveRDS(comunas_censo_casen, "URBANO/region_01_P17_u.rds")
+saveRDS(tabla_5, "URBANO/region_01_P17_u_nuevo.rds")
 ```
  
+```{r}
+nrow(tabla_5)
+```
 
 
 <br>
@@ -833,36 +582,6 @@ $$ \hat Y = {\beta_0}^2 + 2  \beta_0  \beta_1 \ln{X}+  \beta_1^2 ln^2X  $$
 ### Modelo log-log
 
 $$ \hat Y = e^{\beta_0+\beta_1  ln{X}} $$
-
-## Anexo: Integriedad de los datos estimados.
-
-```{r}
-region_01 <- readRDS("URBANO/region_01_P17_u.rds")
-region_01
-```
-
-
-
-Hipotesis de trabajo:
-
-Creeemos que existen respuestas a las pregunta P17 ¿Trabajó por un pago o especie? en la base de datos original.
-
-```{r}
-tabla_con_clave <- 
-readRDS("../../../ds_correlaciones_censo_casen/corre_censo_casen_2017/censos_con_clave/censo_personas_con_clave_17")
-r3_100 <- tabla_con_clave[c(1:100),]
-kbl(r3_100) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-```
-
-
-
-```{r}
-
-```
-
 
 
 

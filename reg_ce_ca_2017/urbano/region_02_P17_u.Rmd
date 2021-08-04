@@ -294,10 +294,10 @@ comunas_censo_casen = merge( x = comunas_censo_casen, y = tabla_de_prop_pob, by 
 head(comunas_censo_casen,5)
 ```
 
-Creamos:
+Creamos multipob:
 
 ```{r}
-comunas_censo_casen$multipob <- comunas_censo_casen$Ingresos_expandidos*comunas_censo_casen$p.x
+comunas_censo_casen$multipob <- comunas_censo_casen$Ingresos_expandidos*comunas_censo_casen$p
 ```
 ```{r}
 head(comunas_censo_casen,5)
@@ -544,12 +544,12 @@ $$ Ingreso \_ Medio\_zona = est\_ing / (personas * p\_poblacional) $$
 
 
 ```{r}
-comunas_censo_casen
+head(comunas_censo_casen,10)
 ```
 
 
 ```{r}
-comunas_censo_casen$ing_medio_zona <- comunas_censo_casen$est_ing /(comunas_censo_casen$personas  * comunas_censo_casen$p.x)
+comunas_censo_casen$ing_medio_zona <- comunas_censo_casen$est_ing /(comunas_censo_casen$personas  * comunas_censo_casen$p)
 
 r3_100 <- comunas_censo_casen[c(1:100),]
 kbl(r3_100) %>%

@@ -1,0 +1,215 @@
+---
+title:  Ingresos totales por persona corregidos en la Casen(<span style="color:green">2017</span>)
+
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+  <div style='line-height :24px'> <span style='font-size: 26px'>Obtención de los promedios de ingresos totales comunales según la Casen del 2017 y construcción de la variable "Ingresos expandidos".</span></div>
+  
+
+ 
+  
+header-includes:
+   - \usepackage[]{babel}
+
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true   
+---
+
+fecha: `r format(Sys.time(), "%d-%m-%Y")`
+
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+```
+
+# Introducción
+
+La corrección a la que nos referimos en el título de nuestro trabajo se refiere a la exclusión de outliers con la fórmula del 1.5 rango intercuartílico. La pregunta sobre situación ocupacional se aplica a los mayores de 12 años, por lo que se debe hacer ese filtro y los NA no se tocan, sino estaríamos subestimando la pobreza.
+
+# "ingreso promedio mensual" según CASEN 2017 a nivel de comuna.
+
+## Leemos la base de datos:
+
+```{r}
+casen_2017 <- readRDS(file = "../../../../archivos_grandes/casen_2017_c.rds")
+```
+
+## Veamos el numero de encuestados:
+
+```{r}
+nrow(casen_2017)
+```
+
+## Excluimos los outliers de ytotcor y observemos los primeros 10 registros de nuestra nueva tabla ahora de 137460 registros:
+
+```{r}
+Q <- quantile(casen_2017$ytotcor, probs=c(.25, .75), na.rm = T)
+iqr <- IQR(casen_2017$ytotcor, na.rm = T)
+casen_2017_sin_o <- subset(casen_2017, casen_2017$ytotcor > (Q[1] - 1.5*iqr) & casen_2017$ytotcor < (Q[2]+1.5*iqr))
+casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character), stringsAsFactors=FALSE)
+
+# ggg <- head(casen_2017_sin_o,10)
+# 
+# kbl(ggg) %>%
+#   kable_styling(bootstrap_options = c("striped", "hover")) %>%
+#   kable_paper() %>%
+#   scroll_box(width = "100%", height = "300px")
+```
+
+```{r}
+nrow(casen_2017_sin_o)
+```
+
+
+## Obtenemos los promedios de ingreso comunales, con la columna que indica urbano-ruralidad, renombramos y agregamos una columna año:
+
+zona **zona**\
+1 Urbano\
+2 Rural
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+b <-  as.numeric(casen_2017_sin_o$ytotcor)
+a <- casen_2017_sin_o$comuna
+c <- casen_2017_sin_o$zona
+promedios_grupales <-aggregate(b, by=list(a,c), FUN = mean , na.rm=TRUE )
+head(promedios_grupales,5)
+```
+
+
+```{r, message=FALSE, warning=FALSE, results='hide'}
+#Asignamos nombres con sentido a las cabeceras:
+names(promedios_grupales)[1] <- "comuna"
+names(promedios_grupales)[2] <- "zona"
+names(promedios_grupales)[3] <- "promedio_i"
+promedios_grupales$año <- "2017"
+head(promedios_grupales,5)
+```
+
+```{r}
+nrow(promedios_grupales)
+```
+
+Existen 346 comunas en Chile. La ausencia de 22 es responsabilidad de la Casen 2017.
+
+## Agregamos los codigos comunales:
+
+```{r}
+codigos_comunales <- readRDS(file = "../../../../archivos_grandes/codigos_comunales_2011-2017.rds")
+names(codigos_comunales)[1] <- "código"
+names(codigos_comunales)[2] <- "comuna"
+df_2017 = merge( x = promedios_grupales, y = codigos_comunales, by = "comuna", all.x = TRUE)
+head(df_2017,5)
+```
+
+## Agreguemos una columna con la variable de ingresos ponderada por población. Para ello contamos las frecuencias de los registros por comuna en el Censo del 2017.
+
+```{r}
+library("rio")
+x <- import("../../../../archivos_grandes/Microdato_Censo2017-Personas.csv")
+my_summary_data <- x %>%
+    group_by(x$COMUNA) %>%
+    summarise(Count = n()) 
+names(my_summary_data)[1] <- "comuna"     
+names(my_summary_data)[2] <- "personas"
+head(my_summary_data,5)
+```
+
+## Agregamos un cero antes de cada código comunal para poder hacer a continuación el merge posteriormente con la tabla de frecuencias.
+
+
+```{r}
+# recogemos el campo Comuna:
+codigos <- my_summary_data$comuna
+# construimos una secuencia llamada rango del 1 al total de filas del dataset:
+rango <- seq(1:nrow(my_summary_data))
+# Creamos un string que agrega un cero a todos los registros:
+cadena <- paste("0",codigos[rango], sep = "")
+
+# El string cadena tiene o 5 o 6 digitos, los cuales siempre deben ser siempre 5 agregandole un cero al inicio de los que tienen 4.
+# Para ello extraemos un substring de la cadena sobre todas las filas (rangos) comenzando desde el primero o el segundo y llegando siempre al 6.
+
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(my_summary_data,cadena)
+# comuna_corr <- comuna_corr[,-c(1)]
+names(comuna_corr)[3] <- "código"  
+comuna_corr <- comuna_corr[,-(1),drop=FALSE]
+head(comuna_corr,5)
+```
+
+## unimos:
+
+```{r}
+df_2017_2 = merge( x = df_2017, y = comuna_corr, by = "código", all.x = TRUE)
+head(df_2017_2,5)
+```
+
+## Agregamos la columna "Ingresos_expandidos"
+
+```{r}
+df_2017_2$Ingresos_expandidos <- df_2017_2$promedio_i*df_2017_2$personas
+kbl(df_2017_2) %>%
+kable_material(c("striped", "hover"), font_size = 14)%>%
+scroll_box(width = "100%", height = "500px")
+```
+
+## Generación y guardado de tablas
+
+```{r}
+saveRDS(df_2017_2, "ingresos_expandidos_casen_2017_totales.rds")
+ingresos_expandidos_casen_2017_totales <- readRDS("ingresos_expandidos_casen_2017_totales.rds")
+ingresos_expandidos_casen_2017_totales_r <- filter(ingresos_expandidos_casen_2017_totales, ingresos_expandidos_casen_2017_totales$zona == "Rural")
+ingresos_expandidos_casen_2017_totales_u <- filter(ingresos_expandidos_casen_2017_totales, ingresos_expandidos_casen_2017_totales$zona == "Urbano")                                                   
+saveRDS(ingresos_expandidos_casen_2017_totales_r, "ingresos_expandidos_casen_2017_totales_r.rds")
+saveRDS(ingresos_expandidos_casen_2017_totales_u, "ingresos_expandidos_casen_2017_totales_u.rds")
+```
+
+
+
+
+## 3 Referencias
+
+https://rpubs.com/osoramirez/316691
+
+https://dataintelligencechile.shinyapps.io/casenfinal
+
+
+
+
