@@ -35,12 +35,12 @@ calcula las **frecuencias** de respuestas 1 (¿Trabajó por un pago o especie?) 
 
 
 ************************************************************
-Lo que debe quedar meridianamente claro son las tablas **rurales** y **urbanas** de los ingresos extraídos de la Casen promediados por comuna, que están aquí:\
+Lo que debe quedar meridianamente claro son las tablas **rurales** y **urbanas** de los ingresos extraídos de la Casen promediados por comuna, que se construyen aquí:\
 ds_correlaciones_censo_casen\reg_ce_ca_2017\urbano\ingresos_expandidos_Casen_u_y_r.Rmd
     
-**Debe hacerse el filtro sobre los mayores de 12 años** 
+**No olvidar que debe hacerse el filtro sobre los mayores de 12 años** 
 
-Se refieren las totales, las rurales y las urbanas:
+Se refieren las totales, las rurales y las urbanas:\
 ingresos_expandidos_casen_2017_totales.rds\       
 ingresos_expandidos_casen_2017_totales_r.rds\
 ingresos_expandidos_casen_2017_totales_u.rds
