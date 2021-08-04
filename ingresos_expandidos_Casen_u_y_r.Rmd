@@ -57,14 +57,25 @@ Obtenemos el dato de "ingreso promedio anual" según CASEN 2017 (a nivel de comu
 
 ```{r}
 # leemos la base de datos:
-casen_2017 <- readRDS(file = "casen_2017_c.rds")
+casen_2017 <- readRDS(file = "../../archivos_grandes/Casen en Pandemia 2020 SPSS.sav")
 ```
 
 
 ### 1.1.2 Eliminamos del dataframe los registros que no posean valores en la columna del ingreso total:
 
+lo anterior es un error porque subestimamos la pobreza.
+
+```{r}
+casen_2017 <- casen_2017[c(1:1000),]
+```
+
+
+
 ```{r}
 casen_2017 <- casen_2017[!is.na(casen_2017$ytotcor),]
+
+
+
 ```
 
 ### 1.1.3 Excluimos los outliers:

@@ -1,5 +1,5 @@
 ---
-title:  Expansión de la CASEN sobre el CENSO (Región 01)
+title:  Expansión de la CASEN sobre el CENSO (Región 01 <span style="color:green">Urbano</span>)
 author:
 - name: VE-CC-AJ
   affiliation: DataIntelligence
@@ -89,6 +89,14 @@ kbl(r3_100) %>%
   scroll_box(width = "100%", height = "300px")
 ```
 <br>
+
+Filtramos:
+
+```{r}
+tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$P09 > 15)
+```
+
+
 
 Queremos saber cuantas personas en Chile hay
 
@@ -442,7 +450,7 @@ $$ \hat Y = e^{\beta_0+\beta_1  ln{X}} $$
 
 ### Modelo real:
 
-$$  \hat Y = e^{13.10300 + 1.06405 \cdot ln{X}}  $$
+$$  \hat Y = e^{13.10277 + 1.064123 \cdot ln{X}}  $$
 
 
 <br>
@@ -507,6 +515,26 @@ pp + theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust=1))
 
 
 
+# Criterio para excluir outliers:
+
+```{r}
+Q <- quantile(tabla_5$ing_medio_zona, probs=c(.25, .75), na.rm = T)
+iqr <- IQR(tabla_5$ing_medio_zona, na.rm = T)
+casen_2017_sin_o <- subset(tabla_5, tabla_5$ing_medio_zona > (Q[1] - 1.5*iqr) & tabla_5$ing_medio_zona < (Q[2]+1.5*iqr))
+casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character), stringsAsFactors=FALSE)
+
+casen_2017_sin_o$multipob <- as.numeric(casen_2017_sin_o$multipob)
+casen_2017_sin_o$est_ing<- as.numeric(casen_2017_sin_o$est_ing)
+casen_2017_sin_o$ing_medio_zona <- as.numeric(casen_2017_sin_o$ing_medio_zona)
+
+
+head(casen_2017_sin_o,10) 
+```
+```{r}
+pp <- ggplot(data = casen_2017_sin_o ) + geom_boxplot(aes(x=comuna, y=ing_medio_zona, color=comuna))
+pp + theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust=1))
+```
+
 
 
 <br>
@@ -516,9 +544,7 @@ Guardamos:
 saveRDS(tabla_5, "URBANO/region_01_P17_u_nuevo.rds")
 ```
  
-```{r}
-nrow(tabla_5)
-```
+
 
 
 <br>
