@@ -1,0 +1,818 @@
+---
+title:  Expansión de la CASEN sobre el CENSO (tabla matriz <span style="color:green">Rural</span>)
+author:
+- name: VE-CC-AJ
+  affiliation: DataIntelligence
+subtitle: | 
+  ESCOLARIDAD 12
+header-includes:
+   - \usepackage[]{babel}
+output:
+  rmdformats::html_clean:
+    highlight: kate
+    toc: true
+    use_bookdown: true    
+---
+
+Fecha: `r format(Sys.time(), "%d-%m-%Y")`
+<style type="text/css">
+.main-container {
+  max-width: 1600px;
+  margin-left: 100px;
+  margin-right: auto;
+}
+</style>
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#library(ggpubr)
+library(markdown)
+library(shiny)
+library(shinythemes)
+library(tidyverse)
+library(magrittr)
+library(lubridate)
+#library(plotly)
+library(kableExtra)
+library(knitr)
+library("readxl")
+library(writexl)
+#library(RPostgreSQL)
+#library(devtools)
+library(remotes)
+library(DBI)
+library(tidyverse)
+library(kableExtra)
+#library(reldist)
+library("readxl")
+library("writexl")
+library(kableExtra)
+library(PerformanceAnalytics)
+library("rio")
+library("dplyr")
+library(plotly)
+library(normtest) 
+library(nortest)
+library(moments)
+library(MASS)
+
+library(DT)
+```
+
+# RURALIDAD
+
+# Resumen 
+
+Los ingresos estimados en relación a escolaridad a nivel rural en algunos casos nos entregan valores exageradamente altos. Como obtenemos coeficientes de determinación satisfactorias con los coeficientes de determinación estadisticamente significativos, quedamos satisfechos con ellos, cuando no excluimos el 1,5 del IQR para arriba y para abajo en la variable p
+
+
+como altos por lo que para mejorar la estimación excluiremos datos de frecuencias de respuesta, zonas con muy pocas personas encuestadas distorsionan el cálculo del ingreso medio pues ese p poblacional está en el denominador de la fórmula. La pregunta clave es: Qué porcentaje de datos se pueden excluir sin perder la representatividad estadística?.
+
+# Generación de ingresos expandidos a nivel Rural para la región 1:
+
+<br>
+
+##  Variable CENSO
+
+Necesitamos calcular las frecuencias a nivel censal de las respuestas correspondientes a la categoría: "ESCOLARIDAD" categoria 12 del Censo de personas. Recordemos que ésta fué la más alta correlación en relación a los ingresos expandidos multiplicada por la cantidad de zonas cubiertas[(ver punto 2 Correlaciones aquí)](https://rpubs.com/dataintelligence/corr_ce_ca_P17).
+
+### Lectura y filtrado de la tabla censal de personas
+
+Leemos la tabla Censo 2017 de personas que ya tiene integrada la clave zonal:
+
+```{r}
+tabla_con_clave <-
+readRDS("C:\\Users\\chris\\OneDrive\\Documentos\\GitHub\\ds_correlaciones_censo_casen\\corre_censo_casen_2017\\censos_con_clave\\censo_personas_con_clave_17")
+r3_100 <- tabla_con_clave[c(1:100),]
+```
+
+
+```{r}
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped","hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+<br>
+
+### Cálculo de frecuencias
+
+Obtenemos las frecuencias a la pregunta ESCOLARIDAD filtradas por region = 1 y zona urbana = 1 y respuesta 12.
+
+```{r}
+tabla_con_clave_f <- tabla_con_clave[,-c(2,4,6:40,42:48),drop=FALSE]
+claves_con_1 <- filter(tabla_con_clave_f, tabla_con_clave_f$ESCOLARIDAD == 12)
+claves_con_1 <- filter(claves_con_1, claves_con_1$AREA == 2)
+
+                                                        reg <- 1
+                                                        
+claves_con_1 <- filter(claves_con_1, claves_con_1$REGION == reg)
+claves_con_1 <- as.data.frame(claves_con_1)
+codigos <- claves_con_1$COMUNA
+rango <- seq(1:nrow(claves_con_1))
+cadena <- paste("0",codigos[rango], sep = "")
+cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
+codigos <- as.data.frame(codigos)
+cadena <- as.data.frame(cadena)
+comuna_corr <- cbind(claves_con_1,cadena) 
+
+unicos <- unique(comuna_corr)
+unicos <- unicos[!duplicated(unicos$clave), ]
+
+e <- xtabs(~clave+ESCOLARIDAD, data=claves_con_1)
+e <- as.data.frame(e)
+###  1. Unir los codigos comunales correctos a las frecuencias 
+tabla_1 = merge( x = e, y = unicos, by = "clave", all.x = TRUE)
+colnames(tabla_1)[8] <- "código"
+tabla_2 <- tabla_1[, -c(2,5,6,7)]
+names(tabla_2)[4] <- "código"  
+
+  datatable(tabla_2,class = 'cell-border stripe',
+          options = list(
+            pageLength = 5,
+            autoWidth = TRUE
+))
+```
+
+
+
+### Unir los ingresos expandidos rurales
+
+```{r}
+ingresos_expandidos_rurales <- readRDS("C:\\Users\\chris\\OneDrive\\Documentos\\GitHub\\ds_correlaciones_censo_casen\\reg_ce_ca_2017\\urbano\\ingresos_expandidos_casen_2017_totales_r.rds")
+  datatable(ingresos_expandidos_rurales,class = 'cell-border stripe',
+          options = list(
+            pageLength = 5,
+            autoWidth = TRUE
+))
+```
+
+### se pierde la primera ronda por ausencia de filas de Casen
+
+```{r}
+tabla_3 = merge( x = tabla_2 , y = ingresos_expandidos_rurales, by = "código", all.x = TRUE)
+colnames(tabla_3)[2] <- "zona"
+colnames(tabla_3)[6] <- "area"
+  datatable(tabla_3,class = 'cell-border stripe',
+          options = list(
+            pageLength = 5,
+            autoWidth = TRUE
+))
+```
+
+<!-- ####################################################################################### -->
+
+
+
+
+```{r}
+### hay que integrar las proporciones poblacionales zonales:
+
+tabla_de_prop_pob <- readRDS("C:\\Users\\chris\\OneDrive\\Documentos\\GitHub\\ds_correlaciones_censo_casen\\tabla_de_prop_pob.rds")
+names(tabla_de_prop_pob)[1] <- "zona" 
+tabla_de_prop_pob$zona <- as.character(tabla_de_prop_pob$zona) 
+tabla_4 = merge( x = tabla_3, y = tabla_de_prop_pob, by = "zona", all.x = TRUE)
+tabla_5 <- tabla_4[, -c( 11,13)]
+names(tabla_5)[2] <- "código"  
+names(tabla_5)[3] <- "frecuencia_de_resp"  
+names(tabla_5)[4] <- "region"  
+names(tabla_5)[5] <- "region_nombre" 
+  datatable(tabla_5,class = 'cell-border stripe',
+          options = list(
+            pageLength = 5,
+            autoWidth = TRUE
+))
+```
+
+
+3. construir multipob
+
+
+```{r}
+tabla_5$multipob <- tabla_5$Ingresos_expandidos*tabla_5$p 
+tabla_5 <- na.omit(tabla_5)
+tabla_5
+
+
+```
+ 
+
+#  Análisis de regresión con la presencia de outliers en la frecuencia de respuesta
+
+Aplicaremos un análisis de regresión donde:
+
+$$ Y(dependiente) = ingreso \ expandido \ por \ zona \ (multi\_pob)$$
+
+$$ X(independiente) = frecuencia \ de \ población \ que \ posee \ la \ variable \ Censal \ respecto \ a \ la \ zona \ (Freq.x)  $$
+<br>
+
+##  Diagrama de dispersión loess
+
+```{r, warning=FALSE}
+scatter.smooth(x=tabla_5$frecuencia_de_resp, y=tabla_5$multipob, main="multi_pob ~ Freq",
+     xlab = "Freq",
+     ylab = "multi_pob",
+           col = 2, is.na = T) 
+```
+
+
+##  Modelos lineales 
+
+Aplicaremos un análisis de regresión lineal del ingreso expandido por zona sobre las frecuencias de respuestas zonales para 9 modelos.
+
+##  Gráfica de la recta de regresión lineal con variables sin modificar
+
+```{r, warning = FALSE, message = FALSE}
+ggplot(tabla_5, aes(x = frecuencia_de_resp, y = multipob)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+```
+
+
+### aqui excluimos los outliers de frec de resp.
+
+Con el criterio del 1.5 iqr vamos a excluir los valores frecuencia de respuesta
+
+
+```{r}
+tabla_sin_out <- tabla_5
+```
+
+
+
+
+
+```{r}
+Q <- quantile(tabla_sin_out$frecuencia_de_resp, probs=c(.25, .75), na.rm = T)
+iqr <- IQR(tabla_sin_out$frecuencia_de_resp, na.rm = T)
+casen_2017_sin_o <- subset(tabla_sin_out, tabla_sin_out$frecuencia_de_resp > (Q[1] - 1.5*iqr) & tabla_sin_out$frecuencia_de_resp < (Q[2] + 1.5*iqr))
+casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character), stringsAsFactors=FALSE)
+casen_2017_sin_o$frecuencia_de_resp <- as.numeric(casen_2017_sin_o$frecuencia_de_resp)
+casen_2017_sin_o$multipob <- as.numeric(casen_2017_sin_o$multipob)
+  datatable(casen_2017_sin_o,class = 'cell-border stripe',
+          options = list(
+            pageLength = 5,
+            autoWidth = TRUE
+))
+```
+
+
+
+```{r, warning = FALSE, message = FALSE}
+ggplot(casen_2017_sin_o, aes(x = frecuencia_de_resp, y = multipob)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+```
+
+```{r, warning = FALSE, message = FALSE}
+ggplot(casen_2017_sin_o, aes(x = sqrt(frecuencia_de_resp), y = sqrt(multipob))) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+```
+
+
+
+
+### Vamos a aplicar 9 modelos alternativos para encontrar el que posea el mayor coeficiente de determinacion
+
+```{r}
+### 8.0 Modelo simple
+
+linearMod <- lm( multipob~(frecuencia_de_resp) , data=tabla_5)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "simple"
+sintaxis <- "linearMod <- lm( multipob~(frecuencia_de_resp) , data=tabla_5)"
+
+modelos0 <- cbind(modelo,dato,sintaxis) 
+
+
+### 8.1 Modelo cuadrático
+
+linearMod <- lm( multipob~(frecuencia_de_resp^2) , data=tabla_5)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "cuadrático"
+sintaxis <- "linearMod <- lm( multi_pob~(Freq.x^2) , data=h_y_m_comuna_corr_01)"
+
+modelos1 <- cbind(modelo,dato,sintaxis) 
+ 
+ 
+### 8.2 Modelo cúbico
+ 
+linearMod <- lm( multipob~(frecuencia_de_resp^3) , data=tabla_5)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "cúbico"
+sintaxis <- "linearMod <- lm( multi_pob~(Freq.x^3) , data=h_y_m_comuna_corr_01)"
+
+modelos2 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.3 Modelo logarítmico
+ 
+linearMod <- lm( multipob~log(frecuencia_de_resp) , data=tabla_5)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "logarítmico"
+sintaxis <- "linearMod <- lm( multi_pob~log(Freq.x) , data=h_y_m_comuna_corr_01)"
+
+modelos3 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.5 Modelo con raíz cuadrada 
+ 
+linearMod <- lm( multipob~sqrt(frecuencia_de_resp) , data=tabla_5)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz cuadrada"
+sintaxis <- "linearMod <- lm( multi_pob~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)"
+
+modelos5 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.6 Modelo raíz-raíz
+ 
+linearMod <- lm( sqrt(multipob)~sqrt(frecuencia_de_resp) , data=tabla_5)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz-raíz"
+sintaxis <- "linearMod <- lm( sqrt(multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)"
+
+modelos6 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.7 Modelo log-raíz
+ 
+linearMod <- lm( log(multipob)~sqrt(frecuencia_de_resp) , data=tabla_5)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "log-raíz"
+sintaxis <- "linearMod <- lm( log(multi_pob)~sqrt(Freq.x) , data=h_y_m_comuna_corr_01)"
+
+modelos7 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.8 Modelo raíz-log
+ 
+linearMod <- lm( sqrt(multipob)~log(frecuencia_de_resp) , data=tabla_5)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz-log"
+sintaxis <- "linearMod <- lm( sqrt(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)"
+
+modelos8 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.9 Modelo log-log
+ 
+linearMod <- lm( log(multipob)~log(frecuencia_de_resp) , data=tabla_5)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "log-log"
+sintaxis <- "linearMod <- lm( log(multi_pob)~log(Freq.x) , data=h_y_m_comuna_corr_01)"
+
+modelos9 <- cbind(modelo,dato,sintaxis)
+ 
+modelos_bind <- rbind(modelos0, modelos1, modelos2,modelos3,modelos5,modelos6,modelos7,modelos8,modelos9)
+modelos_bind <- as.data.frame(modelos_bind)
+
+# modelos_bind <<- modelos_bind[order(modelos_bind$dato, decreasing = T ),]
+modelos_bind <- cbind(row.names(modelos_bind),modelos_bind)
+names(modelos_bind)[1] <- "n"
+modelos_bind$dato <- as.numeric(modelos_bind$dato)
+modelos_bind <- modelos_bind[order(modelos_bind$dato, decreasing = T ),]
+
+kbl(modelos_bind) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+<br>
+
+# Elección del modelo.
+
+```{r}
+for(i in modelos_bind$n) {
+
+  numero <- modelos_bind[i,1]
+  numero <- as.numeric(numero)
+  metodo <- numero
+switch (metodo,
+        case = linearMod <- lm( multipob~(frecuencia_de_resp) , data=tabla_5),
+        case = linearMod <- lm( multipob~(frecuencia_de_resp^2) , data=tabla_5),
+        case = linearMod <- lm( multipob~(frecuencia_de_resp^3) , data=tabla_5),
+        case = linearMod <- lm( multipob~log(frecuencia_de_resp) , data=tabla_5),
+        case = linearMod <- lm( multipob~sqrt(frecuencia_de_resp) , data=tabla_5),
+        case = linearMod <- lm( sqrt(multipob)~sqrt(frecuencia_de_resp) , data=tabla_5),
+        case = linearMod <- lm( log(multipob)~sqrt(frecuencia_de_resp) , data=tabla_5),
+        case = linearMod <- lm( sqrt(multipob)~log(frecuencia_de_resp) , data=tabla_5),
+        case = linearMod <- lm( log(multipob)~log(frecuencia_de_resp) , data=tabla_5)
+)
+ rq <<- summary(linearMod)
+  valor1 <- rq$coefficients[8] < 0.001
+  valor2 <- rq$coefficients[7] < 0.001
+
+  if(valor2 == TRUE & valor1 == TRUE) {
+    print("------")
+    print(modelos_bind[i,2])
+    print(rq)
+    break
+
+  }
+}
+aa <- rq$coefficients[1]
+bb <- rq$coefficients[2]
+```
+
+
+
+
+## construccion de la tabla con ingresos estimados(con outliers)
+
+$$ \hat Y = {\beta_0}^2 + 2  \beta_0  \beta_1 \sqrt{X}+  \beta_1^2 X  $$
+
+```{r} 
+
+tabla_5$est_ing <- aa^2 + 2*aa*bb*sqrt(tabla_5$frecuencia_de_resp)+bb^2*tabla_5$frecuencia_de_resp
+
+tabla_5$ing_medio_zona <- tabla_5$est_ing /(tabla_5$personas  * tabla_5$p)
+
+nombre <- paste0("tablas_regiones_ESC_r/region_",reg,"_ESC_r_v2.xlsx")
+write_xlsx(tabla_5,nombre)
+tabla_5
+  # datatable(tabla_5,class = 'cell-border stripe',
+  #         options = list(
+  #           pageLength = 5,
+  #           autoWidth = TRUE
+# )
+# )
+```
+
+
+```{r}
+scatter.smooth(x=tabla_5$frecuencia_de_resp, y=tabla_5$multipob, main="ing_medio_zona ~ Freq",
+     xlab = "Freq",
+     ylab = "multi_pob",
+           col = 2, is.na = T)
+```
+
+
+
+
+
+
+
+
+
+Calculemos los promedios de el campo **promedio_i** e **ing_medio_zona** para compararlos
+
+```{r}
+library("dplyr")
+summarise(tabla_5, my_mean = mean(promedio_i))
+```
+
+```{r}
+library("dplyr")
+summarise(tabla_5, my_mean = mean(ing_medio_zona))
+```
+
+
+
+<span style="color:red">
+De la gráfica se observa perfectamente la presencia de outliers que debemos excluir, pues pueden infuir en la determiación de un r-cuadrado alto con la existencia de valores que se alejan de la realidad. Vamos a aplicar la exclusión del 1.5 del rango intercuartilico tanto para valores en rangos superiores como inferiores en el campo frecuencia de respuesta(el campo p no nos sirve, pues es representativo de la poblecion zonal respecto a la comunal)</span>
+
+## Construccion de la tabla sin outliers
+
+
+Con el criterio del 1.5 iqr vamos a excluir los valores frecuencia de respuesta
+
+```{r}
+Q <- quantile(tabla_sin_out$frecuencia_de_resp, probs=c(.25, .75), na.rm = T)
+iqr <- IQR(tabla_sin_out$frecuencia_de_resp, na.rm = T)
+casen_2017_sin_o <- subset(tabla_sin_out, tabla_sin_out$frecuencia_de_resp > (Q[1] - 1.5*iqr) & tabla_sin_out$frecuencia_de_resp < (Q[2] + 1.5*iqr))
+casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character), stringsAsFactors=FALSE)
+casen_2017_sin_o$frecuencia_de_resp <- as.numeric(casen_2017_sin_o$frecuencia_de_resp)
+casen_2017_sin_o$multipob <- as.numeric(casen_2017_sin_o$multipob)
+  datatable(casen_2017_sin_o,class = 'cell-border stripe',
+          options = list(
+            pageLength = 5,
+            autoWidth = TRUE
+))
+```
+
+
+
+
+
+
+
+```{r, warning=FALSE}
+
+
+
+
+
+
+scatter.smooth(x=casen_2017_sin_o$frecuencia_de_resp, y=casen_2017_sin_o$multipob, main="multi_pob ~ Freq",
+     xlab = "Freq",
+     ylab = "multi_pob",
+           col = 2, is.na = T) 
+```
+
+##  Modelos lineales 
+
+Aplicaremos un análisis de regresión lineal del ingreso expandido por zona sobre las frecuencias de respuestas zonales para 9 modelos.
+
+##  Gráfica de la recta de regresión lineal sacando los outliers
+
+```{r, warning = FALSE, message = FALSE}
+casen_2017_sin_o$frecuencia_de_resp <- as.numeric(casen_2017_sin_o$frecuencia_de_resp)
+ggplot(casen_2017_sin_o, aes(x = frecuencia_de_resp, y = multipob)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+```
+```{r}
+casen_2017_sin_o
+```
+
+
+
+
+
+```{r}
+# Q <- quantile(casen_2017_sin_o$frecuencia_de_resp, probs=c(.25, .75), na.rm = T)
+# iqr <- IQR(casen_2017_sin_o$frecuencia_de_resp, na.rm = T)
+# casen_2017_sin_o <- subset(tabla_sin_out,casen_2017_sin_o$frecuencia_de_resp > (Q[1] - 1.5*iqr) & casen_2017_sin_o$frecuencia_de_resp < (Q[2] + 1.5*iqr))
+# casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character), stringsAsFactors=FALSE)
+# casen_2017_sin_o$frecuencia_de_resp <- as.numeric(casen_2017_sin_o$frecuencia_de_resp)
+# casen_2017_sin_o$multipob <- as.numeric(casen_2017_sin_o$multipob)
+# casen_2017_sin_o
+#   # datatable(casen_2017_sin_o,class = 'cell-border stripe',
+#   #         options = list(
+#   #           pageLength = 5,
+#   #           autoWidth = TRUE
+# # )
+# # )
+```
+
+
+
+```{r}
+### 8.0 Modelo simple
+
+linearMod <- lm( multipob~(frecuencia_de_resp) , data=casen_2017_sin_o)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "simple"
+sintaxis <- "linearMod <- lm( multipob~(frecuencia_de_resp) , data=casen_2017_sin_o)"
+
+modelos0 <- cbind(modelo,dato,sintaxis) 
+
+
+### 8.1 Modelo cuadrático
+
+linearMod <- lm( multipob~(frecuencia_de_resp^2) , data=casen_2017_sin_o)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "cuadrático"
+sintaxis <- "linearMod <- lm( multi_pob~(Freq.x^2) , data=casen_2017_sin_o)"
+
+modelos1 <- cbind(modelo,dato,sintaxis)
+
+ 
+### 8.2 Modelo cúbico
+ 
+linearMod <- lm( multipob~(frecuencia_de_resp^3) , data=casen_2017_sin_o)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "cúbico"
+sintaxis <- "linearMod <- lm( multi_pob~(Freq.x^3) , data=casen_2017_sin_o)"
+
+modelos2 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.3 Modelo logarítmico
+ 
+linearMod <- lm( multipob~log(frecuencia_de_resp) , data=casen_2017_sin_o)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "logarítmico"
+sintaxis <- "linearMod <- lm( multi_pob~log(Freq.x) , data=casen_2017_sin_o)"
+
+modelos3 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.5 Modelo con raíz cuadrada 
+ 
+linearMod <- lm( multipob~sqrt(frecuencia_de_resp) , data=casen_2017_sin_o)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz cuadrada"
+sintaxis <- "linearMod <- lm( multi_pob~sqrt(Freq.x) , data=casen_2017_sin_o)"
+
+modelos5 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.6 Modelo raíz-raíz
+ 
+linearMod <- lm( sqrt(multipob)~sqrt(frecuencia_de_resp) , data=casen_2017_sin_o)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz-raíz"
+sintaxis <- "linearMod <- lm( sqrt(multi_pob)~sqrt(Freq.x) , data=casen_2017_sin_o)"
+
+modelos6 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.7 Modelo log-raíz
+ 
+linearMod <- lm( log(multipob)~sqrt(frecuencia_de_resp) , data=casen_2017_sin_o)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "log-raíz"
+sintaxis <- "linearMod <- lm( log(multi_pob)~sqrt(Freq.x) , data=casen_2017_sin_o)"
+
+modelos7 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.8 Modelo raíz-log
+ 
+linearMod <- lm( sqrt(multipob)~log(frecuencia_de_resp) , data=casen_2017_sin_o)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "raíz-log"
+sintaxis <- "linearMod <- lm( sqrt(multi_pob)~log(Freq.x) , data=casen_2017_sin_o)"
+
+modelos8 <- cbind(modelo,dato,sintaxis)
+ 
+### 8.9 Modelo log-log
+ 
+linearMod <- lm( log(multipob)~log(frecuencia_de_resp) , data=casen_2017_sin_o)
+datos <- summary(linearMod)
+dato <- datos$adj.r.squared
+modelo <- "log-log"
+sintaxis <- "linearMod <- lm( log(multi_pob)~log(Freq.x) , data=casen_2017_sin_o)"
+
+modelos9 <- cbind(modelo,dato,sintaxis)
+ 
+modelos_bind <- rbind(modelos0, modelos1, modelos2,modelos3,modelos5,modelos6,modelos7,modelos8,modelos9)
+modelos_bind <- as.data.frame(modelos_bind)
+
+# modelos_bind <<- modelos_bind[order(modelos_bind$dato, decreasing = T ),]
+modelos_bind <- cbind(row.names(modelos_bind),modelos_bind)
+names(modelos_bind)[1] <- "n"
+modelos_bind$dato <- as.numeric(modelos_bind$dato)
+modelos_bind <- modelos_bind[order(modelos_bind$dato, decreasing = T ),]
+
+kbl(modelos_bind) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+<br>
+
+# Elección del modelo.
+
+```{r}
+for(i in modelos_bind$n) {
+
+  numero <- modelos_bind[i,1]
+  numero <- as.numeric(numero)
+  metodo <- numero
+switch (metodo,
+        case = linearMod <- lm( multipob~(frecuencia_de_resp) , data=casen_2017_sin_o),
+        case = linearMod <- lm( multipob~(frecuencia_de_resp^2) , data=casen_2017_sin_o),
+        case = linearMod <- lm( multipob~(frecuencia_de_resp^3) , data=casen_2017_sin_o),
+        case = linearMod <- lm( multipob~log(frecuencia_de_resp) , data=casen_2017_sin_o),
+        case = linearMod <- lm( multipob~sqrt(frecuencia_de_resp) , data=casen_2017_sin_o),
+        case = linearMod <- lm( sqrt(multipob)~sqrt(frecuencia_de_resp) , data=casen_2017_sin_o),
+        case = linearMod <- lm( log(multipob)~sqrt(frecuencia_de_resp) , data=casen_2017_sin_o),
+        case = linearMod <- lm( sqrt(multipob)~log(frecuencia_de_resp) , data=casen_2017_sin_o),
+        case = linearMod <- lm( log(multipob)~log(frecuencia_de_resp) , data=casen_2017_sin_o)
+)
+ rq <<- summary(linearMod)
+  valor1 <- rq$coefficients[8] < 0.001
+  valor2 <- rq$coefficients[7] < 0.001
+
+  if(valor2 == TRUE & valor1 == TRUE) {
+    print("------")
+    print(modelos_bind[i,2])
+    print(rq)
+    break
+
+  }
+}
+aa <- rq$coefficients[1]
+bb <- rq$coefficients[2]
+```
+
+
+
+```{r, warning = FALSE, message = FALSE}
+ggplot(casen_2017_sin_o, aes(x = frecuencia_de_resp, y = multipob)) + 
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+```
+
+
+
+## Casos perdidos con la exclusión de outliers en la frecuencia de respuesta 
+
+
+```{r}
+nrow(tabla_5) 
+nrow(casen_2017_sin_o)
+valores_ex <- nrow(tabla_5) - nrow(casen_2017_sin_o)
+valores_ex
+```
+
+En la regresión lineal que lanzamos sin datos a excluir, nos encontramos con un ajuste muy alto, estando frente al clásico ejemplo de como un solo outlier puede distorsionar un modelo de regresión. Excluyendo el 15% de datos obtemos una regresión con coeficiente de determinación menos preciso(0.7813) pero más ajustado a la realidad y con coefecientes de regreción estadisticamente significativos.
+```{r}
+aa
+bb
+```
+
+$$ \hat Y = \beta_0 + \beta_1  \sqrt {X}  $$
+
+```{r}
+casen_2017_sin_o$est_ing <- aa+bb*sqrt(casen_2017_sin_o$frecuencia_de_resp)###--- raiz cuadrada
+
+casen_2017_sin_o$p <- as.numeric(casen_2017_sin_o$p)
+casen_2017_sin_o$personas <- as.numeric(casen_2017_sin_o$personas)
+casen_2017_sin_o$ing_medio_zona <- casen_2017_sin_o$est_ing /(casen_2017_sin_o$personas  * casen_2017_sin_o$p)
+
+nombre <- paste0("tablas_regiones_ESC_r/region_",reg,"_ESC_r_v2.xlsx")
+write_xlsx(casen_2017_sin_o,nombre)
+casen_2017_sin_o
+  datatable(casen_2017_sin_o,class = 'cell-border stripe',
+          options = list(
+            pageLength = 5,
+            autoWidth = TRUE
+))
+```
+```{r}
+casen_2017_sin_o
+```
+
+```{r}
+ggplot(data = casen_2017_sin_o) + geom_boxplot(aes(x=ing_medio_zona, y=ing_medio_zona))
+```
+
+
+
+
+
+### Comparación de promedio sin exclusión de outliers
+
+```{r}
+library("dplyr")
+promedio_i1 <- (summarise(tabla_5, my_mean = mean(promedio_i)))
+as.numeric(promedio_i1)
+ing_medio_zona1 <- summarise(tabla_5, my_mean = mean(ing_medio_zona))
+as.numeric(ing_medio_zona1)
+```
+
+### Comparación de promedio con exclusión de outliers
+
+```{r}
+library("dplyr")
+casen_2017_sin_o$promedio_i <- as.numeric(casen_2017_sin_o$promedio_i)
+promedio_i2 <- summarise(casen_2017_sin_o, my_mean = mean(promedio_i))
+as.numeric(promedio_i2)
+ing_medio_zona2 <- summarise(casen_2017_sin_o, my_mean = mean(ing_medio_zona))
+as.numeric(ing_medio_zona2)
+```
+
+```{r}
+casen_2017_sin_o
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

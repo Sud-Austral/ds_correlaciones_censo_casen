@@ -80,121 +80,95 @@ Necesitamos calcular las frecuencias a nivel censal de las respuestas correspond
 Leemos la tabla Censo 2017 de personas que ya tiene integrada la clave zonal:
 
 ```{r}
-tabla_con_clave_o <- 
+tabla_con_clave <- 
 readRDS("../../../ds_correlaciones_censo_casen/corre_censo_casen_2017/censos_con_clave/censo_personas_con_clave_17")
-# r3_100 <- tabla_con_clave[c(1:100),]
-# kbl(r3_100) %>%
-#   kable_styling(bootstrap_options = c("striped", "hover")) %>%
-#   kable_paper() %>%
-#   scroll_box(width = "100%", height = "300px")
+r3_100 <- tabla_con_clave[c(1:100),]
+kbl(r3_100) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  kable_paper() %>%
+  scroll_box(width = "100%", height = "300px")
 ```
 <br>
 
-Analisis de zonas Región 3
-
-Zonas totales
-
+Filtramos:
 
 ```{r}
-fyt <- filter(tabla_con_clave_o, tabla_con_clave_o$AREA == 1 || tabla_con_clave_o$AREA == 2)
-#fyt2 <- filter(fyt, fyt$REGION == 3)
-#fyt3 <- filter(fyt2, fyt2$P09 > 15)
-f_zona_urbana <- unique(fyt$clave)
-length(f_zona_urbana)
-```
-
-Siempre serán 199 zonas en la región 01, pero la proporción rural-urbano cambiará en relación a la variable sobre la que estemos trabajando.
-
-
-Zonas totales urbanas
-
-```{r}
-fyt <- filter(tabla_con_clave_o, tabla_con_clave_o$AREA == 1)
-fyt2 <- filter(fyt, fyt$REGION ==3)
-fyt3 <- filter(fyt2, fyt2$P09 > 15)
-f_zona_urbana <- unique(fyt3$clave)
-length(f_zona_urbana)
-
-```
-
-Zonas totales rurales
-
-```{r}
-fyt <- filter(tabla_con_clave_o, tabla_con_clave_o$AREA == 2)
-fyt2 <- filter(fyt, fyt$REGION == 3)
-fyt3 <- filter(fyt2, fyt2$P09 > 15)
-f_zona_urbana <- unique(fyt3$clave)
-length(f_zona_urbana)
+#tabla_con_clave <- filter(tabla_con_clave, tabla_con_clave$P09 > 15)
 ```
 
 
-<br>
 
-
-Hacemos todos nuestros filtros:
 
 
 ```{r}
-tabla_con_clave_f  <- filter(tabla_con_clave_o, tabla_con_clave_o$REGION ==3)
-tabla_con_clave_f <- filter(tabla_con_clave_f, tabla_con_clave_f$P17 == 1)
-tabla_con_clave_f <- filter(tabla_con_clave_f, tabla_con_clave_f$AREA == 1)
-tabla_con_clave_f <- filter(tabla_con_clave_f, tabla_con_clave_f$P09 > 15)
-tabla_con_clave_f  <- as.data.frame(tabla_con_clave_f)
+length(tabla_con_clave$clave)
 ```
+
+Queremos saber cuantas zonas hay en Chile:
 
 ```{r}
-head(tabla_con_clave_f,10)
+longitud <- length(unique(tabla_con_clave$clave))
+longitud 
 ```
 
-Queremos saber cuantas zonas urbanas hay en la primera región de Chile que cumplen nuestros criterios:
 
-
-```{r}
-f_zona_urbana <- unique(tabla_con_clave_f$clave)
-length(f_zona_urbana)
-```
 
 
 ### Cálculo de frecuencias
 
-Obtenemos las frecuencias a la pregunta P17
+Obtenemos las frecuencias a la pregunta P17 filtradas por region = 1 y zona urbana = 1 y respuesta 1.
 
 ```{r}
-tabla_con_clave_ff <-tabla_con_clave_f[,-c(2,4,6:31,33:48), drop=FALSE]
-head(tabla_con_clave_ff,10)
-
+tabla_con_clave_f <- tabla_con_clave[,-c(2,4,6:31,33:40,42:48),drop=FALSE]
+tabla_con_clave_f
 ```
 
 
 ```{r}
-f_zona_urbana_2 <- unique(tabla_con_clave_ff$clave)
-length(f_zona_urbana_2)
+# para ruralidad: ESCOLARIDAD = 12
+
+claves_con_1 <- filter(tabla_con_clave_f, tabla_con_clave_f$ESCOLARIDAD == 12)
+claves_con_1 <- filter(claves_con_1, claves_con_1$AREA == 2)
+
+#####################################################################################################################
+#####################################################################################################################
+
+claves_con_1 <- filter(claves_con_1, claves_con_1$REGION ==2)
+
+
+
+claves_con_1 <- as.data.frame(claves_con_1)
+
+head(claves_con_1,10)
+claves_con_1
 ```
 
-
-
-Hay que arreglar el codigo comunal a f_zona_urbana_2:
+Hay que arreglar el codigo comunal a aaa:
 
 ```{r}
-codigos <- tabla_con_clave_ff$COMUNA
-rango <- seq(1:nrow(tabla_con_clave_ff))
+codigos <- claves_con_1$COMUNA
+rango <- seq(1:nrow(claves_con_1))
 cadena <- paste("0",codigos[rango], sep = "")
 cadena <- substr(cadena,(nchar(cadena)[rango])-(4),6)
 codigos <- as.data.frame(codigos)
 cadena <- as.data.frame(cadena)
-comuna_corr <- cbind(tabla_con_clave_ff,cadena)
+comuna_corr <- cbind(claves_con_1,cadena)
 #comuna_corr <- comuna_corr[,-c(2,3),drop=FALSE]
 #names(comuna_corr)[3] <- "código" 
 head(comuna_corr,10)
+comuna_corr
 ```
-
-
-
 
 ```{r}
 unicos <- unique(comuna_corr)
 head(unicos,10)
+unicos
+```
 
+
+```{r}
+unicos <- unicos[!duplicated(unicos$clave), ]
+unicos
 ```
 
 
@@ -203,9 +177,10 @@ head(unicos,10)
 ```{r}
 #e <- table(claves_con_1$clave, claves_con_1$P17) 
 library(MASS)
-e <- xtabs(~clave+P17, data=comuna_corr)
+e <- xtabs(~clave+ESCOLARIDAD, data=claves_con_1)
 e <- as.data.frame(e)
 head(e,10)
+e
 ```
 
 ```{r}
@@ -218,29 +193,25 @@ nrow(e)
 1. Unir los codigos comunales correctos a las frecuencias
 
 ```{r}
-tabla_1 = merge( x = e, y = unicos, by = "clave", all.y = TRUE)
+tabla_1 = merge( x = e, y = unicos, by = "clave", all.x = TRUE)
 head(tabla_1,10)
+colnames(tabla_1)[9] <- "código"
+tabla_1
 ```
 
 
 ```{r}
-tabla_1 <- data.frame(lapply(tabla_1, as.character), stringsAsFactors=FALSE)
-tabla_2 <- unique(tabla_1$clave)
-length(tabla_2)
-
+nrow(tabla_1)
 ```
 
-
-
-
-
-
-## Eliminemos y renombremos:
+## Eliminemos la grasa y renombremos:
 
 ```{r}
 tabla_2 <- tabla_1[, -c(2,5,6,7)]
 names(tabla_2)[4] <- "código"  
 head(tabla_2,10)
+tabla_2 <- tabla_2[, -c(4)]
+tabla_2
 ```
 
 
@@ -249,18 +220,22 @@ head(tabla_2,10)
 
 
 ```{r}
-ingresos_expandidos_urbanos <- readRDS("ingresos_expandidos_casen_2017_totales_u.rds")
-head(ingresos_expandidos_urbanos,10)
+ingresos_expandidos_rurales <- readRDS("ingresos_expandidos_casen_2017_totales_r.rds")
+head(ingresos_expandidos_rurales,10)
+ingresos_expandidos_rurales
 ```
 
 
 
 ```{r}
-tabla_3 = merge( x = tabla_2 , y = ingresos_expandidos_urbanos, by = "código", all.x = TRUE)
-names(tabla_3)[2] <- "zona" 
-names(tabla_3)[5] <- "comuna" 
-names(tabla_3)[6] <- "tipo" 
-tabla_3$zona <- as.character(tabla_3$zona) 
+tabla_3 = merge( x = tabla_2 , y = ingresos_expandidos_rurales, by = "código", all.x = TRUE)
+# names(tabla_3)[2] <- "zona" 
+# names(tabla_3)[5] <- "comuna" 
+# names(tabla_3)[6] <- "tipo" 
+# tabla_3$zona <- as.character(tabla_3$zona) 
+head(tabla_3,10)
+colnames(tabla_3)[2] <- "zona"
+colnames(tabla_3)[6] <- "area"
 tabla_3
 ```
 
@@ -269,26 +244,27 @@ hay que integrar las proporciones poblacionales zonales:
 
 ```{r}
 tabla_de_prop_pob <- readRDS("../../../../archivos_grandes/tabla_de_prop_pob.rds")
-head(tabla_de_prop_pob,10)
-```
-
-
-```{r}
 names(tabla_de_prop_pob)[1] <- "zona" 
 tabla_de_prop_pob$zona <- as.character(tabla_de_prop_pob$zona) 
 head(tabla_de_prop_pob,10)
+
 ```
 
 ```{r}
 tabla_4 = merge( x = tabla_3, y = tabla_de_prop_pob, by = "zona", all.x = TRUE)
-tabla_4
+head(tabla_4,10)
 ```
 
-## Eliminemos y renombremos:
+## Eliminemos la grasa y renombremos:
 
 ```{r}
 tabla_5 <- tabla_4[, -c( 11,13)]
+names(tabla_5)[2] <- "código"  
+names(tabla_5)[3] <- "frecuencia_de_resp"  
+names(tabla_5)[4] <- "region"  
+names(tabla_5)[5] <- "region_nombre"  
 head(tabla_5,10)
+tabla_5
 ```
 
 
@@ -297,30 +273,10 @@ head(tabla_5,10)
 
 ```{r}
 tabla_5$multipob <- tabla_5$Ingresos_expandidos*tabla_5$p
-
-kbl(tabla_5) %>%
-  kable_styling(bootstrap_options = c("striped","hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "300px")
-
-```
-
-
-```{r}
-nrow(tabla_5)
-```
-
-
-
-Se fueron dos de 01404.
-Vamos a eliminar los NA.
-
-
-```{r}
-tabla_5 <- na.omit(tabla_5)
-colnames(tabla_5)[3] <- "frecuencia_de_resp"
+head(tabla_5,10)
 tabla_5
 ```
+
 
 
 
@@ -338,12 +294,10 @@ $$ X(independiente) = frecuencia \ de \ población \ que \ posee \ la \ variable
 ##  Diagrama de dispersión loess
 
 ```{r}
-tabla_5$frecuencia_de_resp <- as.numeric(tabla_5$frecuencia_de_resp)
-
 scatter.smooth(x=tabla_5$frecuencia_de_resp, y=tabla_5$multipob, main="multi_pob ~ Freq",
      xlab = "Freq",
      ylab = "multi_pob",
-           col = 2) 
+           col = 2, is.na = T) 
 ```
 
 ##  Outliers 
@@ -362,7 +316,7 @@ summary(linearMod)
 ##  Gráfica de la recta de regresión lineal
 
 ```{r, warning = FALSE, message = FALSE}
-ggplot(tabla_5, aes(x = (frecuencia_de_resp), y = (multipob))) + 
+ggplot(tabla_5, aes(x = frecuencia_de_resp, y = multipob)) + 
   geom_point() +
   stat_smooth(method = "lm", col = "red")
 ```
@@ -373,10 +327,6 @@ Si bien obtenemos nuestro modelo lineal da cuenta del 0.9659 de la variabilidad 
 #  Modelos alternativos
 
 ```{r}
-
-
-
-
 ### 8.1 Modelo cuadrático
 
 linearMod <- lm( multipob~(frecuencia_de_resp^2) , data=tabla_5)
@@ -470,7 +420,7 @@ modelos_bind <<- modelos_bind[order(modelos_bind$dato, decreasing = T ),]
 kbl(modelos_bind) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
-  scroll_box(width = "100%", height = "400px")
+  scroll_box(width = "100%", height = "300px")
 ```
 
 <br>
@@ -482,7 +432,7 @@ Elegimos el modelo log-log (8) pues tiene el más alto $R^2$
 ```{r}
 
 #h_y_m_comuna_corr <- h_y_m_comuna_corr_01
-metodo <-5
+metodo <- 8
 switch (metodo,
         case = linearMod <- lm( multipob~(frecuencia_de_resp^2) , data=tabla_5),
         case = linearMod <- lm( multipob~(frecuencia_de_resp^3) , data=tabla_5),
@@ -508,17 +458,9 @@ Es éste el modelo que nos entrega el mayor coeficiente de determinación de tod
 
 Desplegamos una curva suavizada por loess en el diagrama de dispersión.
 
-
-
-
-
 ```{r}
-
 scatter.smooth(x=log(tabla_5$frecuencia_de_resp), y=log(tabla_5$multipob), lpars = list(col = "red", lwd = 2, lty = 1), main="multi_pob ~ Freq.x")
 
-```
-```{r}
-head(tabla_5,10)
 ```
 
 
@@ -528,7 +470,7 @@ ggplot(tabla_5, aes(x = log(frecuencia_de_resp) , y = log(multipob))) + geom_poi
 ```
 
 ```{r}
-tabla_5
+head(tabla_5,10)
 ```
 
 
@@ -547,15 +489,13 @@ $$ \hat Y = e^{\beta_0+\beta_1  ln{X}} $$
 
 ### Modelo real:
 
-$$  \hat Y = e^{13.32614 + 1.039997   \cdot ln{X}}  $$
+$$  \hat Y = e^{13.10277 + 1.064123 \cdot ln{X}}  $$
 
 
 <br>
-
-
 ```{r}
-#linearMod <- lm( log(multipob)~log(frecuencia_de_resp) , data=tabla_5)
-linearMod <- lm( sqrt(multipob)~sqrt(frecuencia_de_resp) , data=tabla_5)
+linearMod <- lm( log(multipob)~log(frecuencia_de_resp) , data=tabla_5)
+#linearMod <- lm( sqrt(multipob)~sqrt(frecuencia_de_resp) , data=tabla_5)
 aa <- linearMod$coefficients[1]
 bb <- linearMod$coefficients[2]
 aa
@@ -571,10 +511,11 @@ bb
 Esta nueva variable se llamará: est_ing
 
 ```{r}
-#tabla_5$est_ing <- aa^2 +2*aa*bb*sqrt()
+# tabla_5$est_ing <- exp(aa+bb*log(tabla_5$frecuencia_de_resp))
 ```
 
-$$ \hat Y = {\beta_0}^2 + 2  \beta_0  \beta_1 \sqrt{X}+  \beta_1^2 X  $$
+
+
 
 
 ```{r}
@@ -599,8 +540,7 @@ $$ Ingreso \_ Medio\_zona = est\_ing / (personas * p\_poblacional) $$
 <br>
 
 ```{r}
-tabla_5$ing_medio_zona <- as.numeric(tabla_5$est_ing /(tabla_5$personas  * tabla_5$p))
-nrow(tabla_5)
+tabla_5$ing_medio_zona <- tabla_5$est_ing /(tabla_5$personas  * tabla_5$p)
 ```
 
 
@@ -609,140 +549,51 @@ r3_100 <- tabla_5[c(1:100),]
 kbl(r3_100) %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
   kable_paper() %>%
-  scroll_box(width = "120%", height = "300px")
+  scroll_box(width = "100%", height = "300px")
 ```
 
 
-```{r}
-pp <- ggplot(data = tabla_5) + geom_boxplot(aes(ing_medio_zona))
-pp + theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust=1))
-```
 
 
 
 
 ```{r}
-pp <- ggplot(data = tabla_5) + geom_boxplot(aes(x=comuna, y=ing_medio_zona, color=comuna))
-pp + theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust=1))
+# pp <- ggplot(data = tabla_5) + geom_boxplot(aes(x=comuna, y=ing_medio_zona, color=comuna))
+# pp + theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust=1))
 ```
 
-```{r}
-tabla_5
-```
 
 
 # Criterio para excluir outliers:
 
 ```{r}
-
-
-
-
-Q <- quantile(tabla_5$frecuencia_de_resp, probs=c(.25, .75), na.rm = T)
-iqr <- IQR(tabla_5$frecuencia_de_resp, na.rm = T)
-casen_2017_sin_o <- subset(tabla_5, tabla_5$frecuencia_de_resp > (Q[1] - 1.5*iqr) & tabla_5$frecuencia_de_resp < (Q[2]+1.5*iqr))
+Q <- quantile(tabla_5$ing_medio_zona, probs=c(.25, .75), na.rm = T)
+iqr <- IQR(tabla_5$ing_medio_zona, na.rm = T)
+casen_2017_sin_o <- subset(tabla_5, tabla_5$ing_medio_zona > (Q[1] - 1.5*iqr) & tabla_5$ing_medio_zona < (Q[2]+1.5*iqr))
 casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character), stringsAsFactors=FALSE)
 
-casen_2017_sin_o
-```
-
-
-
-
-```{r}
-
-casen_2017_sin_o$ing_medio_zona <- as.numeric(casen_2017_sin_o$ing_medio_zona)
-Q <- quantile(casen_2017_sin_o$ing_medio_zona, probs=c(.1, .9), na.rm = T)
-iqr <- IQR(casen_2017_sin_o$ing_medio_zona, na.rm = T)
-casen_2017_sin_o <- subset(casen_2017_sin_o, casen_2017_sin_o$ing_medio_zona > (Q[1] - 1.5*iqr) & casen_2017_sin_o$ing_medio_zona < (Q[2]+1.5*iqr))
-casen_2017_sin_o <- data.frame(lapply(casen_2017_sin_o, as.character), stringsAsFactors=FALSE)
 casen_2017_sin_o$multipob <- as.numeric(casen_2017_sin_o$multipob)
-casen_2017_sin_o
-```
-
-
-
-```{r}
+casen_2017_sin_o$est_ing<- as.numeric(casen_2017_sin_o$est_ing)
 casen_2017_sin_o$ing_medio_zona <- as.numeric(casen_2017_sin_o$ing_medio_zona)
 
-pp <- ggplot(data = casen_2017_sin_o) + geom_boxplot(aes(ing_medio_zona))
-pp + theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust=1))
+
+head(casen_2017_sin_o,10) 
+```
+```{r}
+# pp <- ggplot(data = casen_2017_sin_o ) + geom_boxplot(aes(x=comuna, y=ing_medio_zona, color=comuna))
+# pp + theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust=1))
 ```
 
 
 
-
-
-```{r}
-kbl(casen_2017_sin_o) %>%
-  kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  kable_paper() %>%
-  scroll_box(width = "100%", height = "400px")
-```
-
-
-
-
-
-
-
-
+<br>
+Guardamos:
 
 ```{r}
-
-casen_2017_sin_o$ing_medio_zona <- as.numeric(casen_2017_sin_o$ing_medio_zona)
-
-pp <- ggplot(data = casen_2017_sin_o ) + geom_boxplot(aes(x=comuna, y=ing_medio_zona, color=comuna))
-pp + theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust=1))
-```
-
-
-```{r}
-nrow(casen_2017_sin_o) 
-```
-
-```{r}
-tabla_5
-```
-
-Excluyamos en ingreso medio mayor:
-```{r}
-casen_2017_sin_o
-```
-
-
-
-
-
-
-```{r}
-nrow(casen_2017_sin_o)
-```
-
-
-
-```{r}
-
-saveRDS(casen_2017_sin_o, "urbanidad/region_15_P17_u_nuevo.rds")
+casen_2017_sin_o$region <- 1
+saveRDS(casen_2017_sin_o, "ruralidad/region_01_ESCOLARIDAD_r_nuevo.rds")
 ```
  
-
-
-
-
-
-
-
-
-fin
-
-
-
-
-
-
-
-
 
 
 
@@ -827,7 +678,7 @@ https://www.investopedia.com/terms/e/empirical-rule.asp
 #   unadataframe = rbind( unadataframe, region )
 # }
 # 
-# saveRDS(unadataframe, "urbanidad/nacional_P17_u_nuevo.rds")
+# saveRDS(unadataframe, "ruralidad/region_01_P17_r_nuevo.rds")
 
 
 ```
@@ -836,94 +687,14 @@ https://www.investopedia.com/terms/e/empirical-rule.asp
 
 
 
-Calculo de promedios
-
-
-```{r}
-sss <- readRDS("urbanidad/region_01_P17_u_nuevo.rds")
-sss
-```
 
 
 
 
 
 
-```{r}
-sss$promedio_i <- as.numeric(sss$promedio_i)
-summarise(sss, my_mean = mean(sss$promedio_i, na.rm = TRUE))
-```
-
-```{r}
-```
 
 
-```{r}
-summarise(sss, my_mean = mean(ing_medio_zona, na.rm = TRUE))
-```
-
-```{r}
-sss
-```
-
-
-
-```{r}
-pp <- ggplot(data = sss) + geom_boxplot(aes(ing_medio_zona))
-pp + theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust=1))
-```
-
-
-```{r}
-tabla_5
-```
-
-```{r}
-pp <- ggplot(data = tabla_5) + geom_boxplot(aes(ing_medio_zona))
-pp + theme(axis.text.x = element_text(angle = 40, vjust = 1, hjust=1))
-```
-
-
-
-
-```{r}
-setdiff(tabla_5$zona ,sss$zona)
-```
-
-```{r}
-# fff <- filter(tabla_5, tabla_5$zona == 2101151004)
-# fff
-```
-
-
-
-
-```{r}
-# archivos <- dir("urbanidad/")
-# 
-# receptaculo <- data.frame()
-# for (ar in archivos) {
-#   direccion <- paste0("urbanidad/",ar)
-#   cargados <- readRDS(direccion)
-# 
-#   receptaculo <- rbind(receptaculo,cargados)
-# }
-# 
-# receptaculo
-
-```
-
-
-```{r}
-# saveRDS(receptaculo, "casen_censo_urbano_2017.rds")
-```
-
-
-
-```{r}
-rrr <- readRDS("casen_censo_urbano_2017.rds")
-nrow(rrr)
-```
 
 
 

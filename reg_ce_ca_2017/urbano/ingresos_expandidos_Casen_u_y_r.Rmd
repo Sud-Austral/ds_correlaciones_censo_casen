@@ -202,6 +202,10 @@ saveRDS(ingresos_expandidos_casen_2017_totales_u, "ingresos_expandidos_casen_201
 ```
 
 
+```{r}
+uuu <- readRDS("ingresos_expandidos_casen_2017_totales_u.rds")
+uuu
+```
 
 
 ## 3 Referencias
